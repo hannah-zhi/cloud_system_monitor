@@ -1657,7 +1657,7 @@ h2 {
 }
 
 .station-card {
-  min-height: 154px;
+  min-height: 228px;
   border-top-width: 1px;
   padding: 15px 14px;
   z-index: 0;
@@ -1717,8 +1717,39 @@ h2 {
   gap: 9px;
 }
 
-.risk-dot {
+.comm-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: 0 0 auto;
   box-shadow: 0 0 12px currentColor;
+}
+
+.station-card.comm-ok {
+  border-top-color: #13c781;
+}
+
+.station-card.comm-partial {
+  border-top-color: #f4a51c;
+}
+
+.station-card.comm-down {
+  border-top-color: #ff3d59;
+}
+
+.comm-dot.comm-ok {
+  background: #13c781;
+  color: #13c781;
+}
+
+.comm-dot.comm-partial {
+  background: #f4a51c;
+  color: #f4a51c;
+}
+
+.comm-dot.comm-down {
+  background: #ff3d59;
+  color: #ff3d59;
 }
 
 .metric {

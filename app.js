@@ -786,17 +786,21 @@ function renderStations(stations) {
 }
 
 function createStationCard(station) {
-  const risk = riskMeta[station.risk];
   const stateClass = operationStateClass(station.run);
+  const commClass = commStatusClass(station.comm);
+  const comm = commMeta[station.comm];
   const remainingEnergy = formatRemainingEnergy(station);
   return `
-    <button class="station-card risk-${station.risk}" data-id="${station.id}" type="button">
+    <button class="station-card ${commClass}" data-id="${station.id}" type="button">
       <div class="card-head">
         <span class="operation-tag ${stateClass}">${station.run}</span>
         <span class="station-name" title="${station.id}${station.name}">${station.id}${station.name}</span>
-        <span class="risk-dot ${risk.className}" title="${risk.label}"></span>
+        <span class="comm-dot ${commClass}" title="${comm.label}"></span>
       </div>
       <div class="metrics central-monitor-metrics">
+        <div class="metric"><span>通讯状态</span><strong>${comm.label}</strong></div>
+        <div class="metric"><span>额定能量/容量</span><strong>${station.rated}MW/${station.ratedEnergy}MWh</strong></div>
+        <div class="metric"><span>子系统数量</span><strong>${station.subsystemCount}</strong></div>
         <div class="metric"><span>场站SOC</span><strong>${formatNumeric(station.soc)} <em>%</em></strong></div>
         <div class="metric"><span>场站有功功率</span><strong>${formatNumeric(station.active)} <em>kW</em></strong></div>
         <div class="metric"><span>剩余电量</span><strong>${remainingEnergy} <em>kWh</em></strong></div>
@@ -812,6 +816,15 @@ function operationStateClass(stateName) {
     停机: "is-stopped",
   };
   return classMap[stateName] || "is-standby";
+}
+
+function commStatusClass(commState) {
+  const classMap = {
+    ok: "comm-ok",
+    partial: "comm-partial",
+    down: "comm-down",
+  };
+  return classMap[commState] || "comm-ok";
 }
 
 function renderStationPicker() {
