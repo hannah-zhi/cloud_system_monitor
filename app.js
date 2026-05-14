@@ -68,6 +68,8 @@ const state = {
   overviewPowerHover: null,
   overviewChargeHitboxes: [],
   overviewChargeHover: null,
+  overviewChartStartDate: "2026-02-03",
+  overviewChartEndDate: "2026-02-13",
   riskBarSort: "sosAsc",
   alarmTrendHitboxes: [],
   detailBoxHitboxes: [],
@@ -435,6 +437,8 @@ function bindEvents() {
       if (state.selectedStation) renderOverviewCharts(state.selectedStation);
     }
   });
+  els.stationOverviewPanel?.addEventListener("click", handleOverviewDateClick);
+  els.stationOverviewPanel?.addEventListener("change", handleOverviewDateChange);
   els.riskBarSort.addEventListener("change", () => {
     state.riskBarSort = els.riskBarSort.value;
     state.riskBarHoverId = null;
@@ -2447,7 +2451,10 @@ function renderStationOverview(station) {
         <div class="panel-title"><span></span>场站运行</div>
         <div class="run-overview">
           <div class="soc-gauge-mini" style="--soc-angle:${Math.max(0, Math.min(180, Number(station.soc || 0) * 1.8))}deg">
-            <strong>${soc}</strong><span>场站SOC</span>
+            <em class="soc-scale soc-scale-min">0%</em>
+            <strong>${soc}<b>%</b></strong>
+            <em class="soc-scale soc-scale-max">100%</em>
+            <span>场站SOC</span>
           </div>
           <div class="run-kpis">
             <span>场站运行状态</span><strong class="${runClass}">${station.run}</strong>
@@ -2474,7 +2481,8 @@ function renderStationOverview(station) {
         </div>
         <div class="storage-summary">
           <div class="storage-ring" style="--wave:${Math.max(6, Math.min(92, Number(station.soc || 0)))}%">
-            <strong>${Math.max(3, Math.round(station.soc / 8))}.0%</strong><span>SOC</span>
+            <strong>${Math.max(3, Math.round(station.soc / 8))}.0%</strong>
+            <span>SOC</span>
           </div>
           <div class="overview-metrics compact">
             <div><span>当日充电量</span><strong>-- <em>kWh</em></strong></div>
@@ -2486,7 +2494,6 @@ function renderStationOverview(station) {
     <article class="panel topology-panel">
       <div class="topology-toolbar">
         <div class="panel-title"><span></span>拓扑图</div>
-        <label><input type="checkbox" checked /> 显示场站结构</label>
       </div>
       <div class="topology-canvas">
         <div class="topo-node grid"><i></i><span>电网</span></div>
@@ -2500,7 +2507,7 @@ function renderStationOverview(station) {
     <article class="panel station-power-panel">
       <div class="panel-title-row">
         <div class="panel-title"><span></span>场站有功功率</div>
-        <div class="chart-date-range"><input type="date" value="2026-02-03" aria-label="开始日期" /><em>→</em><input type="date" value="2026-02-13" aria-label="结束日期" /></div>
+        <div class="chart-date-range alarm-detail-date" data-chart-range="power"><input type="date" value="${state.overviewChartStartDate}" aria-label="开始日期" /><span>→</span><input type="date" value="${state.overviewChartEndDate}" aria-label="结束日期" /></div>
       </div>
       <div class="overview-chart-wrap">
         <canvas id="overviewPowerCanvas" width="900" height="250"></canvas>
@@ -2511,7 +2518,7 @@ function renderStationOverview(station) {
     <article class="panel charge-chart-panel">
       <div class="panel-title-row">
         <div class="panel-title"><span></span>场站充放电表现</div>
-        <div class="chart-date-range"><input type="date" value="2026-02-03" aria-label="开始日期" /><em>→</em><input type="date" value="2026-02-13" aria-label="结束日期" /></div>
+        <div class="chart-date-range alarm-detail-date" data-chart-range="charge"><input type="date" value="${state.overviewChartStartDate}" aria-label="开始日期" /><span>→</span><input type="date" value="${state.overviewChartEndDate}" aria-label="结束日期" /></div>
       </div>
       <div class="overview-chart-wrap">
         <canvas id="overviewChargeCanvas" width="900" height="250"></canvas>
@@ -2527,8 +2534,8 @@ function renderStationOverview(station) {
 }
 
 function createOverviewChartData(station) {
-  return Array.from({ length: 11 }, (_, index) => {
-    const date = new Date(2026, 1, 3 + index);
+  const range = overviewChartDateRange();
+  return range.map((date, index) => {
     const label = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
     const wave = Math.sin(index * 1.37 + Number(station.soc || 0) / 18);
     const active = round(Math.max(-14, Math.min(15, (Number(station.active || 0) / 2.4) + wave * 8 + Math.cos(index * 0.9) * 4 - 2)), 2);
@@ -2538,6 +2545,25 @@ function createOverviewChartData(station) {
     const cycles = round(Math.max(0.1, Math.min(0.9, 0.45 + Math.sin(index * 0.72) * 0.28 + (index % 5) * 0.03)), 2);
     return { label, active, soc, charge, discharge, cycles };
   });
+}
+
+function overviewChartDateRange() {
+  const start = parseDateInputValue(state.overviewChartStartDate) || new Date(2026, 1, 3);
+  const end = parseDateInputValue(state.overviewChartEndDate) || new Date(2026, 1, 13);
+  const [from, to] = start <= end ? [start, end] : [end, start];
+  const maxDays = 31;
+  const days = Math.min(maxDays, Math.max(1, Math.round((to - from) / 86400000) + 1));
+  return Array.from({ length: days }, (_, index) => {
+    const date = new Date(from);
+    date.setDate(from.getDate() + index);
+    return date;
+  });
+}
+
+function parseDateInputValue(value) {
+  const parts = String(value || "").split("-").map(Number);
+  if (parts.length !== 3 || parts.some((part) => !Number.isFinite(part))) return null;
+  return new Date(parts[0], parts[1] - 1, parts[2]);
 }
 
 function renderOverviewCharts(station) {
@@ -2661,6 +2687,33 @@ function handleOverviewChartHover(event) {
   } else if (event.target === els.overviewChargeCanvas) {
     handleOverviewCanvasHover(event, "charge");
   }
+}
+
+function handleOverviewDateClick(event) {
+  const range = event.target.closest(".chart-date-range");
+  if (!range || event.target.matches("input")) return;
+  const input = range.querySelector("input[type='date']");
+  input?.showPicker?.();
+  input?.focus();
+}
+
+function handleOverviewDateChange(event) {
+  const input = event.target.closest(".chart-date-range input[type='date']");
+  if (!input) return;
+  const range = input.closest(".chart-date-range");
+  const inputs = [...range.querySelectorAll("input[type='date']")];
+  state.overviewChartStartDate = inputs[0]?.value || state.overviewChartStartDate;
+  state.overviewChartEndDate = inputs[1]?.value || state.overviewChartEndDate;
+  syncOverviewDateInputs();
+  if (state.selectedStation) renderOverviewCharts(state.selectedStation);
+}
+
+function syncOverviewDateInputs() {
+  els.stationOverviewPanel?.querySelectorAll(".chart-date-range").forEach((range) => {
+    const inputs = range.querySelectorAll("input[type='date']");
+    if (inputs[0]) inputs[0].value = state.overviewChartStartDate;
+    if (inputs[1]) inputs[1].value = state.overviewChartEndDate;
+  });
 }
 
 function handleOverviewCanvasHover(event, type) {
