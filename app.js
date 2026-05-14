@@ -2456,22 +2456,20 @@ function showDetailTab(tabName, shouldRender = true) {
   }
 }
 
-function renderMiniSocGauge(value, label) {
+function renderMiniSocGauge(value) {
   const pct = Math.max(0, Math.min(100, Number(value || 0)));
   const angle = (-180 + pct * 1.8) * (Math.PI / 180);
   const needleLength = 33;
   const needleX = round(56 + Math.cos(angle) * needleLength, 2);
-  const needleY = round(64 + Math.sin(angle) * needleLength, 2);
+  const needleY = round(56 + Math.sin(angle) * needleLength, 2);
   return `
-    <svg class="soc-gauge-svg" viewBox="0 0 112 90" role="img" aria-label="场站SOC ${label}%">
-      <path class="soc-gauge-track" d="M18 64 A38 38 0 0 1 94 64" pathLength="100"></path>
-      <path class="soc-gauge-fill" d="M18 64 A38 38 0 0 1 94 64" pathLength="100" style="stroke-dasharray:${pct} 100"></path>
-      <line class="soc-gauge-needle" x1="56" y1="64" x2="${needleX}" y2="${needleY}"></line>
-      <circle class="soc-gauge-hub" cx="56" cy="64" r="3"></circle>
-      <text class="soc-gauge-value" x="56" y="45">${label}<tspan>%</tspan></text>
-      <text class="soc-gauge-scale" x="12" y="70">0%</text>
-      <text class="soc-gauge-scale" x="100" y="70" text-anchor="end">100%</text>
-      <text class="soc-gauge-label" x="56" y="86">场站SOC</text>
+    <svg class="soc-gauge-svg" viewBox="0 0 112 72" role="img" aria-label="场站SOC ${pct.toFixed(1)}%">
+      <path class="soc-gauge-track" d="M18 56 A38 38 0 0 1 94 56" pathLength="100"></path>
+      <path class="soc-gauge-fill" d="M18 56 A38 38 0 0 1 94 56" pathLength="100" style="stroke-dasharray:${pct} 100"></path>
+      <line class="soc-gauge-needle" x1="56" y1="56" x2="${needleX}" y2="${needleY}"></line>
+      <circle class="soc-gauge-hub" cx="56" cy="56" r="3"></circle>
+      <text class="soc-gauge-scale" x="12" y="61">0%</text>
+      <text class="soc-gauge-scale" x="100" y="61" text-anchor="end">100%</text>
     </svg>`;
 }
 
@@ -2502,6 +2500,8 @@ function renderStationOverview(station) {
   const activePower = formatNumeric(station.active);
   const soc = formatNumeric(station.soc);
   const storageSoc = Math.max(3, Math.min(99, Math.round(Number(station.soc || 0) / 8)));
+  const dailyCharge = formatNumeric(Math.max(0, Number(station.ratedEnergy || 0) * 1000 * (0.18 + Number(station.soc || 0) / 360)));
+  const dailyDischarge = formatNumeric(Math.max(0, Number(station.ratedEnergy || 0) * 1000 * (0.14 + Math.max(0, 100 - Number(station.soc || 0)) / 420)));
   const remaining = formatRemainingEnergy(station);
   const runClass = operationStateClass(station.run);
   const systemItems = Array.from({ length: systemCount }, (_, index) => {
@@ -2529,10 +2529,13 @@ function renderStationOverview(station) {
       <article class="panel station-run-panel">
         <div class="panel-title"><span></span>场站运行</div>
         <div class="run-overview">
-          <div class="soc-gauge-mini">${renderMiniSocGauge(station.soc, soc)}</div>
+          <div class="soc-gauge-mini">
+            ${renderMiniSocGauge(station.soc)}
+            <div class="soc-gauge-readout"><span>场站SOC</span><strong>${soc}<em>%</em></strong></div>
+          </div>
           <div class="run-kpis">
-            <span>场站运行状态</span><strong class="${runClass}">${station.run}</strong>
-            <span>场站实时出力</span><strong>${activePower} <em>kW</em></strong>
+            <div><span>场站运行状态</span><strong class="${runClass}">${station.run}</strong></div>
+            <div><span>场站实时出力</span><strong>${activePower} <em>kW</em></strong></div>
           </div>
         </div>
       </article>
@@ -2556,8 +2559,8 @@ function renderStationOverview(station) {
         <div class="storage-summary">
           <div class="storage-ring">${renderStorageSocTank(storageSoc)}</div>
           <div class="overview-metrics compact">
-            <div><span>当日充电量</span><strong>-- <em>kWh</em></strong></div>
-            <div><span>当日放电量</span><strong>-- <em>kWh</em></strong></div>
+            <div><span>当日充电量</span><strong>${dailyCharge} <em>kWh</em></strong></div>
+            <div><span>当日放电量</span><strong>${dailyDischarge} <em>kWh</em></strong></div>
           </div>
         </div>
       </article>
