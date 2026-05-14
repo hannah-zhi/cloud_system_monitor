@@ -1052,7 +1052,7 @@ h2 {
 
 .dashboard-grid .donut-panel canvas {
   width: 180px;
-  height: 158px;
+  height: 145px;
   justify-self: center;
 }
 
@@ -1780,142 +1780,109 @@ h2 {
 }
 
 .soc-gauge-mini {
-  width: 98px;
-  height: 78px;
-  position: relative;
-  display: grid;
-  place-items: center;
-  color: #f6f9ff;
-  padding-top: 10px;
+  width: 112px;
+  height: 90px;
+  display: block;
   justify-self: start;
-  overflow: visible;
-}
-
-.soc-gauge-mini::before {
-  content: "";
-  position: absolute;
-  inset: 0 8px 20px;
-  border-radius: 80px 80px 0 0;
-  background:
-    radial-gradient(circle at 50% 100%, #20222d 0 52%, transparent 53%),
-    conic-gradient(from 270deg at 50% 100%, #18c7a6 0 var(--soc-angle, 90deg), rgba(51, 55, 70, 0.9) 0 180deg, transparent 0);
-}
-
-.storage-ring {
-  width: 60px;
-  height: 76px;
-  position: relative;
-  display: grid;
-  place-items: center;
-  color: #f6f9ff;
-  justify-self: start;
-  overflow: visible;
-}
-
-.storage-ring::before {
-  content: "";
-  position: absolute;
-  top: 5px;
-  left: 6px;
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  border: 1px solid rgba(132, 143, 168, 0.36);
-  background: #1f212c;
-  box-shadow: inset 0 0 0 7px rgba(39, 42, 56, 0.75);
   overflow: hidden;
 }
 
-.storage-ring::after {
-  content: "";
-  position: absolute;
-  left: 7px;
-  top: calc(55px - var(--wave, 28%));
-  width: 48px;
-  height: 48px;
-  border-radius: 44% 48% 46% 50%;
-  background:
-    radial-gradient(ellipse at 68% 6%, rgba(24, 35, 55, 0.96) 0 28%, transparent 29%),
-    linear-gradient(180deg, #1d9cff 0%, #1689ff 62%, #0972d9 100%);
-  box-shadow: 0 -4px 10px rgba(22, 137, 255, 0.28);
-  transform: rotate(-7deg);
+.soc-gauge-svg,
+.storage-ring-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
-.soc-gauge-mini strong,
-.storage-ring strong {
-  position: relative;
-  z-index: 2;
-  font-size: 16px;
-}
-
-.soc-gauge-mini span,
-.storage-ring span {
-  position: relative;
-  z-index: 2;
-  color: #b8c0d0;
-  font-size: 12px;
-}
-
-.soc-gauge-mini strong {
-  font-size: 17px;
-  transform: translateY(-5px);
-}
-
-.soc-gauge-mini strong b {
-  margin-left: 3px;
-  color: #c7cfdf;
-  font-size: 12px;
-}
-
-.soc-gauge-mini span {
-  align-self: end;
+.storage-ring {
+  width: 64px;
+  height: 78px;
+  display: block;
   justify-self: start;
-  margin-left: 0;
-  margin-bottom: 3px;
+  overflow: hidden;
 }
 
-.soc-gauge-mini::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: 32px;
-  width: 36px;
-  height: 2px;
-  background: #aeb7ca;
-  transform: rotate(24deg);
-  transform-origin: left center;
-  z-index: 1;
+.soc-gauge-track,
+.soc-gauge-fill {
+  fill: none;
+  stroke-linecap: butt;
+  stroke-width: 18;
 }
 
-.soc-scale {
-  position: absolute;
-  bottom: 30px;
-  z-index: 2;
-  color: #8f98aa;
+.soc-gauge-track {
+  stroke: rgba(48, 51, 65, 0.94);
+}
+
+.soc-gauge-fill {
+  stroke: #18c7a6;
+}
+
+.soc-gauge-needle {
+  stroke: #bac4d5;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.soc-gauge-hub {
+  fill: #bac4d5;
+}
+
+.soc-gauge-value {
+  fill: #f5f8ff;
+  font-size: 17px;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
+.soc-gauge-value tspan {
+  fill: #c7cfdf;
   font-size: 10px;
-  font-style: normal;
-  line-height: 1;
+  font-weight: 600;
 }
 
-.soc-scale-min {
-  left: 0;
+.soc-gauge-scale {
+  fill: #8f98aa;
+  font-size: 10px;
 }
 
-.soc-scale-max {
-  right: 0;
-}
-
-.storage-ring strong {
-  align-self: start;
-  margin-top: 21px;
-  font-size: 14px;
-}
-
-.storage-ring span {
-  align-self: end;
-  margin-bottom: 0;
-  color: #f2f6ff;
+.soc-gauge-label,
+.storage-ring-label {
+  fill: #dce4f0;
   font-size: 12px;
+  text-anchor: middle;
+}
+
+.storage-ring-shell,
+.storage-ring-bg {
+  fill: #20222d;
+}
+
+.storage-ring-shell {
+  stroke: rgba(132, 143, 168, 0.42);
+  stroke-width: 1;
+}
+
+.storage-ring-bg {
+  opacity: 0.96;
+}
+
+.storage-ring-wave {
+  fill: #1689ff;
+}
+
+.storage-ring-outline {
+  fill: none;
+  stroke: rgba(91, 132, 189, 0.72);
+  stroke-width: 2;
+}
+
+.storage-ring-value {
+  fill: #f5f8ff;
+  font-size: 13px;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: middle;
 }
 
 .run-kpis,

@@ -2456,11 +2456,52 @@ function showDetailTab(tabName, shouldRender = true) {
   }
 }
 
+function renderMiniSocGauge(value, label) {
+  const pct = Math.max(0, Math.min(100, Number(value || 0)));
+  const angle = (-180 + pct * 1.8) * (Math.PI / 180);
+  const needleLength = 33;
+  const needleX = round(56 + Math.cos(angle) * needleLength, 2);
+  const needleY = round(64 + Math.sin(angle) * needleLength, 2);
+  return `
+    <svg class="soc-gauge-svg" viewBox="0 0 112 90" role="img" aria-label="场站SOC ${label}%">
+      <path class="soc-gauge-track" d="M18 64 A38 38 0 0 1 94 64" pathLength="100"></path>
+      <path class="soc-gauge-fill" d="M18 64 A38 38 0 0 1 94 64" pathLength="100" style="stroke-dasharray:${pct} 100"></path>
+      <line class="soc-gauge-needle" x1="56" y1="64" x2="${needleX}" y2="${needleY}"></line>
+      <circle class="soc-gauge-hub" cx="56" cy="64" r="3"></circle>
+      <text class="soc-gauge-value" x="56" y="45">${label}<tspan>%</tspan></text>
+      <text class="soc-gauge-scale" x="12" y="70">0%</text>
+      <text class="soc-gauge-scale" x="100" y="70" text-anchor="end">100%</text>
+      <text class="soc-gauge-label" x="56" y="86">场站SOC</text>
+    </svg>`;
+}
+
+function renderStorageSocTank(value) {
+  const pct = Math.max(0, Math.min(100, Number(value || 0)));
+  const waveY = round(52 - pct * 0.42, 2);
+  return `
+    <svg class="storage-ring-svg" viewBox="0 0 64 78" role="img" aria-label="储能系统SOC ${pct}%">
+      <defs>
+        <clipPath id="storageSocClip">
+          <circle cx="32" cy="30" r="25"></circle>
+        </clipPath>
+      </defs>
+      <circle class="storage-ring-shell" cx="32" cy="30" r="25"></circle>
+      <g clip-path="url(#storageSocClip)">
+        <rect class="storage-ring-bg" x="7" y="5" width="50" height="50"></rect>
+        <path class="storage-ring-wave" d="M7 ${waveY} C17 ${waveY - 4} 25 ${waveY + 4} 35 ${waveY} S52 ${waveY - 4} 57 ${waveY} L57 58 L7 58 Z"></path>
+      </g>
+      <circle class="storage-ring-outline" cx="32" cy="30" r="25"></circle>
+      <text class="storage-ring-value" x="32" y="33">${pct.toFixed(1)}%</text>
+      <text class="storage-ring-label" x="32" y="72">SOC</text>
+    </svg>`;
+}
+
 function renderStationOverview(station) {
   if (!els.stationOverviewPanel) return;
   const systemCount = Math.max(6, Math.min(18, Math.round(Number(station.subsystemCount || 12))));
   const activePower = formatNumeric(station.active);
   const soc = formatNumeric(station.soc);
+  const storageSoc = Math.max(3, Math.min(99, Math.round(Number(station.soc || 0) / 8)));
   const remaining = formatRemainingEnergy(station);
   const runClass = operationStateClass(station.run);
   const systemItems = Array.from({ length: systemCount }, (_, index) => {
@@ -2488,12 +2529,7 @@ function renderStationOverview(station) {
       <article class="panel station-run-panel">
         <div class="panel-title"><span></span>场站运行</div>
         <div class="run-overview">
-          <div class="soc-gauge-mini" style="--soc-angle:${Math.max(0, Math.min(180, Number(station.soc || 0) * 1.8))}deg">
-            <em class="soc-scale soc-scale-min">0%</em>
-            <strong>${soc}<b>%</b></strong>
-            <em class="soc-scale soc-scale-max">100%</em>
-            <span>场站SOC</span>
-          </div>
+          <div class="soc-gauge-mini">${renderMiniSocGauge(station.soc, soc)}</div>
           <div class="run-kpis">
             <span>场站运行状态</span><strong class="${runClass}">${station.run}</strong>
             <span>场站实时出力</span><strong>${activePower} <em>kW</em></strong>
@@ -2518,10 +2554,7 @@ function renderStationOverview(station) {
           </label>
         </div>
         <div class="storage-summary">
-          <div class="storage-ring" style="--wave:${Math.max(6, Math.min(92, Number(station.soc || 0)))}%">
-            <strong>${Math.max(3, Math.round(station.soc / 8))}.0%</strong>
-            <span>SOC</span>
-          </div>
+          <div class="storage-ring">${renderStorageSocTank(storageSoc)}</div>
           <div class="overview-metrics compact">
             <div><span>当日充电量</span><strong>-- <em>kWh</em></strong></div>
             <div><span>当日放电量</span><strong>-- <em>kWh</em></strong></div>
