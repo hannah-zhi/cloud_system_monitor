@@ -2702,10 +2702,31 @@ function handleOverviewDateChange(event) {
   if (!input) return;
   const range = input.closest(".chart-date-range");
   const inputs = [...range.querySelectorAll("input[type='date']")];
-  state.overviewChartStartDate = inputs[0]?.value || state.overviewChartStartDate;
-  state.overviewChartEndDate = inputs[1]?.value || state.overviewChartEndDate;
+  const oldStart = parseDateInputValue(state.overviewChartStartDate) || new Date(2026, 1, 3);
+  const oldEnd = parseDateInputValue(state.overviewChartEndDate) || new Date(2026, 1, 13);
+  const windowDays = Math.max(0, Math.round((oldEnd - oldStart) / 86400000));
+  const changedIndex = inputs.indexOf(input);
+  let nextStart = parseDateInputValue(inputs[0]?.value) || oldStart;
+  let nextEnd = parseDateInputValue(inputs[1]?.value) || oldEnd;
+  if (changedIndex === 0) {
+    nextEnd = addDays(nextStart, windowDays);
+  } else if (changedIndex === 1) {
+    nextStart = addDays(nextEnd, -windowDays);
+  }
+  if (nextStart > nextEnd) {
+    if (changedIndex === 0) nextEnd = new Date(nextStart);
+    else nextStart = new Date(nextEnd);
+  }
+  state.overviewChartStartDate = formatDateInput(nextStart);
+  state.overviewChartEndDate = formatDateInput(nextEnd);
   syncOverviewDateInputs();
   if (state.selectedStation) renderOverviewCharts(state.selectedStation);
+}
+
+function addDays(date, days) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
 }
 
 function syncOverviewDateInputs() {
