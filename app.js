@@ -2403,19 +2403,24 @@ function renderStationOverview(station) {
   const soc = formatNumeric(station.soc);
   const remaining = formatRemainingEnergy(station);
   const runClass = operationStateClass(station.run);
-  const systems = Array.from({ length: 12 }, (_, index) => {
+  const systemItems = Array.from({ length: 12 }, (_, index) => {
     const n = index + 1;
     const localSoc = n % 7 === 0 ? 95 : n % 5 === 0 ? 47.9 : 5;
     const localPower = station.run === "放电" && n % 5 === 0 ? 3.7 : station.run === "充电" && n % 4 === 0 ? 2.4 : 0;
     const status = n % 8 === 0 ? "停机" : n % 5 === 0 ? "放电" : "待机";
-    const statusClass = operationStateClass(status);
+    return { n, localSoc, localPower, status, statusClass: operationStateClass(status) };
+  });
+  const systemOptions = systemItems
+    .map((item) => `<option value="${item.n}">K${station.id.slice(2)}-${item.n}#子系统</option>`)
+    .join("");
+  const systems = systemItems.map((item) => {
     return `
-      <div class="storage-system-card ${statusClass}">
-        <div class="storage-system-head"><strong>K${station.id.slice(2)}-${n}#子系统</strong><span>${status}</span></div>
-        <div class="system-row"><span>系统有功(PCS)功率</span><strong>${formatNumeric(localPower)} kW</strong></div>
-        <div class="system-row"><span>系统SOC</span><strong>${formatNumeric(localSoc)} %</strong></div>
-        <div class="mini-bars">${Array.from({ length: 12 }, (_, bar) => `<i style="opacity:${bar < Math.round(localSoc / 9) ? 0.95 : 0.18}"></i>`).join("")}</div>
-        <div class="system-row"><span>系统SOH</span><strong>${formatNumeric(97.5 + ((n * 0.17) % 2))} %</strong></div>
+      <div class="storage-system-card ${item.statusClass}" data-system="${item.n}">
+        <div class="storage-system-head"><strong>K${station.id.slice(2)}-${item.n}#子系统</strong><span>${item.status}</span></div>
+        <div class="system-row"><span>系统有功(PCS)功率</span><strong>${formatNumeric(item.localPower)} kW</strong></div>
+        <div class="system-row"><span>系统SOC</span><strong>${formatNumeric(item.localSoc)} %</strong></div>
+        <div class="mini-bars">${Array.from({ length: 12 }, (_, bar) => `<i style="opacity:${bar < Math.round(item.localSoc / 9) ? 0.95 : 0.18}"></i>`).join("")}</div>
+        <div class="system-row"><span>系统SOH</span><strong>${formatNumeric(97.5 + ((item.n * 0.17) % 2))} %</strong></div>
         <button type="button">更多 ›</button>
       </div>`;
   }).join("");
@@ -2443,9 +2448,17 @@ function renderStationOverview(station) {
         </div>
       </article>
       <article class="panel storage-summary-panel">
-        <div class="panel-title"><span></span>储能系统 ›</div>
+        <div class="panel-title-row">
+          <div class="panel-title"><span></span>储能系统 ›</div>
+          <label class="storage-system-filter">
+            <span>子系统</span>
+            <select aria-label="储能子系统筛选">${systemOptions}</select>
+          </label>
+        </div>
         <div class="storage-summary">
-          <div class="storage-ring"><strong>${Math.max(3, Math.round(station.soc / 8))}.0%</strong><span>SOC</span></div>
+          <div class="storage-ring" style="--wave:${Math.max(6, Math.min(92, Number(station.soc || 0)))}%">
+            <strong>${Math.max(3, Math.round(station.soc / 8))}.0%</strong><span>SOC</span>
+          </div>
           <div class="overview-metrics compact">
             <div><span>当日充电量</span><strong>-- <em>kWh</em></strong></div>
             <div><span>当日放电量</span><strong>-- <em>kWh</em></strong></div>
