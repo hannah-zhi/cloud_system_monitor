@@ -2943,11 +2943,12 @@ function renderDonut(subsystems) {
   ];
   const total = subsystems.length;
   clear(ctx, canvas.width, canvas.height);
-  drawDonutChart(ctx, canvas, entries, (key) => riskMeta[key].color);
-  ctx.fillStyle = "#f1f3f7";
-  ctx.font = "24px Microsoft YaHei";
-  ctx.textAlign = "center";
-  ctx.fillText(String(total), canvas.width / 2, canvas.height / 2 + 8);
+  drawDonutChart(ctx, canvas, entries, (key) => riskMeta[key].color, {
+    radius: 62,
+    lineWidth: 30,
+    font: "22px Microsoft YaHei",
+    centerYOffset: 7,
+  });
   els.donutLegend.innerHTML = entries
     .map(
       ([key, count]) => `
@@ -2958,7 +2959,11 @@ function renderDonut(subsystems) {
     .join("");
 }
 
-function drawDonutChart(ctx, canvas, entries, colorForKey) {
+function drawDonutChart(ctx, canvas, entries, colorForKey, options = {}) {
+  const radius = options.radius ?? 82;
+  const lineWidth = options.lineWidth ?? 42;
+  const font = options.font ?? "24px Microsoft YaHei";
+  const centerYOffset = options.centerYOffset ?? 8;
   const total = entries.reduce((sum, [, count]) => sum + count, 0) || 1;
   clear(ctx, canvas.width, canvas.height);
   let start = -Math.PI / 2;
@@ -2966,15 +2971,15 @@ function drawDonutChart(ctx, canvas, entries, colorForKey) {
     const angle = (count / total) * Math.PI * 2;
     ctx.beginPath();
     ctx.strokeStyle = colorForKey(key);
-    ctx.lineWidth = 42;
-    ctx.arc(canvas.width / 2, canvas.height / 2, 82, start, start + angle);
+    ctx.lineWidth = lineWidth;
+    ctx.arc(canvas.width / 2, canvas.height / 2, radius, start, start + angle);
     ctx.stroke();
     start += angle;
   });
   ctx.fillStyle = "#f1f3f7";
-  ctx.font = "24px Microsoft YaHei";
+  ctx.font = font;
   ctx.textAlign = "center";
-  ctx.fillText(String(total), canvas.width / 2, canvas.height / 2 + 8);
+  ctx.fillText(String(total), canvas.width / 2, canvas.height / 2 + centerYOffset);
 }
 
 function renderBars(subsystems) {
@@ -3456,8 +3461,11 @@ function openPageFromUrl() {
 }
 
 function openStationFromUrl() {
-  const stationId = new URLSearchParams(window.location.search).get("station");
-  if (stationId) showDetail(stationId);
+  const params = new URLSearchParams(window.location.search);
+  const stationId = params.get("station");
+  if (!stationId) return;
+  showDetail(stationId);
+  if (params.get("tab") === "diagnosis") showDetailTab("diagnosis");
 }
 
 function bindSosRangeEvents() {
