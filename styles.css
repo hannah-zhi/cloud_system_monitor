@@ -1928,33 +1928,115 @@ h2 {
 
 .topo-node {
   position: absolute;
-  width: 92px;
-  height: 48px;
-  display: grid;
-  place-items: center;
+  width: 110px;
+  min-height: 78px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   color: #c9d3e5;
   font-size: 12px;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.topo-node i {
+  width: 62px;
+  height: 50px;
+  flex: 0 0 auto;
+  position: relative;
+  border-radius: 7px;
   background:
-    linear-gradient(180deg, rgba(57, 63, 80, 0.95), rgba(30, 35, 48, 0.95)),
-    radial-gradient(circle at 50% 0%, rgba(18, 152, 255, 0.34), transparent 64%);
-  border: 1px solid rgba(18, 152, 255, 0.44);
-  box-shadow: 0 12px 22px rgba(18, 152, 255, 0.18);
-  transform: skewY(-8deg);
+    linear-gradient(180deg, rgba(75, 82, 102, 0.95), rgba(45, 50, 66, 0.95)),
+    radial-gradient(circle at 50% 0%, rgba(18, 152, 255, 0.25), transparent 68%);
+  border-bottom: 3px solid #1689ff;
+  box-shadow: 0 12px 22px rgba(18, 152, 255, 0.22);
+  transform: skewY(-10deg);
+}
+
+.topo-node i::before,
+.topo-node i::after {
+  content: "";
+  position: absolute;
+}
+
+.topo-node.grid i::before {
+  left: 14px;
+  top: -28px;
+  width: 36px;
+  height: 42px;
+  background:
+    linear-gradient(70deg, transparent 47%, #aeb7c8 49% 52%, transparent 54%),
+    linear-gradient(110deg, transparent 47%, #aeb7c8 49% 52%, transparent 54%),
+    linear-gradient(0deg, transparent 47%, #aeb7c8 49% 52%, transparent 54%);
+  opacity: 0.9;
+}
+
+.topo-node.grid i::after {
+  left: 18px;
+  top: -30px;
+  width: 28px;
+  height: 34px;
+  border-left: 2px solid #aeb7c8;
+  border-right: 2px solid #aeb7c8;
+  transform: skewX(-14deg);
+  opacity: 0.75;
+}
+
+.topo-node.step i::before {
+  left: 11px;
+  top: 12px;
+  width: 40px;
+  height: 23px;
+  background:
+    linear-gradient(90deg, #9ca6ba 0 4px, transparent 4px 8px) 0 0 / 8px 100%,
+    linear-gradient(180deg, #c2c9d7, #777f92);
+  border: 1px solid rgba(224, 231, 245, 0.45);
+  box-shadow: 6px -8px 0 rgba(190, 197, 212, 0.42);
+}
+
+.topo-node.wind i::before {
+  left: 27px;
+  top: -19px;
+  width: 3px;
+  height: 48px;
+  background: #c7cfde;
+  transform: rotate(-12deg);
+}
+
+.topo-node.wind i::after {
+  left: 15px;
+  top: -24px;
+  width: 28px;
+  height: 28px;
+  border-top: 3px solid #c7cfde;
+  border-left: 3px solid #c7cfde;
+  border-radius: 50%;
+  transform: rotate(24deg);
+}
+
+.topo-node span {
+  flex: 0 0 auto;
+  padding: 3px 6px;
+  background: rgba(50, 55, 71, 0.76);
+  color: #cdd5e6;
+  border-radius: 2px;
+  white-space: nowrap;
 }
 
 .topo-node.grid {
-  left: 50%;
-  top: 28px;
+  left: calc(50% - 18px);
+  top: 20px;
 }
 
 .topo-node.step {
-  left: 50%;
-  top: 112px;
+  left: calc(50% - 18px);
+  top: 111px;
 }
 
 .topo-node.wind {
   left: calc(50% - 170px);
-  top: 136px;
+  top: 140px;
 }
 
 .topo-line {
@@ -1963,8 +2045,8 @@ h2 {
 }
 
 .topo-line.vertical {
-  left: calc(50% + 45px);
-  top: 76px;
+  left: calc(50% + 16px);
+  top: 78px;
   width: 2px;
   height: 145px;
 }
@@ -2030,6 +2112,10 @@ h2 {
   padding: 0;
 }
 
+.storage-system-card button {
+  display: none;
+}
+
 .storage-system-card .system-row strong {
   font-size: 11px;
   line-height: 1.15;
@@ -2041,11 +2127,38 @@ h2 {
 }
 
 .line-chart-demo,
-.bar-chart-demo {
+.bar-chart-demo,
+.overview-chart-wrap {
   height: 230px;
   margin-top: 8px;
   border-bottom: 1px solid rgba(138, 146, 164, 0.7);
   background: repeating-linear-gradient(0deg, transparent 0 39px, rgba(145, 153, 173, 0.16) 40px);
+}
+
+.overview-chart-wrap {
+  position: relative;
+}
+
+.overview-chart-wrap canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.chart-date-range {
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgba(77, 85, 108, 0.84);
+  background: rgba(12, 14, 23, 0.84);
+  color: #f4f8ff;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.chart-date-range em {
+  color: #8f98aa;
+  font-style: normal;
 }
 
 .line-chart-demo svg {
@@ -2091,6 +2204,33 @@ h2 {
   margin-top: 8px;
   color: #adb6c7;
   font-size: 12px;
+}
+
+.chart-legend span::before {
+  content: "";
+  display: inline-block;
+  width: 12px;
+  height: 3px;
+  margin-right: 6px;
+  vertical-align: middle;
+  background: currentColor;
+}
+
+.blue-line,
+.blue-bar {
+  color: #1689ff;
+}
+
+.yellow-line {
+  color: #ffd437;
+}
+
+.teal-bar {
+  color: #20d3c5;
+}
+
+.purple-line {
+  color: #b95cff;
 }
 
 .station-card:hover,

@@ -64,6 +64,10 @@ const state = {
   riskTrendHitboxes: [],
   riskBarHoverId: null,
   riskTrendHover: null,
+  overviewPowerHitboxes: [],
+  overviewPowerHover: null,
+  overviewChargeHitboxes: [],
+  overviewChargeHover: null,
   riskBarSort: "sosAsc",
   alarmTrendHitboxes: [],
   detailBoxHitboxes: [],
@@ -133,6 +137,10 @@ function bindElements() {
     "detailOverviewTab",
     "detailDiagnosisTab",
     "stationOverviewPanel",
+    "overviewPowerCanvas",
+    "overviewPowerTooltip",
+    "overviewChargeCanvas",
+    "overviewChargeTooltip",
     "detailComm",
     "detailRisk",
     "detailSos",
@@ -416,6 +424,16 @@ function bindEvents() {
     state.riskTrendHover = null;
     renderSafely(() => renderRiskTrend(state.stations, state.riskTrendRange));
     els.riskTrendTooltip.classList.remove("show");
+  });
+  els.stationOverviewPanel?.addEventListener("mousemove", handleOverviewChartHover);
+  els.stationOverviewPanel?.addEventListener("mouseleave", (event) => {
+    if (!event.relatedTarget || !els.stationOverviewPanel.contains(event.relatedTarget)) {
+      state.overviewPowerHover = null;
+      state.overviewChargeHover = null;
+      els.overviewPowerTooltip?.classList.remove("show");
+      els.overviewChargeTooltip?.classList.remove("show");
+      if (state.selectedStation) renderOverviewCharts(state.selectedStation);
+    }
   });
   els.riskBarSort.addEventListener("change", () => {
     state.riskBarSort = els.riskBarSort.value;
@@ -2421,7 +2439,6 @@ function renderStationOverview(station) {
         <div class="system-row"><span>系统SOC</span><strong>${formatNumeric(item.localSoc)} %</strong></div>
         <div class="mini-bars">${Array.from({ length: 12 }, (_, bar) => `<i style="opacity:${bar < Math.round(item.localSoc / 9) ? 0.95 : 0.18}"></i>`).join("")}</div>
         <div class="system-row"><span>系统SOH</span><strong>${formatNumeric(97.5 + ((item.n * 0.17) % 2))} %</strong></div>
-        <button type="button">更多 ›</button>
       </div>`;
   }).join("");
   els.stationOverviewPanel.innerHTML = `
@@ -2472,31 +2489,207 @@ function renderStationOverview(station) {
         <label><input type="checkbox" checked /> 显示场站结构</label>
       </div>
       <div class="topology-canvas">
-        <div class="topo-node grid">电网</div>
-        <div class="topo-node step">35kV-220kV 升压站</div>
-        <div class="topo-node wind">风电配套</div>
+        <div class="topo-node grid"><i></i><span>电网</span></div>
+        <div class="topo-node step"><i></i><span>110kV-220kV 升压站</span></div>
+        <div class="topo-node wind"><i></i><span>风电配套</span></div>
         <div class="topo-line vertical"></div>
         <div class="topo-line branch"></div>
       </div>
       <div class="storage-system-grid">${systems}</div>
     </article>
     <article class="panel station-power-panel">
-      <div class="panel-title"><span></span>场站有功功率</div>
-      <div class="line-chart-demo">
-        <svg viewBox="0 0 900 190" preserveAspectRatio="none" aria-hidden="true">
-          <path d="M0,95 L45,40 L85,130 L120,115 L160,55 L210,138 L260,78 L310,128 L365,112 L420,70 L470,145 L525,94 L575,118 L620,82 L665,140 L710,95 L760,126 L810,52 L855,136 L900,58" />
-          <path class="yellow" d="M0,86 L55,135 L110,100 L165,126 L220,88 L285,138 L350,118 L410,122 L470,74 L535,138 L610,108 L675,86 L735,116 L795,75 L850,132 L900,90" />
-        </svg>
+      <div class="panel-title-row">
+        <div class="panel-title"><span></span>场站有功功率</div>
+        <div class="chart-date-range"><span>2026-02-03</span><em>→</em><span>2026-02-13</span></div>
+      </div>
+      <div class="overview-chart-wrap">
+        <canvas id="overviewPowerCanvas" width="900" height="250"></canvas>
+        <div id="overviewPowerTooltip" class="risk-bars-tooltip"></div>
       </div>
       <div class="chart-legend"><span class="blue-line">有功功率</span><span class="yellow-line">荷电状态</span></div>
     </article>
     <article class="panel charge-chart-panel">
-      <div class="panel-title"><span></span>场站充放电表现</div>
-      <div class="bar-chart-demo">
-        ${Array.from({ length: 10 }, (_, index) => `<i class="charge" style="height:${42 + ((index * 17) % 40)}%"></i><i class="discharge" style="height:${28 + ((index * 13) % 46)}%"></i>`).join("")}
+      <div class="panel-title-row">
+        <div class="panel-title"><span></span>场站充放电表现</div>
+        <div class="chart-date-range"><span>2026-02-03</span><em>→</em><span>2026-02-13</span></div>
+      </div>
+      <div class="overview-chart-wrap">
+        <canvas id="overviewChargeCanvas" width="900" height="250"></canvas>
+        <div id="overviewChargeTooltip" class="risk-bars-tooltip"></div>
       </div>
       <div class="chart-legend"><span class="teal-bar">充电量</span><span class="blue-bar">放电量</span><span class="purple-line">循环次数</span></div>
     </article>`;
+  els.overviewPowerCanvas = document.getElementById("overviewPowerCanvas");
+  els.overviewPowerTooltip = document.getElementById("overviewPowerTooltip");
+  els.overviewChargeCanvas = document.getElementById("overviewChargeCanvas");
+  els.overviewChargeTooltip = document.getElementById("overviewChargeTooltip");
+  renderOverviewCharts(station);
+}
+
+function createOverviewChartData(station) {
+  return Array.from({ length: 11 }, (_, index) => {
+    const date = new Date(2026, 1, 3 + index);
+    const label = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    const wave = Math.sin(index * 1.37 + Number(station.soc || 0) / 18);
+    const active = round(Math.max(-14, Math.min(15, (Number(station.active || 0) / 2.4) + wave * 8 + Math.cos(index * 0.9) * 4 - 2)), 2);
+    const soc = round(Math.max(8, Math.min(92, Number(station.soc || 0) + Math.sin(index * 1.1) * 18 - 12)), 2);
+    const charge = round(Math.max(8, 48 + Math.sin(index * 0.83 + 0.4) * 24 + (index % 4) * 3), 2);
+    const discharge = round(Math.max(4, 42 + Math.cos(index * 0.76 + 0.2) * 26 - (index % 3) * 4), 2);
+    const cycles = round(Math.max(0.1, Math.min(0.9, 0.45 + Math.sin(index * 0.72) * 0.28 + (index % 5) * 0.03)), 2);
+    return { label, active, soc, charge, discharge, cycles };
+  });
+}
+
+function renderOverviewCharts(station) {
+  if (!els.overviewPowerCanvas || !els.overviewChargeCanvas) return;
+  const data = createOverviewChartData(station);
+  renderOverviewPowerChart(data);
+  renderOverviewChargeChart(data);
+}
+
+function renderOverviewPowerChart(data) {
+  const canvas = setupCanvas(els.overviewPowerCanvas);
+  const ctx = canvas.getContext("2d");
+  const pad = { left: 46, right: 38, top: 18, bottom: 44 };
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawOverviewGrid(ctx, canvas, pad, ["15", "10", "5", "0", "-5", "-10", "-15"], "MW");
+  const yPower = (value) => mapLinear(value, -15, 15, canvas.height - pad.bottom, pad.top);
+  const ySoc = (value) => mapLinear(value, 0, 100, canvas.height - pad.bottom, pad.top);
+  const xFor = (index) => pad.left + (index / Math.max(1, data.length - 1)) * (canvas.width - pad.left - pad.right);
+  state.overviewPowerHitboxes = [];
+  drawOverviewLine(ctx, data.map((item, index) => ({ x: xFor(index), y: yPower(item.active) })), "#1689ff");
+  drawOverviewLine(ctx, data.map((item, index) => ({ x: xFor(index), y: ySoc(item.soc) })), "#ffd437");
+  data.forEach((item, index) => {
+    const x = xFor(index);
+    const isHover = state.overviewPowerHover?.index === index;
+    if (isHover) drawOverviewHoverGuide(ctx, x, pad, canvas.height);
+    drawOverviewPoint(ctx, x, yPower(item.active), "#1689ff", isHover);
+    drawOverviewPoint(ctx, x, ySoc(item.soc), "#ffd437", isHover);
+    drawOverviewXAxis(ctx, item.label, x, canvas.height, pad, index, data.length);
+    state.overviewPowerHitboxes.push({ index, x, item });
+  });
+}
+
+function renderOverviewChargeChart(data) {
+  const canvas = setupCanvas(els.overviewChargeCanvas);
+  const ctx = canvas.getContext("2d");
+  const pad = { left: 46, right: 38, top: 18, bottom: 44 };
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawOverviewGrid(ctx, canvas, pad, ["90", "70", "50", "30", "10"], "MWh");
+  const yEnergy = (value) => mapLinear(value, 0, 90, canvas.height - pad.bottom, pad.top);
+  const yCycles = (value) => mapLinear(value, 0, 0.9, canvas.height - pad.bottom, pad.top);
+  const slot = (canvas.width - pad.left - pad.right) / data.length;
+  state.overviewChargeHitboxes = [];
+  const linePoints = [];
+  data.forEach((item, index) => {
+    const x = pad.left + slot * index + slot / 2;
+    const isHover = state.overviewChargeHover?.index === index;
+    if (isHover) drawOverviewHoverGuide(ctx, x, pad, canvas.height);
+    ctx.fillStyle = "rgba(32, 211, 197, 0.82)";
+    ctx.fillRect(x - 16, yEnergy(item.charge), 12, canvas.height - pad.bottom - yEnergy(item.charge));
+    ctx.fillStyle = "rgba(22, 137, 255, 0.86)";
+    ctx.fillRect(x + 4, yEnergy(item.discharge), 12, canvas.height - pad.bottom - yEnergy(item.discharge));
+    linePoints.push({ x, y: yCycles(item.cycles) });
+    drawOverviewXAxis(ctx, item.label, x, canvas.height, pad, index, data.length);
+    state.overviewChargeHitboxes.push({ index, x, item });
+  });
+  drawOverviewLine(ctx, linePoints, "#b95cff");
+  linePoints.forEach((point, index) => drawOverviewPoint(ctx, point.x, point.y, "#b95cff", state.overviewChargeHover?.index === index));
+}
+
+function drawOverviewGrid(ctx, canvas, pad, ticks, unit) {
+  ctx.strokeStyle = "rgba(142, 151, 170, 0.18)";
+  ctx.lineWidth = 1;
+  ticks.forEach((tick, index) => {
+    const y = pad.top + (index / Math.max(1, ticks.length - 1)) * (canvas.height - pad.top - pad.bottom);
+    ctx.beginPath();
+    ctx.moveTo(pad.left, y);
+    ctx.lineTo(canvas.width - pad.right, y);
+    ctx.stroke();
+    ctx.fillStyle = "#7f8798";
+    ctx.font = "12px Arial";
+    ctx.textAlign = "right";
+    ctx.fillText(tick, pad.left - 10, y + 4);
+  });
+  ctx.fillStyle = "#8f98aa";
+  ctx.textAlign = "left";
+  ctx.fillText(unit, pad.left - 34, pad.top - 4);
+}
+
+function mapLinear(value, inMin, inMax, outMin, outMax) {
+  return outMin + ((value - inMin) / Math.max(0.0001, inMax - inMin)) * (outMax - outMin);
+}
+
+function drawOverviewLine(ctx, points, color) {
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  points.forEach((point, index) => {
+    index === 0 ? ctx.moveTo(point.x, point.y) : ctx.lineTo(point.x, point.y);
+  });
+  ctx.stroke();
+}
+
+function drawOverviewPoint(ctx, x, y, color, isHover) {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(x, y, isHover ? 4 : 2.5, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawOverviewHoverGuide(ctx, x, pad, height) {
+  ctx.strokeStyle = "rgba(210, 221, 242, 0.32)";
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(x, pad.top);
+  ctx.lineTo(x, height - pad.bottom);
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+function drawOverviewXAxis(ctx, label, x, height, pad, index, length) {
+  if (index % 2 !== 0 && index !== length - 1) return;
+  ctx.fillStyle = "#777f90";
+  ctx.font = "12px Arial";
+  ctx.textAlign = "center";
+  ctx.fillText(label.slice(5), x, height - pad.bottom + 24);
+}
+
+function handleOverviewChartHover(event) {
+  if (event.target === els.overviewPowerCanvas) {
+    handleOverviewCanvasHover(event, "power");
+  } else if (event.target === els.overviewChargeCanvas) {
+    handleOverviewCanvasHover(event, "charge");
+  }
+}
+
+function handleOverviewCanvasHover(event, type) {
+  const canvas = type === "power" ? els.overviewPowerCanvas : els.overviewChargeCanvas;
+  const hitboxes = type === "power" ? state.overviewPowerHitboxes : state.overviewChargeHitboxes;
+  if (!canvas || !hitboxes.length || !state.selectedStation) return;
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const x = (event.clientX - rect.left) * scaleX;
+  const hit = hitboxes.map((item) => ({ ...item, distance: Math.abs(item.x - x) })).sort((a, b) => a.distance - b.distance)[0];
+  if (!hit || hit.distance > 34) return;
+  if (type === "power") {
+    state.overviewPowerHover = hit;
+    renderOverviewPowerChart(createOverviewChartData(state.selectedStation));
+    showOverviewTooltip(els.overviewPowerTooltip, event, `<strong>${hit.item.label}</strong><span style="color:#1689ff">有功功率 ${formatNumeric(hit.item.active)} MW</span><span style="color:#ffd437">荷电状态 ${formatNumeric(hit.item.soc)}%</span>`);
+  } else {
+    state.overviewChargeHover = hit;
+    renderOverviewChargeChart(createOverviewChartData(state.selectedStation));
+    showOverviewTooltip(els.overviewChargeTooltip, event, `<strong>${hit.item.label}</strong><span style="color:#20d3c5">充电量 ${formatNumeric(hit.item.charge)} MWh</span><span style="color:#1689ff">放电量 ${formatNumeric(hit.item.discharge)} MWh</span><span style="color:#b95cff">循环次数 ${formatNumeric(hit.item.cycles)} 次</span>`);
+  }
+}
+
+function showOverviewTooltip(tooltip, event, html) {
+  if (!tooltip) return;
+  const box = tooltip.parentElement.getBoundingClientRect();
+  tooltip.innerHTML = html;
+  tooltip.style.left = `${Math.min(tooltip.parentElement.clientWidth - 220, Math.max(8, event.clientX - box.left + 12))}px`;
+  tooltip.style.top = `${Math.max(8, event.clientY - box.top - 18)}px`;
+  tooltip.classList.add("show");
 }
 
 function renderDetailCharts(station) {
