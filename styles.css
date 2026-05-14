@@ -1044,15 +1044,16 @@ h2 {
 }
 
 .dashboard-grid .donut-panel .donut-wrap {
-  grid-template-columns: 170px 100px;
+  grid-template-columns: 180px 100px;
   justify-content: center;
-  min-height: 158px;
+  min-height: 180px;
   transform: none;
 }
 
 .dashboard-grid .donut-panel canvas {
   width: 180px;
-  height: 145px;
+  height: 180px;
+  aspect-ratio: 1 / 1;
   justify-self: center;
 }
 

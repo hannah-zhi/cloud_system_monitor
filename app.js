@@ -3340,6 +3340,12 @@ function updateDetailTableSortHeaders() {
 
 function setupCanvas(canvas) {
   const rect = canvas.getBoundingClientRect();
+  if (canvas.dataset.squareCanvas === "true") {
+    const side = Math.max(120, Math.round(Math.min(rect.width || 180, rect.height || rect.width || 180)));
+    canvas.width = side;
+    canvas.height = side;
+    return canvas;
+  }
   const width = Math.max(320, Math.round(rect.width));
   const cssHeight = Number(canvas.getAttribute("height"));
   canvas.width = width;

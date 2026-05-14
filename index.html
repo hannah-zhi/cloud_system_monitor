@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>集中监测 - 远景数智运营系统</title>
-    <link rel="stylesheet" href="styles.css?v=20260514-svg-gauges" />
+    <link rel="stylesheet" href="styles.css?v=20260514-round-donut" />
   </head>
   <body>
     <div class="shell">
@@ -380,7 +380,7 @@
                 <article class="panel donut-panel">
                   <div class="panel-title"><span></span>子系统风险等级分布</div>
                   <div class="donut-wrap">
-                    <canvas id="donutCanvas" width="260" height="210"></canvas>
+                    <canvas id="donutCanvas" width="180" height="180" data-square-canvas="true"></canvas>
                     <div id="donutLegend" class="legend"></div>
                   </div>
                 </article>
@@ -449,6 +449,6 @@
 
     <script src="site-data.js?v=20260415-siteconfig3"></script>
     <script src="risk-data.js?v=20260415-risk-list1"></script>
-    <script src="app.js?v=20260514-svg-gauges"></script>
+    <script src="app.js?v=20260514-round-donut"></script>
   </body>
 </html>
