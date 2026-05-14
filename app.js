@@ -35,6 +35,7 @@ const stationNames = [
 ];
 
 const stationTypeLabels = ["配套储能", "独立储能", "工商业储能"];
+const alarmSourceLabels = ["云端预警", "站端预警", "站端告警", "设备告警"];
 
 const state = {
   stations: [],
@@ -566,7 +567,7 @@ function createAlarms(stations) {
         type,
         level: template.level,
         location: createAlarmLocation(template.locationFormat, station, index),
-        source: index % 4 === 0 ? "站端" : "云端",
+        source: alarmSourceForIndex(index),
         dateISO: formatDateInput(date),
         eventTime: formatFullDateTime(eventDate),
         warningTime: formatFullDateTime(date),
@@ -604,7 +605,7 @@ function createAlarms(stations) {
     alarms[firstIndex] = {
       ...first,
       ...shared,
-      source: "云端",
+      source: alarmSourceLabels[0],
       dateISO: formatDateInput(cloudWarningDate),
       eventTime: formatFullDateTime(cloudEventDate),
       warningTime: formatFullDateTime(cloudWarningDate),
@@ -615,7 +616,7 @@ function createAlarms(stations) {
     alarms[secondIndex] = {
       ...second,
       ...shared,
-      source: "站端",
+      source: alarmSourceLabels[1],
       dateISO: formatDateInput(stationWarningDate),
       eventTime: formatFullDateTime(stationEventDate),
       warningTime: formatFullDateTime(stationWarningDate),
@@ -659,14 +660,14 @@ function createAlarms(stations) {
 
   const stationHandledGroupIds = new Set();
   alarms.forEach((alarm) => {
-    if (alarm.source === "站端" && alarm.linkGroupId && alarm.stationId !== "K-0005") {
+    if (alarm.source === alarmSourceLabels[1] && alarm.linkGroupId && alarm.stationId !== "K-0005") {
       const index = Number(alarm.linkGroupId.replace("pair-", ""));
       if (Number.isFinite(index) && index % 4 === 1) stationHandledGroupIds.add(alarm.linkGroupId);
     }
   });
   alarms.forEach((alarm) => {
     const shouldMarkStandalone =
-      alarm.source === "站端" &&
+      alarm.source === alarmSourceLabels[1] &&
       alarm.stationId !== "K-0005" &&
       !alarm.linkGroupId &&
       Number(alarm.id.split("-").pop()) % 11 === 0;
@@ -683,6 +684,13 @@ function createAlarms(stations) {
   });
 
   return alarms.sort((a, b) => alarmOrder(a.type) - alarmOrder(b.type));
+}
+
+function alarmSourceForIndex(index) {
+  if (index % 11 === 0) return alarmSourceLabels[3];
+  if (index % 7 === 0) return alarmSourceLabels[2];
+  if (index % 4 === 0) return alarmSourceLabels[1];
+  return alarmSourceLabels[0];
 }
 
 function formatFullDateTime(date) {
@@ -913,8 +921,7 @@ function renderAlarms() {
   els.alarmCountLevel1.textContent = rangeAlarms.filter((alarm) => alarm.type === "level1").length;
   els.alarmCountLevel2.textContent = rangeAlarms.filter((alarm) => alarm.type === "level2").length;
   els.alarmCountLevel3.textContent = rangeAlarms.filter((alarm) => alarm.type === "level3").length;
-  els.alarmCloudCount.textContent = alarms.filter((alarm) => alarm.source === "云端").length;
-  els.alarmStationCount.textContent = alarms.filter((alarm) => alarm.source === "站端").length;
+  renderAlarmSourceSummary(els.alarmList.closest(".alarm-panel")?.querySelector(".alarm-source-summary"), alarms);
   els.alarmList.innerHTML = alarms
     .map(
       (alarm) => `
@@ -924,7 +931,7 @@ function renderAlarms() {
             <div class="alarm-tags">
               <span class="alarm-level">${alarm.level}</span><span>${alarm.module}</span>
             </div>
-            <span class="alarm-source alarm-source-${alarm.source === "云端" ? "cloud" : "station"}">${alarm.source}</span>
+            <span class="alarm-source alarm-source-${alarmSourceClass(alarm.source)}">${alarm.source}</span>
           </div>
           <strong>${alarm.title}</strong>
           <div class="alarm-meta">
@@ -942,6 +949,36 @@ function renderAlarms() {
       openAlarmModal(alarm);
     });
   });
+}
+
+function renderAlarmSourceSummary(container, alarms) {
+  if (!container) return;
+  const counts = countAlarmSources(alarms);
+  container.innerHTML = alarmSourceLabels
+    .map((source) => `<div class="alarm-source-stat alarm-source-stat-${alarmSourceClass(source)}"><strong>${counts[source] || 0}</strong><span>${source}</span></div>`)
+    .join("");
+}
+
+function countAlarmSources(alarms) {
+  return alarmSourceLabels.reduce((acc, source) => {
+    acc[source] = alarms.filter((alarm) => alarm.source === source).length;
+    return acc;
+  }, {});
+}
+
+function alarmSourceClass(source) {
+  if (String(source).includes("设备")) return "device";
+  if (String(source).includes("站端告警")) return "station-alarm";
+  if (String(source).includes("站端")) return "station";
+  return "cloud";
+}
+
+function isCloudAlarmSource(source) {
+  return String(source).includes("云端");
+}
+
+function isStationWarningSource(source) {
+  return String(source).includes("站端预警");
 }
 
 function filterAlarmsByTime(alarms) {
@@ -1442,7 +1479,7 @@ function renderAlarmDetailFilters() {
     name: { el: els.alarmDetailName, label: "全部预警名称", searchable: true, options: uniqueSorted(alarms.map((alarm) => alarm.title)) },
     station: { el: els.alarmDetailStation, label: "全部场站", searchable: true, options: uniqueSorted(alarms.map((alarm) => `${alarm.stationId}${alarm.stationName}`)) },
     location: { el: els.alarmDetailLocation, label: "全部位置", searchable: true, options: uniqueSorted(alarms.map((alarm) => alarm.location)) },
-    source: { el: els.alarmDetailSource, label: "全部来源", searchable: false, options: ["云端", "站端"] },
+    source: { el: els.alarmDetailSource, label: "全部来源", searchable: false, options: alarmSourceLabels },
   };
   Object.entries(optionMap).forEach(([key, config]) => renderAlarmMultiSelect(key, config));
 }
@@ -1541,7 +1578,7 @@ function renderAlarmDetailPage() {
         <td>${alarm.eventTime}</td>
         <td>${alarm.warningTime}</td>
         <td><span class="alarm-status-pill ${statusClass(alarm.status)}">${alarm.status}</span></td>
-        <td><span class="alarm-source alarm-source-${sources.includes("站端") && !sources.includes("云端") ? "station" : "cloud"}">${sources}</span></td>
+        <td><span class="alarm-source alarm-source-${alarmSourceClass(sources)}">${sources}</span></td>
       </tr>`;
       })
       .join("")
@@ -1918,12 +1955,12 @@ function renderAlarmInspector(alarmOrGroup) {
   const linked = alarm.linkedAlarmId ? state.allAlarms.find((item) => item.id === alarm.linkedAlarmId) : null;
   els.alarmInspectorBody.innerHTML = `
     <div class="alarm-detail-hero alarm-hero-${alarm.type}">
-      <span class="alarm-source-corner alarm-source-corner-${alarm.source === "云端" ? "cloud" : "station"}"><span>${alarm.source}</span></span>
+      <span class="alarm-source-corner alarm-source-corner-${alarmSourceClass(alarm.source)}"><span>${alarm.source}</span></span>
       <strong>${alarm.title}</strong>
       <p>${alarm.level === "一级" ? "立即复核云端诊断结果并安排现场排查。" : alarm.level === "二级" ? "持续观察趋势，纳入当班巡检计划。" : "记录风险变化，按计划跟踪闭环。"}</p>
       ${
         linked
-          ? `<button class="alarm-linked-jump alarm-linked-jump-${linked.source === "云端" ? "cloud" : "station"}" type="button" data-linked-id="${linked.id}">${alarm.source === "云端" ? "查看关联站端预警" : "查看关联云端预警"}</button>`
+          ? `<button class="alarm-linked-jump alarm-linked-jump-${alarmSourceClass(linked.source)}" type="button" data-linked-id="${linked.id}">${isCloudAlarmSource(alarm.source) ? "查看关联站端预警" : "查看关联云端预警"}</button>`
           : ""
       }
     </div>
@@ -2252,15 +2289,16 @@ function showAlarmProcessError(message) {
 function alarmTrendData(alarm) {
   const levelOffset = alarm.type === "level1" ? 18 : alarm.type === "level2" ? 10 : 4;
   const linkSeed = (alarm.linkGroupId || alarm.id).split("").reduce((sum, char) => sum + char.charCodeAt(0), 0);
-  const sourceOffset = alarm.source === "云端" ? 6 : -4;
-  const amplitude = alarm.source === "云端" ? 7.6 : 11.2;
-  const phase = (linkSeed % 9) * 0.18 + (alarm.source === "云端" ? 0.25 : 0.88);
-  const tailBoost = alarm.source === "云端" ? levelOffset / 4 : levelOffset / 6;
+  const isCloudSource = isCloudAlarmSource(alarm.source);
+  const sourceOffset = isCloudSource ? 6 : -4;
+  const amplitude = isCloudSource ? 7.6 : 11.2;
+  const phase = (linkSeed % 9) * 0.18 + (isCloudSource ? 0.25 : 0.88);
+  const tailBoost = isCloudSource ? levelOffset / 4 : levelOffset / 6;
   const base = 46 + levelOffset + (linkSeed % 8) + sourceOffset;
   return Array.from({ length: 18 }, (_, index) => {
     const swing = Math.sin(index * 0.68 + phase) * amplitude;
-    const ripple = Math.cos(index * 0.31 + (linkSeed % 5)) * (alarm.source === "云端" ? 3.2 : 4.6);
-    const tail = index > 11 ? tailBoost + (alarm.source === "站端" ? (index - 11) * 0.55 : (17 - index) * 0.18) : 0;
+    const ripple = Math.cos(index * 0.31 + (linkSeed % 5)) * (isCloudSource ? 3.2 : 4.6);
+    const tail = index > 11 ? tailBoost + (isStationWarningSource(alarm.source) ? (index - 11) * 0.55 : (17 - index) * 0.18) : 0;
     const value = round(Math.max(20, Math.min(100, base + swing + ripple + tail)), 2);
     return {
       label: `${String(8 + Math.floor(index / 2)).padStart(2, "0")}:${index % 2 ? "30" : "00"}`,
@@ -3167,8 +3205,7 @@ function renderDetailAlarms(station) {
   els.detailAlarmCountLevel1.textContent = rangeAlarms.filter((alarm) => alarm.type === "level1").length;
   els.detailAlarmCountLevel2.textContent = rangeAlarms.filter((alarm) => alarm.type === "level2").length;
   els.detailAlarmCountLevel3.textContent = rangeAlarms.filter((alarm) => alarm.type === "level3").length;
-  els.detailAlarmCloudCount.textContent = alarms.filter((alarm) => alarm.source === "云端").length;
-  els.detailAlarmStationCount.textContent = alarms.filter((alarm) => alarm.source === "站端").length;
+  renderAlarmSourceSummary(els.detailAlarmList.closest(".alarm-panel")?.querySelector(".alarm-source-summary"), alarms);
   els.detailAlarmList.innerHTML = alarms.length
     ? alarms
         .map(
@@ -3179,7 +3216,7 @@ function renderDetailAlarms(station) {
               <div class="alarm-tags">
                 <span class="alarm-level">${alarm.level}</span><span>${alarm.module}</span>
               </div>
-              <span class="alarm-source alarm-source-${alarm.source === "云端" ? "cloud" : "station"}">${alarm.source}</span>
+              <span class="alarm-source alarm-source-${alarmSourceClass(alarm.source)}">${alarm.source}</span>
             </div>
             <strong>${alarm.title}</strong>
             <div class="alarm-meta">

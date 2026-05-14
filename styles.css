@@ -2655,7 +2655,7 @@ h2 {
 }
 
 .alarm-list {
-  height: calc(100% - 204px);
+  height: calc(100% - 258px);
   overflow: auto;
   padding-right: 8px;
 }
@@ -2743,6 +2743,18 @@ h2 {
   border: 1px solid rgba(19, 199, 129, 0.48);
   background: rgba(19, 199, 129, 0.11);
   color: #b9f6dd;
+}
+
+.alarm-source-station-alarm {
+  border: 1px solid rgba(244, 165, 28, 0.52);
+  background: rgba(244, 165, 28, 0.12);
+  color: #ffe0a3;
+}
+
+.alarm-source-device {
+  border: 1px solid rgba(185, 92, 255, 0.5);
+  background: rgba(185, 92, 255, 0.12);
+  color: #ead0ff;
 }
 
 .alarm-body strong {
@@ -3907,6 +3919,34 @@ h2 {
   text-shadow: 0 0 8px rgba(19, 199, 129, 0.42);
 }
 
+.alarm-source-corner-station-alarm {
+  color: #ffd17a;
+}
+
+.alarm-source-corner-station-alarm::before {
+  background: linear-gradient(135deg, rgba(244, 165, 28, 0.18), rgba(244, 165, 28, 0.04));
+  border-top: 1px solid rgba(244, 165, 28, 0.28);
+  border-left: 1px solid rgba(244, 165, 28, 0.28);
+}
+
+.alarm-source-corner-station-alarm > span {
+  text-shadow: 0 0 8px rgba(244, 165, 28, 0.42);
+}
+
+.alarm-source-corner-device {
+  color: #d9adff;
+}
+
+.alarm-source-corner-device::before {
+  background: linear-gradient(135deg, rgba(185, 92, 255, 0.18), rgba(185, 92, 255, 0.04));
+  border-top: 1px solid rgba(185, 92, 255, 0.28);
+  border-left: 1px solid rgba(185, 92, 255, 0.28);
+}
+
+.alarm-source-corner-device > span {
+  text-shadow: 0 0 8px rgba(185, 92, 255, 0.42);
+}
+
 .alarm-group-table-wrap {
   margin-top: 12px;
   border: 1px solid rgba(57, 63, 82, 0.76);
@@ -4077,6 +4117,26 @@ h2 {
 
 .alarm-linked-jump-station:hover {
   background: rgba(19, 199, 129, 0.2);
+}
+
+.alarm-linked-jump-station-alarm {
+  border-color: rgba(244, 165, 28, 0.95);
+  background: rgba(244, 165, 28, 0.1);
+  color: #ffe0a3;
+}
+
+.alarm-linked-jump-station-alarm:hover {
+  background: rgba(244, 165, 28, 0.2);
+}
+
+.alarm-linked-jump-device {
+  border-color: rgba(185, 92, 255, 0.9);
+  background: rgba(185, 92, 255, 0.1);
+  color: #ead0ff;
+}
+
+.alarm-linked-jump-device:hover {
+  background: rgba(185, 92, 255, 0.2);
 }
 
 .alarm-group-context {
