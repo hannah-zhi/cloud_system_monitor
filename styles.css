@@ -1770,15 +1770,19 @@ h2 {
 }
 
 .run-overview {
-  grid-template-columns: 112px minmax(0, 1fr);
+  grid-template-columns: 112px 96px;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  gap: 16px;
   padding-top: 3px;
+  transform: translateX(8px);
 }
 
 .storage-summary {
-  grid-template-columns: 74px minmax(0, 1fr);
+  grid-template-columns: 74px 164px;
   align-items: center;
+  justify-content: center;
+  gap: 18px;
 }
 
 .soc-gauge-mini {
@@ -1794,8 +1798,8 @@ h2 {
 .soc-gauge-svg {
   display: block;
   width: 100%;
-  height: 70px;
-  flex: 0 0 70px;
+  height: 74px;
+  flex: 0 0 74px;
 }
 
 .storage-ring-svg {
@@ -1808,7 +1812,7 @@ h2 {
   width: 64px;
   height: 78px;
   display: block;
-  justify-self: start;
+  justify-self: center;
   overflow: hidden;
 }
 
@@ -1839,7 +1843,7 @@ h2 {
 
 .soc-gauge-scale {
   fill: #8f98aa;
-  font-size: 10px;
+  font-size: 9px;
 }
 
 .storage-ring-label {
@@ -1854,7 +1858,7 @@ h2 {
   justify-content: space-between;
   gap: 8px;
   padding: 0 2px;
-  margin-top: -2px;
+  margin-top: -5px;
 }
 
 .soc-gauge-readout span {
@@ -1921,6 +1925,7 @@ h2 {
 .run-kpis {
   gap: 12px;
   align-self: center;
+  min-width: 0;
 }
 
 .run-kpis div {
@@ -1969,6 +1974,18 @@ h2 {
   white-space: nowrap;
 }
 
+.station-attr-panel {
+  padding-bottom: 18px;
+}
+
+.station-attr-panel .overview-metrics strong {
+  font-size: 15px;
+}
+
+.station-attr-panel .overview-metrics strong em {
+  font-size: 11px;
+}
+
 .run-kpis strong em,
 .overview-metrics strong em {
   color: #8e97aa;
@@ -2000,13 +2017,17 @@ h2 {
 }
 
 .station-attr-panel .overview-metrics {
-  margin-top: 16px;
-  gap: 9px;
+  margin-top: 17px;
+  gap: 6px;
 }
 
 .storage-summary-panel .overview-metrics {
   gap: 16px;
   align-content: center;
+}
+
+.storage-summary-panel .overview-metrics.compact {
+  min-width: 154px;
 }
 
 .storage-system-filter {

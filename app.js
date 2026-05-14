@@ -2463,13 +2463,13 @@ function renderMiniSocGauge(value) {
   const needleX = round(56 + Math.cos(angle) * needleLength, 2);
   const needleY = round(56 + Math.sin(angle) * needleLength, 2);
   return `
-    <svg class="soc-gauge-svg" viewBox="0 0 112 72" role="img" aria-label="场站SOC ${pct.toFixed(1)}%">
+    <svg class="soc-gauge-svg" viewBox="0 0 112 78" role="img" aria-label="场站SOC ${pct.toFixed(1)}%">
       <path class="soc-gauge-track" d="M18 56 A38 38 0 0 1 94 56" pathLength="100"></path>
       <path class="soc-gauge-fill" d="M18 56 A38 38 0 0 1 94 56" pathLength="100" style="stroke-dasharray:${pct} 100"></path>
       <line class="soc-gauge-needle" x1="56" y1="56" x2="${needleX}" y2="${needleY}"></line>
       <circle class="soc-gauge-hub" cx="56" cy="56" r="3"></circle>
-      <text class="soc-gauge-scale" x="12" y="61">0%</text>
-      <text class="soc-gauge-scale" x="100" y="61" text-anchor="end">100%</text>
+      <text class="soc-gauge-scale" x="13" y="70">0%</text>
+      <text class="soc-gauge-scale" x="99" y="70" text-anchor="end">100%</text>
     </svg>`;
 }
 
