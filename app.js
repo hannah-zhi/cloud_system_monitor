@@ -2421,7 +2421,7 @@ function renderStationOverview(station) {
   const soc = formatNumeric(station.soc);
   const remaining = formatRemainingEnergy(station);
   const runClass = operationStateClass(station.run);
-  const systemItems = Array.from({ length: 12 }, (_, index) => {
+  const systemItems = Array.from({ length: systemCount }, (_, index) => {
     const n = index + 1;
     const localSoc = n % 7 === 0 ? 95 : n % 5 === 0 ? 47.9 : 5;
     const localPower = station.run === "放电" && n % 5 === 0 ? 3.7 : station.run === "充电" && n % 4 === 0 ? 2.4 : 0;
@@ -2500,7 +2500,7 @@ function renderStationOverview(station) {
     <article class="panel station-power-panel">
       <div class="panel-title-row">
         <div class="panel-title"><span></span>场站有功功率</div>
-        <div class="chart-date-range"><span>2026-02-03</span><em>→</em><span>2026-02-13</span></div>
+        <div class="chart-date-range"><input type="date" value="2026-02-03" aria-label="开始日期" /><em>→</em><input type="date" value="2026-02-13" aria-label="结束日期" /></div>
       </div>
       <div class="overview-chart-wrap">
         <canvas id="overviewPowerCanvas" width="900" height="250"></canvas>
@@ -2511,7 +2511,7 @@ function renderStationOverview(station) {
     <article class="panel charge-chart-panel">
       <div class="panel-title-row">
         <div class="panel-title"><span></span>场站充放电表现</div>
-        <div class="chart-date-range"><span>2026-02-03</span><em>→</em><span>2026-02-13</span></div>
+        <div class="chart-date-range"><input type="date" value="2026-02-03" aria-label="开始日期" /><em>→</em><input type="date" value="2026-02-13" aria-label="结束日期" /></div>
       </div>
       <div class="overview-chart-wrap">
         <canvas id="overviewChargeCanvas" width="900" height="250"></canvas>
