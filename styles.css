@@ -805,6 +805,38 @@ h2 {
   color: #f4f8ff;
 }
 
+.detail-section-tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin: 0 0 12px;
+  border-bottom: 1px solid rgba(59, 65, 86, 0.78);
+}
+
+.detail-section-tabs button {
+  min-width: 108px;
+  height: 38px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: #9da7ba;
+  font-size: 14px;
+}
+
+.detail-section-tabs button.active {
+  color: #f5f9ff;
+  border-bottom-color: var(--blue);
+  background: linear-gradient(180deg, rgba(18, 152, 255, 0.08), rgba(18, 152, 255, 0.02));
+}
+
+.detail-tab-view {
+  display: none;
+}
+
+.detail-tab-view.active {
+  display: block;
+}
+
 .back-btn,
 .export-btn,
 .small-select,
@@ -1661,6 +1693,312 @@ h2 {
   border-top-width: 1px;
   padding: 15px 14px;
   z-index: 0;
+}
+
+.detail-overview-layout {
+  display: grid;
+  grid-template-columns: 392px minmax(0, 1fr);
+  gap: 16px;
+  align-items: stretch;
+}
+
+.station-overview-panel {
+  min-width: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.station-overview-top {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.run-overview,
+.storage-summary {
+  display: grid;
+  grid-template-columns: 132px 1fr;
+  gap: 12px;
+  align-items: center;
+  min-height: 116px;
+}
+
+.soc-gauge-mini,
+.storage-ring {
+  width: 120px;
+  height: 92px;
+  position: relative;
+  display: grid;
+  place-items: end center;
+  color: #f6f9ff;
+}
+
+.soc-gauge-mini::before,
+.storage-ring::before {
+  content: "";
+  position: absolute;
+  inset: 0 7px 18px;
+  border-radius: 80px 80px 0 0;
+  background:
+    radial-gradient(circle at 50% 100%, #20222d 0 52%, transparent 53%),
+    conic-gradient(from 270deg at 50% 100%, #18c7a6 0 var(--soc-angle, 90deg), rgba(51, 55, 70, 0.9) 0 180deg, transparent 0);
+}
+
+.storage-ring::before {
+  background:
+    radial-gradient(circle at 50% 50%, #20222d 0 56%, transparent 57%),
+    conic-gradient(#1689ff 0 18deg, rgba(51, 55, 70, 0.9) 18deg 360deg);
+  inset: 0 22px 10px;
+  border-radius: 50%;
+}
+
+.soc-gauge-mini strong,
+.storage-ring strong {
+  position: relative;
+  z-index: 1;
+  font-size: 18px;
+}
+
+.soc-gauge-mini span,
+.storage-ring span {
+  position: relative;
+  z-index: 1;
+  color: #b8c0d0;
+  font-size: 13px;
+}
+
+.run-kpis,
+.overview-metrics {
+  display: grid;
+  gap: 12px;
+}
+
+.run-kpis span,
+.overview-metrics span,
+.system-row span {
+  color: #a4adbf;
+  white-space: nowrap;
+}
+
+.run-kpis strong,
+.overview-metrics strong,
+.system-row strong {
+  color: #f8fbff;
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+}
+
+.run-kpis strong em,
+.overview-metrics strong em {
+  color: #8e97aa;
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 500;
+}
+
+.run-kpis .is-charging,
+.run-kpis .is-discharging {
+  color: #23b0ff;
+}
+
+.run-kpis .is-standby,
+.run-kpis .is-stopped {
+  color: #aeb8c8;
+}
+
+.overview-metrics div {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.overview-metrics.compact div {
+  display: block;
+  gap: 4px;
+}
+
+.storage-summary-panel .overview-metrics {
+  gap: 18px;
+}
+
+.topology-panel {
+  min-height: 385px;
+}
+
+.topology-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.topology-toolbar label {
+  color: #d9e5f8;
+  font-size: 13px;
+}
+
+.topology-canvas {
+  height: 225px;
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(170, 178, 200, 0.72);
+}
+
+.topo-node {
+  position: absolute;
+  width: 92px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  color: #c9d3e5;
+  font-size: 12px;
+  background:
+    linear-gradient(180deg, rgba(57, 63, 80, 0.95), rgba(30, 35, 48, 0.95)),
+    radial-gradient(circle at 50% 0%, rgba(18, 152, 255, 0.34), transparent 64%);
+  border: 1px solid rgba(18, 152, 255, 0.44);
+  box-shadow: 0 12px 22px rgba(18, 152, 255, 0.18);
+  transform: skewY(-8deg);
+}
+
+.topo-node.grid {
+  left: 50%;
+  top: 28px;
+}
+
+.topo-node.step {
+  left: 50%;
+  top: 112px;
+}
+
+.topo-node.wind {
+  left: calc(50% - 170px);
+  top: 136px;
+}
+
+.topo-line {
+  position: absolute;
+  background: rgba(190, 198, 216, 0.72);
+}
+
+.topo-line.vertical {
+  left: calc(50% + 45px);
+  top: 76px;
+  width: 2px;
+  height: 145px;
+}
+
+.topo-line.branch {
+  left: calc(50% - 85px);
+  top: 160px;
+  width: 132px;
+  height: 1px;
+  border-top: 1px dotted rgba(190, 198, 216, 0.72);
+  background: transparent;
+}
+
+.storage-system-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.storage-system-card {
+  min-height: 112px;
+  border: 1px solid rgba(67, 72, 91, 0.78);
+  border-radius: 4px;
+  padding: 8px;
+  background: rgba(24, 26, 36, 0.95);
+}
+
+.storage-system-head,
+.system-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.storage-system-head {
+  margin-bottom: 8px;
+  color: #e8edf7;
+}
+
+.storage-system-head span {
+  color: #9da7ba;
+}
+
+.mini-bars {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 2px;
+  margin: 5px 0;
+}
+
+.mini-bars i {
+  height: 7px;
+  background: #9ca6bd;
+}
+
+.storage-system-card button {
+  margin-top: 6px;
+  border: 0;
+  background: transparent;
+  color: #f5f8ff;
+  padding: 0;
+}
+
+.line-chart-demo,
+.bar-chart-demo {
+  height: 230px;
+  margin-top: 8px;
+  border-bottom: 1px solid rgba(138, 146, 164, 0.7);
+  background: repeating-linear-gradient(0deg, transparent 0 39px, rgba(145, 153, 173, 0.16) 40px);
+}
+
+.line-chart-demo svg {
+  width: 100%;
+  height: 100%;
+}
+
+.line-chart-demo path {
+  fill: none;
+  stroke: #1689ff;
+  stroke-width: 2;
+}
+
+.line-chart-demo path.yellow {
+  stroke: #ffd437;
+}
+
+.bar-chart-demo {
+  display: flex;
+  align-items: end;
+  gap: 5px;
+  padding: 0 62px 0;
+}
+
+.bar-chart-demo i {
+  width: 24px;
+  border-radius: 3px 3px 0 0;
+}
+
+.bar-chart-demo .charge {
+  background: linear-gradient(180deg, #20d3c5, rgba(32, 211, 197, 0.12));
+}
+
+.bar-chart-demo .discharge {
+  background: linear-gradient(180deg, #1689ff, rgba(22, 137, 255, 0.12));
+  margin-right: 18px;
+}
+
+.chart-legend {
+  display: flex;
+  justify-content: center;
+  gap: 28px;
+  margin-top: 8px;
+  color: #adb6c7;
+  font-size: 12px;
 }
 
 .station-card:hover,
@@ -3962,6 +4300,11 @@ th {
   }
 
   .detail-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-overview-layout,
+  .station-overview-top {
     grid-template-columns: 1fr;
   }
 

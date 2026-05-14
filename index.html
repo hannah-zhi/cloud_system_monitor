@@ -64,15 +64,6 @@
                   <strong id="selectedCount">110</strong>
                 </label>
               </div>
-              <label class="sort-box">
-                <span aria-hidden="true">☷</span>
-                <select id="sortSelect" aria-label="排序">
-                  <option value="sosAsc" selected>SOS数值-从低到高</option>
-                  <option value="sosDesc">SOS数值-从高到低</option>
-                  <option value="idAsc">场站编号-顺序</option>
-                  <option value="idDesc">场站编号-倒序</option>
-                </select>
-              </label>
             </div>
             <div class="toolbar-actions"></div>
           </div>
@@ -316,7 +307,50 @@
             </div>
           </div>
 
-          <div class="detail-layout">
+          <div class="detail-section-tabs" id="detailSectionTabs" aria-label="单站详情页面切换">
+            <button class="active" data-detail-tab="overview" type="button">场站概览</button>
+            <button data-detail-tab="diagnosis" type="button">安全诊断</button>
+          </div>
+
+          <div class="detail-tab-view active" id="detailOverviewTab">
+            <div class="detail-overview-layout">
+              <aside class="alarm-panel detail-alarm-panel" aria-label="单站预警清单">
+                <div class="alarm-head">
+                  <div>
+                    <div class="panel-title"><span></span>预警清单</div>
+                    <p id="detailAlarmSubtitle">按风险严重度滚动刷新</p>
+                  </div>
+                </div>
+                <div class="alarm-tabs detail-alarm-tabs" id="detailAlarmTabs">
+                  <button class="active" data-type="all" type="button">全部 <span id="detailAlarmCountAll">0</span></button>
+                  <button data-type="level1" type="button">一级 <span id="detailAlarmCountLevel1">0</span></button>
+                  <button data-type="level2" type="button">二级 <span id="detailAlarmCountLevel2">0</span></button>
+                  <button data-type="level3" type="button">三级 <span id="detailAlarmCountLevel3">0</span></button>
+                </div>
+                <div class="alarm-time-tools detail-alarm-time-tools">
+                  <div class="alarm-quick-buttons" id="detailAlarmTimeButtons" aria-label="单站预警时间快捷筛选">
+                    <button class="active" data-days="all" type="button">全部</button>
+                    <button data-days="30" type="button">最近30天</button>
+                    <button data-days="7" type="button">最近7天</button>
+                    <button data-days="3" type="button">最近3天</button>
+                  </div>
+                  <div class="alarm-date-range" aria-label="单站预警时间段">
+                    <input id="detailAlarmStartDate" type="date" aria-label="开始日期" />
+                    <span>至</span>
+                    <input id="detailAlarmEndDate" type="date" aria-label="结束日期" />
+                  </div>
+                </div>
+                <div class="alarm-summary alarm-source-summary">
+                  <div><strong id="detailAlarmCloudCount">--</strong><span>云端</span></div>
+                  <div><strong id="detailAlarmStationCount">--</strong><span>站端</span></div>
+                </div>
+                <div id="detailAlarmList" class="alarm-list detail-alarm-list"></div>
+              </aside>
+              <div id="stationOverviewPanel" class="station-overview-panel"></div>
+            </div>
+          </div>
+
+          <div class="detail-tab-view" id="detailDiagnosisTab">
             <div class="detail-chart-stack">
               <div class="dashboard-grid">
                 <article class="panel gauge-panel">
@@ -405,38 +439,6 @@
                 </div>
               </article>
             </div>
-            <aside class="alarm-panel detail-alarm-panel" aria-label="单站预警清单">
-              <div class="alarm-head">
-                <div>
-                  <div class="panel-title"><span></span>预警清单</div>
-                  <p id="detailAlarmSubtitle">按风险严重度滚动刷新</p>
-                </div>
-              </div>
-              <div class="alarm-tabs detail-alarm-tabs" id="detailAlarmTabs">
-                <button class="active" data-type="all" type="button">全部 <span id="detailAlarmCountAll">0</span></button>
-                <button data-type="level1" type="button">一级 <span id="detailAlarmCountLevel1">0</span></button>
-                <button data-type="level2" type="button">二级 <span id="detailAlarmCountLevel2">0</span></button>
-                <button data-type="level3" type="button">三级 <span id="detailAlarmCountLevel3">0</span></button>
-              </div>
-              <div class="alarm-time-tools detail-alarm-time-tools">
-                <div class="alarm-quick-buttons" id="detailAlarmTimeButtons" aria-label="单站预警时间快捷筛选">
-                  <button class="active" data-days="all" type="button">全部</button>
-                  <button data-days="30" type="button">最近30天</button>
-                  <button data-days="7" type="button">最近7天</button>
-                  <button data-days="3" type="button">最近3天</button>
-                </div>
-                <div class="alarm-date-range" aria-label="单站预警时间段">
-                  <input id="detailAlarmStartDate" type="date" aria-label="开始日期" />
-                  <span>至</span>
-                  <input id="detailAlarmEndDate" type="date" aria-label="结束日期" />
-                </div>
-              </div>
-              <div class="alarm-summary alarm-source-summary">
-                <div><strong id="detailAlarmCloudCount">--</strong><span>云端</span></div>
-                <div><strong id="detailAlarmStationCount">--</strong><span>站端</span></div>
-              </div>
-              <div id="detailAlarmList" class="alarm-list detail-alarm-list"></div>
-            </aside>
           </div>
         </section>
       </main>

@@ -85,6 +85,7 @@ const state = {
   activeFilter: "all",
   selectedStationIds: new Set(),
   selectedStation: null,
+  detailTab: "overview",
   trendRange: 7,
   sortSubsystemMode: "idAsc",
 };
@@ -112,7 +113,6 @@ function bindElements() {
     "stationPickerMenu",
     "stationPickerList",
     "stationSelector",
-    "sortSelect",
     "sosMinInput",
     "sosMaxInput",
     "sosMinRange",
@@ -129,6 +129,10 @@ function bindElements() {
     "detailView",
     "backBtn",
     "detailTitle",
+    "detailSectionTabs",
+    "detailOverviewTab",
+    "detailDiagnosisTab",
+    "stationOverviewPanel",
     "detailComm",
     "detailRisk",
     "detailSos",
@@ -260,7 +264,6 @@ function bindEvents() {
   });
   window.addEventListener("resize", positionStationPicker);
   window.addEventListener("scroll", positionStationPicker, true);
-  els.sortSelect.addEventListener("change", applyFilters);
   bindSosRangeEvents();
   els.clearFilterBtn.addEventListener("click", () => {
     state.activeFilter = "all";
@@ -420,6 +423,11 @@ function bindEvents() {
     renderRiskBars(state.stations);
   });
   els.backBtn.addEventListener("click", showList);
+  els.detailSectionTabs?.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-detail-tab]");
+    if (!button) return;
+    showDetailTab(button.dataset.detailTab);
+  });
   els.rangeButtons.addEventListener("click", (event) => {
     const button = event.target.closest("button[data-range]");
     if (!button || !state.selectedStation) return;
@@ -677,10 +685,9 @@ function getRisk(score) {
 function renderFilters() {
   const counts = summarize(state.stations);
   const filters = [
-    { key: "risk:high", label: "高风险", count: counts.risk.high, tone: riskMeta.high.tone },
-    { key: "risk:mid", label: "中风险", count: counts.risk.mid, tone: riskMeta.mid.tone },
-    { key: "risk:low", label: "低风险", count: counts.risk.low, tone: riskMeta.low.tone },
-    { key: "risk:healthy", label: "健康", count: counts.risk.healthy, tone: riskMeta.healthy.tone },
+    { key: "comm:ok", label: commMeta.ok.label, count: counts.comm.ok, tone: commMeta.ok.tone },
+    { key: "comm:partial", label: commMeta.partial.label, count: counts.comm.partial, tone: commMeta.partial.tone },
+    { key: "comm:down", label: commMeta.down.label, count: counts.comm.down, tone: commMeta.down.tone },
   ];
   els.statusFilters.innerHTML = filters
     .map(
@@ -715,23 +722,15 @@ function applyFilters() {
   const keyword = els.searchInput.value.trim().toLowerCase();
   const [filterType, filterValue] = state.activeFilter.split(":");
   let filtered = state.stations.filter((station) => {
-    const matchSosRange = station.sos >= state.sosMin && station.sos <= state.sosMax;
     const matchSelected = !state.selectedStationIds.size || state.selectedStationIds.has(station.id);
     const matchKeyword = state.selectedStationIds.size || !keyword || `${station.id}${station.name}`.toLowerCase().includes(keyword);
     const matchFilter =
       state.activeFilter === "all" ||
-      (filterType === "comm" && station.comm === filterValue) ||
-      (filterType === "risk" && station.risk === filterValue);
-    return matchSosRange && matchSelected && matchKeyword && matchFilter;
+      (filterType === "comm" && station.comm === filterValue);
+    return matchSelected && matchKeyword && matchFilter;
   });
 
-  const sortBy = els.sortSelect.value;
-  filtered = filtered.sort((a, b) => {
-    if (sortBy === "sosAsc") return a.sos - b.sos || a.id.localeCompare(b.id, "zh-CN");
-    if (sortBy === "sosDesc") return b.sos - a.sos || a.id.localeCompare(b.id, "zh-CN");
-    if (sortBy === "idDesc") return b.id.localeCompare(a.id, "zh-CN");
-    return a.id.localeCompare(b.id, "zh-CN");
-  });
+  filtered = filtered.sort((a, b) => a.id.localeCompare(b.id, "zh-CN"));
 
   state.filtered = filtered;
   renderStations(filtered);
@@ -2330,6 +2329,7 @@ function showDetail(id) {
   state.detailAlarmDays = "all";
   state.detailAlarmStartDate = "";
   state.detailAlarmEndDate = "";
+  state.detailTab = "overview";
   els.detailAlarmTabs.querySelectorAll("button").forEach((button) => button.classList.toggle("active", button.dataset.type === "all"));
   els.detailAlarmTimeButtons.querySelectorAll("button").forEach((button) => button.classList.toggle("active", button.dataset.days === "all"));
   els.detailAlarmStartDate.value = "";
@@ -2339,6 +2339,7 @@ function showDetail(id) {
   els.alarmDetailView.classList.remove("active-view");
   els.detailView.classList.add("active-view");
   document.getElementById("pageTitle").textContent = "";
+  showDetailTab("overview", false);
   renderDetail(station);
   window.scrollTo({ top: 0, behavior: "smooth" });
   const url = new URL(window.location.href);
@@ -2377,9 +2378,112 @@ function renderDetail(station) {
   els.rangeButtons.querySelectorAll("button").forEach((button) => button.classList.toggle("active", button.dataset.range === "7"));
   els.subsystemSortBtn.value = "idAsc";
   state.detailSubsystems = createSubsystems(station);
+  renderStationOverview(station);
   renderDetailCharts(station);
   renderTable();
   renderDetailAlarms(station);
+}
+
+function showDetailTab(tabName, shouldRender = true) {
+  state.detailTab = tabName === "diagnosis" ? "diagnosis" : "overview";
+  els.detailSectionTabs?.querySelectorAll("button").forEach((button) => {
+    button.classList.toggle("active", button.dataset.detailTab === state.detailTab);
+  });
+  els.detailOverviewTab?.classList.toggle("active", state.detailTab === "overview");
+  els.detailDiagnosisTab?.classList.toggle("active", state.detailTab === "diagnosis");
+  if (shouldRender && state.selectedStation && state.detailTab === "diagnosis") {
+    renderDetailCharts(state.selectedStation);
+  }
+}
+
+function renderStationOverview(station) {
+  if (!els.stationOverviewPanel) return;
+  const systemCount = Math.max(6, Math.min(18, Math.round(Number(station.subsystemCount || 12))));
+  const activePower = formatNumeric(station.active);
+  const soc = formatNumeric(station.soc);
+  const remaining = formatRemainingEnergy(station);
+  const runClass = operationStateClass(station.run);
+  const systems = Array.from({ length: 12 }, (_, index) => {
+    const n = index + 1;
+    const localSoc = n % 7 === 0 ? 95 : n % 5 === 0 ? 47.9 : 5;
+    const localPower = station.run === "放电" && n % 5 === 0 ? 3.7 : station.run === "充电" && n % 4 === 0 ? 2.4 : 0;
+    const status = n % 8 === 0 ? "停机" : n % 5 === 0 ? "放电" : "待机";
+    const statusClass = operationStateClass(status);
+    return `
+      <div class="storage-system-card ${statusClass}">
+        <div class="storage-system-head"><strong>K${station.id.slice(2)}-${n}#子系统</strong><span>${status}</span></div>
+        <div class="system-row"><span>系统有功(PCS)功率</span><strong>${formatNumeric(localPower)} kW</strong></div>
+        <div class="system-row"><span>系统SOC</span><strong>${formatNumeric(localSoc)} %</strong></div>
+        <div class="mini-bars">${Array.from({ length: 12 }, (_, bar) => `<i style="opacity:${bar < Math.round(localSoc / 9) ? 0.95 : 0.18}"></i>`).join("")}</div>
+        <div class="system-row"><span>系统SOH</span><strong>${formatNumeric(97.5 + ((n * 0.17) % 2))} %</strong></div>
+        <button type="button">更多 ›</button>
+      </div>`;
+  }).join("");
+  els.stationOverviewPanel.innerHTML = `
+    <div class="station-overview-top">
+      <article class="panel station-run-panel">
+        <div class="panel-title"><span></span>场站运行</div>
+        <div class="run-overview">
+          <div class="soc-gauge-mini" style="--soc-angle:${Math.max(0, Math.min(180, Number(station.soc || 0) * 1.8))}deg">
+            <strong>${soc}</strong><span>场站SOC</span>
+          </div>
+          <div class="run-kpis">
+            <span>场站运行状态</span><strong class="${runClass}">${station.run}</strong>
+            <span>场站实时出力</span><strong>${activePower} <em>kW</em></strong>
+          </div>
+        </div>
+      </article>
+      <article class="panel station-attr-panel">
+        <div class="panel-title"><span></span>场站属性</div>
+        <div class="overview-metrics">
+          <div><span>系统数量</span><strong>${systemCount} <em>套</em></strong></div>
+          <div><span>额定容量</span><strong>${formatNumeric(station.ratedEnergy)} <em>MWh</em></strong></div>
+          <div><span>额定功率</span><strong>${formatNumeric(station.rated)} <em>MW</em></strong></div>
+          <div><span>剩余电量</span><strong>${remaining} <em>kWh</em></strong></div>
+        </div>
+      </article>
+      <article class="panel storage-summary-panel">
+        <div class="panel-title"><span></span>储能系统 ›</div>
+        <div class="storage-summary">
+          <div class="storage-ring"><strong>${Math.max(3, Math.round(station.soc / 8))}.0%</strong><span>SOC</span></div>
+          <div class="overview-metrics compact">
+            <div><span>当日充电量</span><strong>-- <em>kWh</em></strong></div>
+            <div><span>当日放电量</span><strong>-- <em>kWh</em></strong></div>
+          </div>
+        </div>
+      </article>
+    </div>
+    <article class="panel topology-panel">
+      <div class="topology-toolbar">
+        <div class="panel-title"><span></span>拓扑图</div>
+        <label><input type="checkbox" checked /> 显示场站结构</label>
+      </div>
+      <div class="topology-canvas">
+        <div class="topo-node grid">电网</div>
+        <div class="topo-node step">35kV-220kV 升压站</div>
+        <div class="topo-node wind">风电配套</div>
+        <div class="topo-line vertical"></div>
+        <div class="topo-line branch"></div>
+      </div>
+      <div class="storage-system-grid">${systems}</div>
+    </article>
+    <article class="panel station-power-panel">
+      <div class="panel-title"><span></span>场站有功功率</div>
+      <div class="line-chart-demo">
+        <svg viewBox="0 0 900 190" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M0,95 L45,40 L85,130 L120,115 L160,55 L210,138 L260,78 L310,128 L365,112 L420,70 L470,145 L525,94 L575,118 L620,82 L665,140 L710,95 L760,126 L810,52 L855,136 L900,58" />
+          <path class="yellow" d="M0,86 L55,135 L110,100 L165,126 L220,88 L285,138 L350,118 L410,122 L470,74 L535,138 L610,108 L675,86 L735,116 L795,75 L850,132 L900,90" />
+        </svg>
+      </div>
+      <div class="chart-legend"><span class="blue-line">有功功率</span><span class="yellow-line">荷电状态</span></div>
+    </article>
+    <article class="panel charge-chart-panel">
+      <div class="panel-title"><span></span>场站充放电表现</div>
+      <div class="bar-chart-demo">
+        ${Array.from({ length: 10 }, (_, index) => `<i class="charge" style="height:${42 + ((index * 17) % 40)}%"></i><i class="discharge" style="height:${28 + ((index * 13) % 46)}%"></i>`).join("")}
+      </div>
+      <div class="chart-legend"><span class="teal-bar">充电量</span><span class="blue-bar">放电量</span><span class="purple-line">循环次数</span></div>
+    </article>`;
 }
 
 function renderDetailCharts(station) {
