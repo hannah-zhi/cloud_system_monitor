@@ -2812,9 +2812,11 @@ h2 {
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   padding: 0 8px;
   border-radius: 4px;
   font-size: 12px;
+  white-space: nowrap;
 }
 
 .alarm-source-cloud {
@@ -3532,32 +3534,32 @@ h2 {
 
 .alarm-detail-table th:nth-child(1),
 .alarm-detail-table td:nth-child(1) {
-  width: 3%;
+  width: 5%;
 }
 
 .alarm-detail-table th:nth-child(2),
 .alarm-detail-table td:nth-child(2) {
-  width: 8%;
+  width: 7%;
 }
 
 .alarm-detail-table th:nth-child(3),
 .alarm-detail-table td:nth-child(3) {
-  width: 18%;
+  width: 17%;
 }
 
 .alarm-detail-table th:nth-child(4),
 .alarm-detail-table td:nth-child(4) {
-  width: 8%;
+  width: 7%;
 }
 
 .alarm-detail-table th:nth-child(5),
 .alarm-detail-table td:nth-child(5) {
-  width: 15%;
+  width: 14%;
 }
 
 .alarm-detail-table th:nth-child(6),
 .alarm-detail-table td:nth-child(6) {
-  width: 16%;
+  width: 14%;
 }
 
 .alarm-detail-table th:nth-child(7),
@@ -3572,12 +3574,12 @@ h2 {
 
 .alarm-detail-table th:nth-child(9),
 .alarm-detail-table td:nth-child(9) {
-  width: 8%;
+  width: 7%;
 }
 
 .alarm-detail-table th:nth-child(10),
 .alarm-detail-table td:nth-child(10) {
-  width: 4%;
+  width: 9%;
 }
 
 .alarm-detail-table th {
@@ -3836,9 +3838,25 @@ h2 {
   text-align: center;
 }
 
+.alarm-index-cell {
+  display: flex;
+  min-height: 22px;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: #d7deea;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.alarm-row-index {
+  min-width: 16px;
+  text-align: center;
+}
+
 .alarm-mail-badge {
   display: inline-flex;
-  width: 22px;
+  width: 18px;
   height: 20px;
   align-items: center;
   justify-content: center;
@@ -3846,7 +3864,7 @@ h2 {
   border-radius: 4px;
   background: rgba(18, 152, 255, 0.14);
   color: #bfeaff;
-  font-size: 13px;
+  font-size: 12px;
   box-shadow: 0 0 12px rgba(18, 152, 255, 0.18);
 }
 

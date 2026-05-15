@@ -1555,12 +1555,12 @@ function renderAlarmDetailPage() {
   els.alarmDetailTable.innerHTML = alarms
     .length
     ? groups
-      .map((group) => {
+      .map((group, index) => {
         const alarm = group.latest;
         const sources = uniqueSorted(group.alarms.map((item) => item.source)).join("/");
         return `
       <tr data-alarm-id="${group.id}" class="${state.detailAlarmSelectedIds.has(group.id) ? "selected" : ""}">
-        <td class="alarm-mail-cell">${group.srCompleted ? '<span class="alarm-mail-badge" title="SR已返回">✉</span>' : ""}</td>
+        <td class="alarm-index-cell">${group.srCompleted ? '<span class="alarm-mail-badge" title="SR已返回">✉</span>' : ""}<span class="alarm-row-index">${index + 1}</span></td>
         <td class="alarm-level-cell">
           <div class="alarm-level-cell-inner ${state.detailAlarmSelectionMode ? "selection-mode" : ""}">
             ${
