@@ -3525,16 +3525,16 @@ h2 {
 }
 
 .alarm-detail-table th:first-child {
-  padding-left: 10px;
+  padding-left: 34px;
 }
 
 .alarm-detail-table td:first-child {
-  padding-left: 10px;
+  padding-left: 34px;
 }
 
 .alarm-detail-table th:nth-child(1),
 .alarm-detail-table td:nth-child(1) {
-  width: 6%;
+  width: 7%;
 }
 
 .alarm-detail-table th:nth-child(2),
@@ -3544,7 +3544,7 @@ h2 {
 
 .alarm-detail-table th:nth-child(3),
 .alarm-detail-table td:nth-child(3) {
-  width: 16%;
+  width: 15%;
 }
 
 .alarm-detail-table th:nth-child(4),
@@ -3589,6 +3589,10 @@ h2 {
   position: sticky;
   top: 0;
   z-index: 1;
+}
+
+.alarm-detail-table th:first-child {
+  white-space: nowrap;
 }
 
 .alarm-detail-table tr {
@@ -3839,7 +3843,8 @@ h2 {
 }
 
 .alarm-index-cell {
-  text-align: center;
+  position: relative;
+  text-align: left;
   color: #d7deea;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -3847,10 +3852,10 @@ h2 {
 
 .alarm-index-inner {
   display: inline-flex;
+  position: relative;
   min-height: 22px;
   align-items: center;
-  justify-content: center;
-  gap: 4px;
+  justify-content: flex-start;
   max-width: 100%;
 }
 
@@ -3861,6 +3866,9 @@ h2 {
 
 .alarm-mail-badge {
   display: inline-flex;
+  position: absolute;
+  left: -25px;
+  top: 50%;
   width: 18px;
   height: 20px;
   align-items: center;
@@ -3871,6 +3879,7 @@ h2 {
   color: #bfeaff;
   font-size: 12px;
   box-shadow: 0 0 12px rgba(18, 152, 255, 0.18);
+  transform: translateY(-50%);
 }
 
 .alarm-status-pill {
