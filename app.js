@@ -36,6 +36,12 @@ const stationNames = [
 
 const stationTypeLabels = ["配套储能", "独立储能", "工商业储能"];
 const alarmSourceLabels = ["云端预警", "站端预警", "站端告警", "设备告警"];
+const alarmOverviewDonutOptions = {
+  radius: 48,
+  lineWidth: 28,
+  font: "18px Microsoft YaHei",
+  centerYOffset: 6,
+};
 
 const state = {
   stations: [],
@@ -1179,7 +1185,7 @@ function renderRiskAlarmPie(alarms) {
   ];
   const colors = { level1: "#ff3d59", level2: "#f4a51c", level3: "#13c781" };
   const labels = { level1: "一级", level2: "二级", level3: "三级" };
-  drawDonutChart(ctx, canvas, entries, (key) => colors[key]);
+  drawDonutChart(ctx, canvas, entries, (key) => colors[key], alarmOverviewDonutOptions);
   els.riskAlarmPieLegend.innerHTML = entries
     .map(
       ([key, count]) => `
@@ -1205,7 +1211,7 @@ function renderRiskAlarmSourcePie(alarms) {
   const ctx = canvas.getContext("2d");
   const counts = countAlarmSources(alarms);
   const entries = alarmSourceLabels.map((source) => [source, counts[source] || 0]);
-  drawDonutChart(ctx, canvas, entries, sourceColor);
+  drawDonutChart(ctx, canvas, entries, sourceColor, alarmOverviewDonutOptions);
   els.riskAlarmSourcePieLegend.innerHTML = entries
     .map(
       ([source, count]) => `
@@ -1335,7 +1341,7 @@ function renderRiskModules(alarms) {
   const modules = ["电池系统", "电气系统", "环控系统", "消防系统"];
   const colors = ["#1689ff", "#13c781", "#f4a51c", "#ff3d59"];
   const entries = modules.map((module) => [module, alarms.filter((alarm) => alarm.module === module).length]);
-  drawDonutChart(ctx, canvas, entries, (key) => colors[modules.indexOf(key)] || "#1689ff");
+  drawDonutChart(ctx, canvas, entries, (key) => colors[modules.indexOf(key)] || "#1689ff", alarmOverviewDonutOptions);
   els.riskModuleLegend.innerHTML = entries
     .map(
       ([module, count], index) => `

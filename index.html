@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>集中监测 - 远景数智运营系统</title>
-    <link rel="stylesheet" href="styles.css?v=20260518-source-pie-icons" />
+    <link rel="stylesheet" href="styles.css?v=20260518-round-pies-topology-label" />
   </head>
   <body>
     <div class="shell">
@@ -190,21 +190,21 @@
             <article class="panel">
               <div class="panel-title"><span></span>预警等级占比</div>
               <div class="donut-wrap">
-                <canvas id="riskAlarmPieCanvas" width="300" height="250"></canvas>
+                <canvas id="riskAlarmPieCanvas" width="300" height="300" data-square-canvas="true"></canvas>
                 <div id="riskAlarmPieLegend" class="legend"></div>
               </div>
             </article>
             <article class="panel">
               <div class="panel-title"><span></span>预警来源分布</div>
               <div class="donut-wrap">
-                <canvas id="riskAlarmSourcePieCanvas" width="300" height="250"></canvas>
+                <canvas id="riskAlarmSourcePieCanvas" width="300" height="300" data-square-canvas="true"></canvas>
                 <div id="riskAlarmSourcePieLegend" class="legend"></div>
               </div>
             </article>
             <article class="panel risk-wide-panel">
               <div class="panel-title"><span></span>预警模块分布</div>
               <div class="donut-wrap">
-                <canvas id="riskModuleCanvas" width="300" height="250"></canvas>
+                <canvas id="riskModuleCanvas" width="300" height="300" data-square-canvas="true"></canvas>
                 <div id="riskModuleLegend" class="legend"></div>
               </div>
             </article>
@@ -456,6 +456,6 @@
 
     <script src="site-data.js?v=20260415-siteconfig3"></script>
     <script src="risk-data.js?v=20260415-risk-list1"></script>
-    <script src="app.js?v=20260518-source-pie-icons"></script>
+    <script src="app.js?v=20260518-round-pies-topology-label"></script>
   </body>
 </html>

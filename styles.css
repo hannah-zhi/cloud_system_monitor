@@ -2183,6 +2183,12 @@ h2 {
   top: 132px;
 }
 
+.topo-node.wind span {
+  position: absolute;
+  left: 105px;
+  top: 73px;
+}
+
 .topo-line {
   position: absolute;
   z-index: 1;
