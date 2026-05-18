@@ -2494,6 +2494,47 @@ function renderStorageSocTank(value) {
     </svg>`;
 }
 
+function renderTopologyIcon(type) {
+  const platform = `
+    <path class="topo-platform-top" d="M22 58 L58 42 L96 58 L58 76 Z"></path>
+    <path class="topo-platform-side" d="M22 58 L58 76 L96 58 L96 66 L58 85 L22 66 Z"></path>
+    <path class="topo-platform-glow" d="M24 66 L58 84 L94 66"></path>`;
+  if (type === "grid") {
+    return `
+      <svg viewBox="0 0 118 98" aria-hidden="true">
+        ${platform}
+        <g class="topo-grid-towers">
+          <path d="M42 53 L48 8 L64 53 M45 31 L58 20 L48 12 M46 42 L61 30 L50 24 M52 8 L66 19 L50 19 M48 34 L67 41"></path>
+          <path d="M62 49 L70 4 L88 49 M66 27 L82 16 L72 9 M67 39 L85 28 L73 22 M75 4 L91 16 L72 17 M70 31 L90 37"></path>
+          <path d="M45 18 C55 12 68 11 80 14"></path>
+        </g>
+      </svg>`;
+  }
+  if (type === "step") {
+    return `
+      <svg viewBox="0 0 118 98" aria-hidden="true">
+        ${platform}
+        <g class="topo-step-device">
+          <path d="M38 57 L38 37 L78 28 L78 58 L58 68 Z"></path>
+          <path d="M38 37 L58 47 L78 28 M58 47 L58 68"></path>
+          <path d="M44 40 L44 31 M52 36 L52 25 M60 34 L60 24 M68 32 L68 26"></path>
+          <path d="M43 47 L53 44 M43 52 L53 49 M63 41 L73 38 M63 47 L73 44 M63 53 L73 50"></path>
+        </g>
+      </svg>`;
+  }
+  return `
+    <svg viewBox="0 0 118 98" aria-hidden="true">
+      ${platform}
+      <g class="topo-wind-device">
+        <path d="M57 61 L60 22"></path>
+        <circle cx="60" cy="22" r="3"></circle>
+        <path d="M60 22 C50 16 43 10 40 2"></path>
+        <path d="M60 22 C71 23 82 26 92 32"></path>
+        <path d="M60 22 C58 34 54 43 47 52"></path>
+      </g>
+    </svg>`;
+}
+
 function renderStationOverview(station) {
   if (!els.stationOverviewPanel) return;
   const systemCount = Math.max(6, Math.min(18, Math.round(Number(station.subsystemCount || 12))));
@@ -2570,9 +2611,9 @@ function renderStationOverview(station) {
         <div class="panel-title"><span></span>拓扑图</div>
       </div>
       <div class="topology-canvas">
-        <div class="topo-node grid"><i></i><span>电网</span></div>
-        <div class="topo-node step"><i></i><span>110kV-220kV 升压站</span></div>
-        <div class="topo-node wind"><i></i><span>风电配套</span></div>
+        <div class="topo-node grid"><i>${renderTopologyIcon("grid")}</i><span>电网</span></div>
+        <div class="topo-node step"><i>${renderTopologyIcon("step")}</i><span>110kV-220kV 升压站</span></div>
+        <div class="topo-node wind"><i>${renderTopologyIcon("wind")}</i><span>风电配套</span></div>
         <div class="topo-line vertical"></div>
         <div class="topo-line branch"></div>
       </div>

@@ -2078,7 +2078,7 @@ h2 {
 }
 
 .topology-canvas {
-  height: 225px;
+  height: 245px;
   position: relative;
   overflow: hidden;
   border-bottom: 1px solid rgba(170, 178, 200, 0.72);
@@ -2086,11 +2086,12 @@ h2 {
 
 .topo-node {
   position: absolute;
-  width: 110px;
-  min-height: 78px;
+  z-index: 2;
+  width: 184px;
+  min-height: 112px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   color: #c9d3e5;
   font-size: 12px;
   background: transparent;
@@ -2099,78 +2100,58 @@ h2 {
 }
 
 .topo-node i {
-  width: 62px;
-  height: 50px;
+  width: 118px;
+  height: 98px;
   flex: 0 0 auto;
   position: relative;
-  border-radius: 7px;
-  background:
-    linear-gradient(180deg, rgba(75, 82, 102, 0.95), rgba(45, 50, 66, 0.95)),
-    radial-gradient(circle at 50% 0%, rgba(18, 152, 255, 0.25), transparent 68%);
-  border-bottom: 3px solid #1689ff;
-  box-shadow: 0 12px 22px rgba(18, 152, 255, 0.22);
-  transform: skewY(-10deg);
+  display: block;
+  filter: drop-shadow(0 13px 16px rgba(18, 152, 255, 0.2));
 }
 
-.topo-node i::before,
-.topo-node i::after {
-  content: "";
-  position: absolute;
+.topo-node svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
 }
 
-.topo-node.grid i::before {
-  left: 14px;
-  top: -28px;
-  width: 36px;
-  height: 42px;
-  background:
-    linear-gradient(70deg, transparent 47%, #aeb7c8 49% 52%, transparent 54%),
-    linear-gradient(110deg, transparent 47%, #aeb7c8 49% 52%, transparent 54%),
-    linear-gradient(0deg, transparent 47%, #aeb7c8 49% 52%, transparent 54%);
-  opacity: 0.9;
+.topo-platform-top {
+  fill: #5b6171;
 }
 
-.topo-node.grid i::after {
-  left: 18px;
-  top: -30px;
-  width: 28px;
-  height: 34px;
-  border-left: 2px solid #aeb7c8;
-  border-right: 2px solid #aeb7c8;
-  transform: skewX(-14deg);
-  opacity: 0.75;
+.topo-platform-side {
+  fill: #3a4052;
 }
 
-.topo-node.step i::before {
-  left: 11px;
-  top: 12px;
-  width: 40px;
-  height: 23px;
-  background:
-    linear-gradient(90deg, #9ca6ba 0 4px, transparent 4px 8px) 0 0 / 8px 100%,
-    linear-gradient(180deg, #c2c9d7, #777f92);
-  border: 1px solid rgba(224, 231, 245, 0.45);
-  box-shadow: 6px -8px 0 rgba(190, 197, 212, 0.42);
+.topo-platform-glow {
+  fill: none;
+  stroke: #1689ff;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 5px rgba(18, 199, 255, 0.75));
 }
 
-.topo-node.wind i::before {
-  left: 27px;
-  top: -19px;
-  width: 3px;
-  height: 48px;
-  background: #c7cfde;
-  transform: rotate(-12deg);
+.topo-grid-towers,
+.topo-wind-device,
+.topo-step-device {
+  fill: none;
+  stroke: #b9c0cf;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
-.topo-node.wind i::after {
-  left: 15px;
-  top: -24px;
-  width: 28px;
-  height: 28px;
-  border-top: 3px solid #c7cfde;
-  border-left: 3px solid #c7cfde;
-  border-radius: 50%;
-  transform: rotate(24deg);
+.topo-step-device {
+  fill: rgba(158, 166, 186, 0.38);
+  stroke: #c4cad7;
+  stroke-width: 1.6;
+}
+
+.topo-step-device path:nth-child(n+3) {
+  fill: none;
+}
+
+.topo-wind-device {
+  stroke-width: 3;
 }
 
 .topo-node span {
@@ -2183,36 +2164,37 @@ h2 {
 }
 
 .topo-node.grid {
-  left: calc(50% - 18px);
-  top: 20px;
+  left: calc(50% - 74px);
+  top: 8px;
 }
 
 .topo-node.step {
-  left: calc(50% - 18px);
-  top: 111px;
+  left: calc(50% - 74px);
+  top: 108px;
 }
 
 .topo-node.wind {
-  left: calc(50% - 170px);
-  top: 140px;
+  left: calc(50% - 246px);
+  top: 132px;
 }
 
 .topo-line {
   position: absolute;
+  z-index: 1;
   background: rgba(190, 198, 216, 0.72);
 }
 
 .topo-line.vertical {
-  left: calc(50% + 16px);
-  top: 78px;
+  left: calc(50% - 16px);
+  top: 88px;
   width: 2px;
-  height: 145px;
+  height: 155px;
 }
 
 .topo-line.branch {
-  left: calc(50% - 85px);
-  top: 160px;
-  width: 132px;
+  left: calc(50% - 158px);
+  top: 178px;
+  width: 143px;
   height: 1px;
   border-top: 1px dotted rgba(190, 198, 216, 0.72);
   background: transparent;
