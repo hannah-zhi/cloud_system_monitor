@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 150" role="img" aria-label="电网">
+  <defs>
+    <linearGradient id="baseTop" x1="52" y1="80" x2="128" y2="120" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#777d8d"/>
+      <stop offset="1" stop-color="#4f5564"/>
+    </linearGradient>
+    <linearGradient id="baseSide" x1="90" y1="112" x2="90" y2="136" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#414755"/>
+      <stop offset="1" stop-color="#2c323e"/>
+    </linearGradient>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="12" stdDeviation="8" flood-color="#05070d" flood-opacity=".35"/>
+    </filter>
+  </defs>
+  <g filter="url(#softShadow)">
+    <path d="M90 76 143 101 90 126 37 101Z" fill="url(#baseTop)"/>
+    <path d="M37 101v12l53 26v-13Z" fill="url(#baseSide)"/>
+    <path d="M143 101v12l-53 26v-13Z" fill="#333946"/>
+    <path d="m37 113 53 26 53-26" fill="none" stroke="#8f97a8" stroke-width="1.4" opacity=".45"/>
+    <path d="m37 113 53 26 53-26" fill="none" stroke="#c7d0dc" stroke-width="1" opacity=".35"/>
+  </g>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <g stroke="#c9ced8" stroke-width="3">
+      <path d="M62 96 73 34l11 62"/>
+      <path d="M103 96 114 34l11 62"/>
+    </g>
+    <g stroke="#aeb5c2" stroke-width="2">
+      <path d="M54 53h38M57 68h32M61 82h24"/>
+      <path d="M95 53h38M98 68h32M102 82h24"/>
+    </g>
+    <g stroke="#8e95a4" stroke-width="1.45" opacity=".95">
+      <path d="M73 38 62 96M73 38l11 58"/>
+      <path d="M114 38 103 96M114 38l11 58"/>
+      <path d="M57 53 84 96M89 53 62 96"/>
+      <path d="M60 68 83 96M88 68 64 96"/>
+      <path d="M98 53 125 96M130 53 103 96"/>
+      <path d="M101 68 124 96M129 68 105 96"/>
+    </g>
+    <g stroke="#d4d8e1" stroke-width="1.2" opacity=".72">
+      <path d="M54 53 95 53M92 53h41"/>
+      <path d="M57 68 98 68M95 68h35"/>
+    </g>
+  </g>
+  <g fill="#d4d8e1" opacity=".9">
+    <circle cx="68" cy="96" r="2.4"/>
+    <circle cx="82" cy="96" r="2.4"/>
+    <circle cx="111" cy="96" r="2.4"/>
+    <circle cx="125" cy="96" r="2.4"/>
+  </g>
+</svg>

@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>集中监测 - 远景数智运营系统</title>
-    <link rel="stylesheet" href="styles.css?v=20260518-topology-icons" />
+    <link rel="stylesheet" href="styles.css?v=20260518-source-pie-icons" />
   </head>
   <body>
     <div class="shell">
@@ -192,6 +192,13 @@
               <div class="donut-wrap">
                 <canvas id="riskAlarmPieCanvas" width="300" height="250"></canvas>
                 <div id="riskAlarmPieLegend" class="legend"></div>
+              </div>
+            </article>
+            <article class="panel">
+              <div class="panel-title"><span></span>预警来源分布</div>
+              <div class="donut-wrap">
+                <canvas id="riskAlarmSourcePieCanvas" width="300" height="250"></canvas>
+                <div id="riskAlarmSourcePieLegend" class="legend"></div>
               </div>
             </article>
             <article class="panel risk-wide-panel">
@@ -449,6 +456,6 @@
 
     <script src="site-data.js?v=20260415-siteconfig3"></script>
     <script src="risk-data.js?v=20260415-risk-list1"></script>
-    <script src="app.js?v=20260518-topology-icons"></script>
+    <script src="app.js?v=20260518-source-pie-icons"></script>
   </body>
 </html>
