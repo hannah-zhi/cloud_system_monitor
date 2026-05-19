@@ -1449,7 +1449,7 @@ function sourceColor(source) {
     station: "#13c781",
     "station-alarm": "#f4a51c",
     device: "#b95cff",
-    data: "#00d7ff",
+    data: "#ff8629",
   }[key] || "#8aa0bd";
 }
 
@@ -2892,15 +2892,23 @@ function subsystemAlarmTooltipHtml(station, subsystemNo) {
   const alarms = [...state.allAlarms, ...state.homeDataAlarms].filter(
     (alarm) => alarm.stationId === station.id && alarm.location.includes(`#${subsystemNo}子系统`)
   );
+  const tone = subsystemAlarmTone(alarms);
   if (!alarms.length) {
-    return `<div class="storage-system-tooltip"><strong>预警/告警：0</strong><p>当前子系统暂无预警/告警</p></div>`;
+    return `<div class="storage-system-tooltip ${tone}"><strong>预警/告警：0</strong><p>当前子系统暂无预警/告警</p></div>`;
   }
   const topItems = alarms.slice(0, 5);
   return `
-    <div class="storage-system-tooltip">
+    <div class="storage-system-tooltip ${tone}">
       <strong>预警/告警：${alarms.length}</strong>
       <ul>${topItems.map((alarm) => `<li>${alarm.title}</li>`).join("")}</ul>
     </div>`;
+}
+
+function subsystemAlarmTone(alarms) {
+  if (alarms.some((alarm) => alarm.type === "level1" || alarm.level === "一级")) return "level1";
+  if (alarms.some((alarm) => alarm.type === "level2" || alarm.level === "二级")) return "level2";
+  if (alarms.some((alarm) => alarm.type === "level3" || alarm.level === "三级")) return "level3";
+  return "none";
 }
 
 function renderStationOverview(station) {
@@ -2928,8 +2936,12 @@ function renderStationOverview(station) {
     .map((item) => `<option value="${item.n}">K${station.id.slice(2)}-${item.n}#子系统</option>`)
     .join("");
   const systems = systemItems.map((item) => {
+    const subsystemAlarms = [...state.allAlarms, ...state.homeDataAlarms].filter(
+      (alarm) => alarm.stationId === station.id && alarm.location.includes(`#${item.n}子系统`)
+    );
+    const alarmTone = subsystemAlarmTone(subsystemAlarms);
     return `
-    <div class="storage-system-card ${item.statusClass}" data-system="${item.n}">
+    <div class="storage-system-card ${item.statusClass} alarm-${alarmTone}" data-system="${item.n}">
       <div class="storage-system-head"><strong>K${station.id.slice(2)}-${item.n}#子系统</strong><span>${item.status}</span></div>
       <div class="system-row"><span>系统有功(PCS)功率</span><strong>${formatNumeric(item.localPower)} kW</strong></div>
       <div class="system-row"><span>系统SOC</span><strong>${formatNumeric(item.localSoc)} %</strong></div>
@@ -2967,10 +2979,10 @@ function renderStationOverview(station) {
       <article class="panel station-attr-panel">
         <div class="panel-title"><span></span>场站属性</div>
         <div class="overview-metrics">
+          <div><span>场站类型</span><strong>${station.stationType || "配套储能"}</strong></div>
           <div><span>系统数量</span><strong>${systemCount} <em>套</em></strong></div>
           <div><span>额定容量</span><strong>${formatNumeric(station.ratedEnergy)} <em>MWh</em></strong></div>
           <div><span>额定功率</span><strong>${formatNumeric(station.rated)} <em>MW</em></strong></div>
-          <div><span>剩余电量</span><strong>${remaining} <em>kWh</em></strong></div>
         </div>
       </article>
       <article class="panel storage-summary-panel">
@@ -3042,19 +3054,23 @@ function renderStorageBundleLines() {
     svg.innerHTML = "";
     return;
   }
-  const trunkX = 14;
+  const trunkX = 15;
   const cardRects = cards.map((card) => {
     const rect = card.getBoundingClientRect();
     return {
       top: rect.top - gridRect.top,
+      bottom: rect.bottom - gridRect.top,
       centerX: rect.left - gridRect.left + rect.width / 2,
-      branchY: Math.max(10, rect.top - gridRect.top - 16),
+      branchY: Math.max(16, rect.top - gridRect.top - 14),
     };
   });
-  const minY = Math.max(10, Math.min(...cardRects.map((rect) => rect.branchY)) - 12);
+  const minY = Math.max(8, Math.min(...cardRects.map((rect) => rect.branchY)) - 12);
   const maxY = Math.max(...cardRects.map((rect) => rect.branchY));
   const paths = [
-    `M ${trunkX - 8} ${minY} H ${trunkX} V ${maxY}`,
+    `M ${trunkX - 9} ${minY} H ${trunkX + 12}`,
+    `M ${trunkX - 6} ${minY} V ${maxY}`,
+    `M ${trunkX} ${minY} V ${maxY}`,
+    `M ${trunkX + 6} ${minY} V ${maxY}`,
     ...cardRects.map((rect) => `M ${trunkX} ${rect.branchY} H ${rect.centerX} V ${Math.max(rect.top - 2, rect.branchY)}`),
   ];
   svg.setAttribute("viewBox", `0 0 ${Math.ceil(gridRect.width)} ${Math.ceil(gridRect.height)}`);
