@@ -99,6 +99,8 @@ const state = {
     source: new Set(),
   },
   activeFilter: "all",
+  activeAlarmSource: "all",
+  overviewSortMode: "sosAsc",
   selectedStationIds: new Set(),
   selectedStation: null,
   detailTab: "overview",
@@ -130,6 +132,7 @@ function bindElements() {
     "stationPickerMenu",
     "stationPickerList",
     "stationSelector",
+    "overviewSortSelect",
     "sosMinInput",
     "sosMaxInput",
     "sosMinRange",
@@ -275,6 +278,10 @@ function bindEvents() {
     });
   });
   els.searchInput.addEventListener("input", applyFilters);
+  els.overviewSortSelect?.addEventListener("change", () => {
+    state.overviewSortMode = els.overviewSortSelect.value;
+    applyFilters();
+  });
   els.searchInput.addEventListener("focus", () => {
     openStationPicker();
     renderStationPicker();
@@ -290,6 +297,7 @@ function bindEvents() {
   bindSosRangeEvents();
   els.clearFilterBtn.addEventListener("click", () => {
     state.activeFilter = "all";
+    state.activeAlarmSource = "all";
     state.selectedStationIds.clear();
     setSosRange(0, 100, false);
     els.searchInput.value = "";
@@ -772,7 +780,7 @@ function renderFilters() {
   const counts = summarize(state.stations);
   const filters = [
     {
-      title: "SOS指数",
+      title: "SOS",
       entries: ["high", "mid", "low", "healthy"].map((key) => ({
         key: `risk:${key}`,
         label: riskMeta[key].label,
@@ -781,7 +789,7 @@ function renderFilters() {
       })),
     },
     {
-      title: "最高预警等级",
+      title: "站内最高预警/告警等级",
       entries: [
         { key: "alarm:level1", label: "一级", count: counts.alarm.level1, color: "#ff3d59" },
         { key: "alarm:level2", label: "二级", count: counts.alarm.level2, color: "#f4a51c" },
@@ -906,7 +914,7 @@ function applyFilters() {
     return matchSelected && matchKeyword && matchFilter;
   });
 
-  filtered = filtered.sort((a, b) => a.id.localeCompare(b.id, "zh-CN"));
+  filtered = sortOverviewStations(filtered);
 
   state.filtered = filtered;
   renderStations(filtered);
@@ -918,6 +926,15 @@ function applyFilters() {
     renderAlarmDetailPage();
   }
   renderStationPicker();
+}
+
+function sortOverviewStations(stations) {
+  return [...stations].sort((a, b) => {
+    if (state.overviewSortMode === "sosDesc") return b.sos - a.sos || a.id.localeCompare(b.id, "zh-CN");
+    if (state.overviewSortMode === "idAsc") return a.id.localeCompare(b.id, "zh-CN");
+    if (state.overviewSortMode === "idDesc") return b.id.localeCompare(a.id, "zh-CN");
+    return a.sos - b.sos || a.id.localeCompare(b.id, "zh-CN");
+  });
 }
 
 function showPage(page) {
@@ -964,14 +981,19 @@ function createStationCard(station) {
   const stateClass = operationStateClass(station.run);
   const commClass = commStatusClass(station.comm);
   const comm = commMeta[station.comm];
+  const risk = riskMeta[station.risk];
   const remainingEnergy = formatRemainingEnergy(station);
   const operationTag = station.comm === "offline" ? "" : `<span class="operation-tag ${stateClass}">${station.run}</span>`;
+  const sosPercent = Math.max(0, Math.min(100, Number(station.sos || 0)));
   return `
-    <button class="station-card ${commClass}" data-id="${station.id}" type="button">
+    <button class="station-card risk-${risk.className} ${commClass}" data-id="${station.id}" type="button">
       <div class="card-head">
         ${operationTag}
         <span class="station-name" title="${station.id}${station.name}">${station.id}${station.name}</span>
         <span class="comm-dot ${commClass}" title="${comm.label}"></span>
+      </div>
+      <div class="card-sos-line" style="--sos-color:${risk.color};--sos-width:${sosPercent}%">
+        <span>SOS</span><strong>${formatSosValue(station.sos)}</strong><i></i>
       </div>
       <div class="metrics central-monitor-metrics">
         <div class="metric"><span>通讯状态</span><strong>${comm.label}</strong></div>
@@ -1064,12 +1086,13 @@ function positionStationPicker() {
 function renderAlarms() {
   if (!els.alarmList) return;
   const rangeAlarms = filterAlarmsByTime(state.alarms);
-  const alarms = rangeAlarms.filter((alarm) => state.activeAlarmType === "all" || alarm.type === state.activeAlarmType);
+  const levelAlarms = rangeAlarms.filter((alarm) => state.activeAlarmType === "all" || alarm.type === state.activeAlarmType);
+  const alarms = levelAlarms.filter((alarm) => state.activeAlarmSource === "all" || alarm.source === state.activeAlarmSource);
   els.alarmCountAll.textContent = rangeAlarms.length;
   els.alarmCountLevel1.textContent = rangeAlarms.filter((alarm) => alarm.type === "level1").length;
   els.alarmCountLevel2.textContent = rangeAlarms.filter((alarm) => alarm.type === "level2").length;
   els.alarmCountLevel3.textContent = rangeAlarms.filter((alarm) => alarm.type === "level3").length;
-  renderAlarmSourceSummary(els.alarmList.closest(".alarm-panel")?.querySelector(".alarm-source-summary"), alarms, homeAlarmSourceLabels);
+  renderAlarmSourceSummary(els.alarmList.closest(".alarm-panel")?.querySelector(".alarm-source-summary"), levelAlarms, homeAlarmSourceLabels, true);
   els.alarmList.innerHTML = alarms
     .map(
       (alarm) => `
@@ -1099,12 +1122,31 @@ function renderAlarms() {
   });
 }
 
-function renderAlarmSourceSummary(container, alarms, sources = alarmSourceLabels) {
+function renderAlarmSourceSummary(container, alarms, sources = alarmSourceLabels, interactive = false) {
   if (!container) return;
   const counts = countAlarmSources(alarms, sources);
   container.innerHTML = sources
-    .map((source) => `<div class="alarm-source-stat alarm-source-stat-${alarmSourceClass(source)}"><strong>${counts[source] || 0}</strong><span>${source}</span></div>`)
+    .map((source) => {
+      const active = state.activeAlarmSource === source ? " active" : "";
+      const attrs = interactive ? ` role="button" tabindex="0" data-source="${source}"` : "";
+      return `<div class="alarm-source-stat alarm-source-stat-${alarmSourceClass(source)}${active}"${attrs}><strong>${counts[source] || 0}</strong><span>${source}</span></div>`;
+    })
     .join("");
+  if (interactive) {
+    container.querySelectorAll("[data-source]").forEach((item) => {
+      const toggle = () => {
+        state.activeAlarmSource = state.activeAlarmSource === item.dataset.source ? "all" : item.dataset.source;
+        renderAlarms();
+      };
+      item.addEventListener("click", toggle);
+      item.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          toggle();
+        }
+      });
+    });
+  }
 }
 
 function countAlarmSources(alarms, sources = alarmSourceLabels) {

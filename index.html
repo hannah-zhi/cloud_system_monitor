@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>集中监测 - 远景数智运营系统</title>
-    <link rel="stylesheet" href="styles.css?v=20260519-panorama-monitor-donuts" />
+    <link rel="stylesheet" href="styles.css?v=20260519-sos-sort-source-filter" />
   </head>
   <body>
     <div class="shell">
@@ -72,6 +72,15 @@
                   <strong id="selectedCount">110</strong>
                 </label>
               </div>
+              <label class="overview-sort combo-input">
+                <span aria-hidden="true">☷</span>
+                <select id="overviewSortSelect" aria-label="场站排序">
+                  <option value="sosAsc" selected>SOS数值-从低到高</option>
+                  <option value="sosDesc">SOS数值-从高到低</option>
+                  <option value="idAsc">场站编号-顺序</option>
+                  <option value="idDesc">场站编号-倒序</option>
+                </select>
+              </label>
             </div>
             <div class="toolbar-actions"></div>
           </div>
@@ -91,7 +100,7 @@
             <aside class="alarm-panel" aria-label="预警清单">
               <div class="alarm-head">
                 <div>
-                  <div class="panel-title"><span></span>预警清单</div>
+                  <div class="panel-title"><span></span>预警/告警清单</div>
                   <p>按风险严重度滚动刷新</p>
                 </div>
               </div>
@@ -463,6 +472,6 @@
 
     <script src="site-data.js?v=20260415-siteconfig3"></script>
     <script src="risk-data.js?v=20260415-risk-list1"></script>
-    <script src="app.js?v=20260519-panorama-monitor-donuts"></script>
+    <script src="app.js?v=20260519-sos-sort-source-filter"></script>
   </body>
 </html>
