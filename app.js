@@ -9,6 +9,7 @@ const commMeta = {
   ok: { label: "通讯正常", tone: "tone-ok", color: "#13c781" },
   partial: { label: "部分通讯中断", tone: "tone-warn", color: "#f4a51c" },
   down: { label: "通讯中断", tone: "tone-danger", color: "#ff3d59" },
+  offline: { label: "离线", tone: "tone-muted", color: "#7c8799" },
 };
 
 const stationNames = [
@@ -35,7 +36,8 @@ const stationNames = [
 ];
 
 const stationTypeLabels = ["配套储能", "独立储能", "工商业储能"];
-const alarmSourceLabels = ["云端预警", "站端预警", "站端告警", "设备告警"];
+const alarmSourceLabels = ["云端预警", "站端预警", "设备告警"];
+const homeAlarmSourceLabels = ["云端预警", "站端预警", "设备告警", "数据告警"];
 const alarmOverviewDonutOptions = {
   radius: 48,
   lineWidth: 28,
@@ -48,6 +50,7 @@ const state = {
   filtered: [],
   alarms: [],
   allAlarms: [],
+  homeDataAlarms: [],
   activeAlarmType: "all",
   activeAlarmDays: "all",
   alarmStartDate: "",
@@ -109,6 +112,7 @@ document.addEventListener("DOMContentLoaded", () => {
   bindElements();
   state.stations = createStations();
   state.allAlarms = createAlarms(state.stations);
+  state.homeDataAlarms = createDataAlarms(state.stations);
   renderAlarmDetailFilters();
   renderFilters();
   applyFilters();
@@ -300,7 +304,7 @@ function bindEvents() {
     els.alarmTabs.querySelectorAll("button").forEach((item) => item.classList.toggle("active", item === button));
     renderAlarms();
   });
-  els.alarmDetailJump.addEventListener("click", () => showPage("alarm"));
+  els.alarmDetailJump?.addEventListener("click", () => showPage("alarm"));
   els.alarmTimeButtons.addEventListener("click", (event) => {
     const button = event.target.closest("button[data-days]");
     if (!button) return;
@@ -488,7 +492,7 @@ function createStations(count = 110) {
     const name = stationNames[index % stationNames.length];
     const sos = scoreFor(n);
     const risk = getRisk(sos);
-    const comm = n % 13 === 0 || n % 17 === 0 ? "down" : n % 7 === 0 || n % 11 === 0 ? "partial" : "ok";
+    const comm = communicationStateForIndex(n);
     const run = operationStateForIndex(n, comm);
     const rated = round(1 + ((n * 7) % 18) * 0.55, 2);
     const ratedEnergy = round(rated * (1.75 + (n % 6) * 0.18), 2);
@@ -518,7 +522,7 @@ function createStationFromConfig(item, index, total) {
   const n = index + 1;
   const sos = scoreFor(n);
   const risk = getRisk(sos);
-  const comm = n % 13 === 0 || n % 17 === 0 ? "down" : n % 7 === 0 || n % 11 === 0 ? "partial" : "ok";
+  const comm = communicationStateForIndex(n);
   const run = operationStateForIndex(n, comm);
   const rated = Number(item.ratedCapacity);
   const ratedEnergy = Number(item.ratedEnergy);
@@ -549,7 +553,15 @@ function stationTypeForIndex(index, total) {
   return stationTypeLabels[2];
 }
 
+function communicationStateForIndex(n) {
+  if (n % 23 === 0 || n % 41 === 0) return "offline";
+  if (n % 13 === 0 || n % 17 === 0) return "down";
+  if (n % 7 === 0 || n % 11 === 0) return "partial";
+  return "ok";
+}
+
 function operationStateForIndex(n, comm) {
+  if (comm === "offline") return "";
   if (n % 19 === 0 || (comm === "down" && n % 2 === 0)) return "停机";
   if (n % 7 === 0) return "充电";
   if (n % 5 === 0) return "待机";
@@ -695,10 +707,46 @@ function createAlarms(stations) {
 }
 
 function alarmSourceForIndex(index) {
-  if (index % 11 === 0) return alarmSourceLabels[3];
-  if (index % 7 === 0) return alarmSourceLabels[2];
+  if (index % 11 === 0) return alarmSourceLabels[2];
   if (index % 4 === 0) return alarmSourceLabels[1];
   return alarmSourceLabels[0];
+}
+
+function createDataAlarms(stations) {
+  const templates = [
+    { title: "数据采集链路中断", level: "一级", type: "level1", module: "数据系统", location: "采集网关-遥测通道" },
+    { title: "SOC数据长时间未刷新", level: "二级", type: "level2", module: "数据系统", location: "BMS数据接入-SOC点位" },
+    { title: "功率曲线数据跳变", level: "二级", type: "level2", module: "数据系统", location: "PCS遥测-有功功率点位" },
+    { title: "电量统计数据缺失", level: "三级", type: "level3", module: "数据系统", location: "日统计任务-充放电电量" },
+    { title: "设备编码映射异常", level: "三级", type: "level3", module: "数据系统", location: "主数据映射-设备台账" },
+  ];
+  return stations
+    .filter((station, index) => index % 6 === 0 || station.comm === "offline")
+    .slice(0, 34)
+    .map((station, index) => {
+      const template = templates[index % templates.length];
+      const warningDate = new Date(2026, 3, 15 - (index % 28), 10 - (index % 4), 8 + (index * 7) % 50);
+      const eventDate = new Date(warningDate.getTime() - (12 + (index % 18)) * 60 * 1000);
+      return {
+        id: `${station.id}-data-${index + 1}`,
+        stationId: station.id,
+        stationName: station.name,
+        title: template.title,
+        module: template.module,
+        type: template.type,
+        level: template.level,
+        location: template.location,
+        source: "数据告警",
+        dateISO: formatDateInput(warningDate),
+        eventTime: formatFullDateTime(eventDate),
+        warningTime: formatFullDateTime(warningDate),
+        time: `${String(warningDate.getMonth() + 1).padStart(2, "0")}-${String(warningDate.getDate()).padStart(2, "0")} ${String(warningDate.getHours()).padStart(2, "0")}:${String(warningDate.getMinutes()).padStart(2, "0")}`,
+        status: "待处理",
+        srIssued: false,
+        srCompleted: false,
+        srNo: "",
+      };
+    });
 }
 
 function formatFullDateTime(date) {
@@ -723,19 +771,36 @@ function getRisk(score) {
 function renderFilters() {
   const counts = summarize(state.stations);
   const filters = [
-    { key: "comm:ok", label: commMeta.ok.label, count: counts.comm.ok, tone: commMeta.ok.tone },
-    { key: "comm:partial", label: commMeta.partial.label, count: counts.comm.partial, tone: commMeta.partial.tone },
-    { key: "comm:down", label: commMeta.down.label, count: counts.comm.down, tone: commMeta.down.tone },
+    {
+      title: "SOS指数",
+      entries: ["high", "mid", "low", "healthy"].map((key) => ({
+        key: `risk:${key}`,
+        label: riskMeta[key].label,
+        count: counts.risk[key],
+        color: riskMeta[key].color,
+      })),
+    },
+    {
+      title: "最高预警等级",
+      entries: [
+        { key: "alarm:level1", label: "一级", count: counts.alarm.level1, color: "#ff3d59" },
+        { key: "alarm:level2", label: "二级", count: counts.alarm.level2, color: "#f4a51c" },
+        { key: "alarm:level3", label: "三级", count: counts.alarm.level3, color: "#13c781" },
+        { key: "alarm:none", label: "无预警", count: counts.alarm.none, color: "#1689ff" },
+      ],
+    },
+    {
+      title: "通讯状态",
+      entries: ["ok", "partial", "down", "offline"].map((key) => ({
+        key: `comm:${key}`,
+        label: commMeta[key].label,
+        count: counts.comm[key],
+        color: commMeta[key].color,
+      })),
+    },
   ];
-  els.statusFilters.innerHTML = filters
-    .map(
-      (item) => `
-      <button class="filter-chip ${item.tone} ${state.activeFilter === item.key ? "active" : ""}" data-filter="${item.key}" type="button">
-        <span>${item.label}</span><strong>${item.count}</strong>
-      </button>`
-    )
-    .join("");
-  els.statusFilters.querySelectorAll("button").forEach((button) => {
+  els.statusFilters.innerHTML = filters.map(renderOverviewFilterDonut).join("");
+  els.statusFilters.querySelectorAll("[data-filter]").forEach((button) => {
     button.addEventListener("click", () => {
       state.activeFilter = state.activeFilter === button.dataset.filter ? "all" : button.dataset.filter;
       renderFilters();
@@ -744,16 +809,87 @@ function renderFilters() {
   });
 }
 
+function renderOverviewFilterDonut(group) {
+  const total = group.entries.reduce((sum, item) => sum + item.count, 0) || 1;
+  let start = -90;
+  const cx = 42;
+  const cy = 42;
+  const outer = 34;
+  const inner = 21;
+  const slices = group.entries
+    .map((item) => {
+      if (!item.count) return "";
+      const angle = Math.max(0.6, (item.count / total) * 360);
+      const path = donutSlicePath(cx, cy, outer, inner, start, start + angle);
+      start += angle;
+      return `<path class="overview-donut-slice ${state.activeFilter === item.key ? "active" : ""}" d="${path}" fill="${item.color}" data-filter="${item.key}"><title>${item.label} ${item.count}</title></path>`;
+    })
+    .join("");
+  return `
+    <article class="overview-donut-card">
+      <h3>${group.title}</h3>
+      <div class="overview-donut-content">
+        <svg class="overview-filter-donut" viewBox="0 0 84 84" role="img" aria-label="${group.title}">
+          <circle cx="${cx}" cy="${cy}" r="${outer}" fill="none" stroke="rgba(58,64,82,0.72)" stroke-width="${outer - inner}"></circle>
+          ${slices}
+          <circle cx="${cx}" cy="${cy}" r="${inner - 1}" fill="rgba(20,22,31,0.98)"></circle>
+          <text x="${cx}" y="${cy + 4}" text-anchor="middle">${total}</text>
+        </svg>
+        <div class="overview-donut-legend">
+          ${group.entries
+            .map(
+              (item) => `
+              <button class="${state.activeFilter === item.key ? "active" : ""}" data-filter="${item.key}" type="button">
+                <span style="--legend-color:${item.color}">${item.label}</span><strong>${item.count}</strong>
+              </button>`
+            )
+            .join("")}
+        </div>
+      </div>
+    </article>`;
+}
+
+function donutSlicePath(cx, cy, outer, inner, startAngle, endAngle) {
+  const startOuter = polarToCartesian(cx, cy, outer, endAngle);
+  const endOuter = polarToCartesian(cx, cy, outer, startAngle);
+  const startInner = polarToCartesian(cx, cy, inner, startAngle);
+  const endInner = polarToCartesian(cx, cy, inner, endAngle);
+  const largeArc = endAngle - startAngle <= 180 ? "0" : "1";
+  return [
+    `M ${startOuter.x} ${startOuter.y}`,
+    `A ${outer} ${outer} 0 ${largeArc} 0 ${endOuter.x} ${endOuter.y}`,
+    `L ${startInner.x} ${startInner.y}`,
+    `A ${inner} ${inner} 0 ${largeArc} 1 ${endInner.x} ${endInner.y}`,
+    "Z",
+  ].join(" ");
+}
+
+function polarToCartesian(cx, cy, radius, angleInDegrees) {
+  const angleInRadians = (angleInDegrees - 90) * Math.PI / 180;
+  return {
+    x: round(cx + radius * Math.cos(angleInRadians), 3),
+    y: round(cy + radius * Math.sin(angleInRadians), 3),
+  };
+}
+
 function summarize(stations) {
   const counts = {
-    comm: { ok: 0, partial: 0, down: 0 },
+    comm: { ok: 0, partial: 0, down: 0, offline: 0 },
     risk: { high: 0, mid: 0, low: 0, healthy: 0 },
+    alarm: { level1: 0, level2: 0, level3: 0, none: 0 },
   };
   stations.forEach((station) => {
     counts.comm[station.comm] += 1;
     counts.risk[station.risk] += 1;
+    counts.alarm[highestAlarmTypeForStation(station)] += 1;
   });
   return counts;
+}
+
+function highestAlarmTypeForStation(station) {
+  const stationAlarms = state.allAlarms.filter((alarm) => alarm.stationId === station.id);
+  if (!stationAlarms.length) return "none";
+  return stationAlarms.sort((a, b) => alarmOrder(a.type) - alarmOrder(b.type))[0].type;
 }
 
 function applyFilters() {
@@ -764,7 +900,9 @@ function applyFilters() {
     const matchKeyword = state.selectedStationIds.size || !keyword || `${station.id}${station.name}`.toLowerCase().includes(keyword);
     const matchFilter =
       state.activeFilter === "all" ||
-      (filterType === "comm" && station.comm === filterValue);
+      (filterType === "comm" && station.comm === filterValue) ||
+      (filterType === "risk" && station.risk === filterValue) ||
+      (filterType === "alarm" && highestAlarmTypeForStation(station) === filterValue);
     return matchSelected && matchKeyword && matchFilter;
   });
 
@@ -772,7 +910,7 @@ function applyFilters() {
 
   state.filtered = filtered;
   renderStations(filtered);
-  state.alarms = filterAlarmsByStations(filtered);
+  state.alarms = filterAlarmsByStations(filtered, [...state.allAlarms, ...state.homeDataAlarms]);
   renderAlarms();
   if (state.activePage === "risk") renderRiskView();
   if (state.activePage === "alarm") {
@@ -803,10 +941,10 @@ function showPage(page) {
   window.history.replaceState({}, "", url);
 }
 
-function filterAlarmsByStations(stations) {
+function filterAlarmsByStations(stations, alarms = state.allAlarms) {
   if (!stations.length) return [];
   const stationIds = new Set(stations.map((station) => station.id));
-  return state.allAlarms.filter((alarm) => stationIds.has(alarm.stationId));
+  return alarms.filter((alarm) => stationIds.has(alarm.stationId));
 }
 
 function renderStations(stations) {
@@ -827,10 +965,11 @@ function createStationCard(station) {
   const commClass = commStatusClass(station.comm);
   const comm = commMeta[station.comm];
   const remainingEnergy = formatRemainingEnergy(station);
+  const operationTag = station.comm === "offline" ? "" : `<span class="operation-tag ${stateClass}">${station.run}</span>`;
   return `
     <button class="station-card ${commClass}" data-id="${station.id}" type="button">
       <div class="card-head">
-        <span class="operation-tag ${stateClass}">${station.run}</span>
+        ${operationTag}
         <span class="station-name" title="${station.id}${station.name}">${station.id}${station.name}</span>
         <span class="comm-dot ${commClass}" title="${comm.label}"></span>
       </div>
@@ -860,6 +999,7 @@ function commStatusClass(commState) {
     ok: "comm-ok",
     partial: "comm-partial",
     down: "comm-down",
+    offline: "comm-offline",
   };
   return classMap[commState] || "comm-ok";
 }
@@ -929,7 +1069,7 @@ function renderAlarms() {
   els.alarmCountLevel1.textContent = rangeAlarms.filter((alarm) => alarm.type === "level1").length;
   els.alarmCountLevel2.textContent = rangeAlarms.filter((alarm) => alarm.type === "level2").length;
   els.alarmCountLevel3.textContent = rangeAlarms.filter((alarm) => alarm.type === "level3").length;
-  renderAlarmSourceSummary(els.alarmList.closest(".alarm-panel")?.querySelector(".alarm-source-summary"), alarms);
+  renderAlarmSourceSummary(els.alarmList.closest(".alarm-panel")?.querySelector(".alarm-source-summary"), alarms, homeAlarmSourceLabels);
   els.alarmList.innerHTML = alarms
     .map(
       (alarm) => `
@@ -959,22 +1099,23 @@ function renderAlarms() {
   });
 }
 
-function renderAlarmSourceSummary(container, alarms) {
+function renderAlarmSourceSummary(container, alarms, sources = alarmSourceLabels) {
   if (!container) return;
-  const counts = countAlarmSources(alarms);
-  container.innerHTML = alarmSourceLabels
+  const counts = countAlarmSources(alarms, sources);
+  container.innerHTML = sources
     .map((source) => `<div class="alarm-source-stat alarm-source-stat-${alarmSourceClass(source)}"><strong>${counts[source] || 0}</strong><span>${source}</span></div>`)
     .join("");
 }
 
-function countAlarmSources(alarms) {
-  return alarmSourceLabels.reduce((acc, source) => {
+function countAlarmSources(alarms, sources = alarmSourceLabels) {
+  return sources.reduce((acc, source) => {
     acc[source] = alarms.filter((alarm) => alarm.source === source).length;
     return acc;
   }, {});
 }
 
 function alarmSourceClass(source) {
+  if (String(source).includes("数据")) return "data";
   if (String(source).includes("设备")) return "device";
   if (String(source).includes("站端告警")) return "station-alarm";
   if (String(source).includes("站端")) return "station";
@@ -1203,6 +1344,7 @@ function sourceColor(source) {
     station: "#13c781",
     "station-alarm": "#f4a51c",
     device: "#b95cff",
+    data: "#00d7ff",
   }[key] || "#8aa0bd";
 }
 
@@ -1936,7 +2078,8 @@ function groupAlarmsForTable(alarms) {
 
 function getAlarmGroupFromAlarm(alarm) {
   if (!alarm) return null;
-  return groupAlarmsForTable(state.allAlarms.filter((item) => alarmGroupKey(item) === alarmGroupKey(alarm)))[0] || null;
+  const source = alarm.source === "数据告警" ? state.homeDataAlarms : state.allAlarms;
+  return groupAlarmsForTable(source.filter((item) => alarmGroupKey(item) === alarmGroupKey(alarm)))[0] || null;
 }
 
 function getAlarmGroup(groupOrAlarm) {

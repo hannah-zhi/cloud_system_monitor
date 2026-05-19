@@ -1492,11 +1492,11 @@ h2 {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 12px;
-  height: 42px;
-  width: 520px;
-  margin-left: auto;
-  padding-right: 90px;
+  margin-bottom: 14px;
+  min-height: 148px;
+  width: 100%;
+  margin-left: 0;
+  padding-right: 0;
 }
 
 .sos-range-panel {
@@ -1610,18 +1610,15 @@ h2 {
 
 .overview-filter-row .status-row {
   position: static;
-  width: auto;
+  width: 100%;
   margin-bottom: 0;
   margin-left: 0;
-  justify-content: flex-end;
+  justify-content: stretch;
   flex-wrap: nowrap;
-  align-items: flex-end;
+  align-items: stretch;
 }
 
 .station-workbench .result-meta button {
-  position: absolute;
-  top: 14px;
-  right: 0;
   height: 30px;
   min-width: 78px;
   padding: 0 10px;
@@ -1666,6 +1663,10 @@ h2 {
 
 .tone-blue {
   box-shadow: inset 3px 0 0 var(--blue);
+}
+
+.tone-muted {
+  box-shadow: inset 3px 0 0 #7c8799;
 }
 
 .filter-chip.active {
@@ -1729,6 +1730,102 @@ h2 {
 
 .overview-filter-row .filter-chip strong {
   font-size: 16px;
+}
+
+.overview-donut-card {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 142px;
+  padding: 12px 14px;
+  border: 1px solid rgba(48, 58, 82, 0.86);
+  background:
+    linear-gradient(180deg, rgba(32, 35, 48, 0.94), rgba(18, 20, 30, 0.97)),
+    radial-gradient(circle at 100% 0%, rgba(18, 152, 255, 0.12), transparent 36%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.overview-donut-card h3 {
+  margin: 0 0 8px;
+  color: #f2f6ff;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.overview-donut-content {
+  display: grid;
+  grid-template-columns: 86px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+}
+
+.overview-filter-donut {
+  width: 84px;
+  height: 84px;
+  overflow: visible;
+}
+
+.overview-filter-donut text {
+  fill: #f3f7ff;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.overview-donut-slice {
+  cursor: pointer;
+  transition: opacity 0.16s ease, filter 0.16s ease;
+}
+
+.overview-donut-slice:hover,
+.overview-donut-slice.active {
+  opacity: 0.92;
+  filter: brightness(1.12);
+}
+
+.overview-donut-legend {
+  display: grid;
+  gap: 5px;
+}
+
+.overview-donut-legend button {
+  width: 100%;
+  height: 22px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 28px;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: transparent;
+  color: #cbd4e6;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.overview-donut-legend button:hover,
+.overview-donut-legend button.active {
+  color: #fff;
+}
+
+.overview-donut-legend span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.overview-donut-legend span::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  display: inline-block;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--legend-color);
+}
+
+.overview-donut-legend strong {
+  color: #f4f7ff;
+  text-align: right;
 }
 
 .detail-overview-layout {
@@ -2474,6 +2571,10 @@ h2 {
   border-top-color: #ff3d59;
 }
 
+.station-card.comm-offline {
+  border-top-color: #7c8799;
+}
+
 .comm-dot.comm-ok {
   background: #13c781;
   color: #13c781;
@@ -2487,6 +2588,11 @@ h2 {
 .comm-dot.comm-down {
   background: #ff3d59;
   color: #ff3d59;
+}
+
+.comm-dot.comm-offline {
+  background: #7c8799;
+  color: #7c8799;
 }
 
 .metric {
@@ -2719,6 +2825,14 @@ h2 {
   color: #d9adff;
 }
 
+.alarm-summary .alarm-source-stat-data {
+  border-color: rgba(0, 215, 255, 0.5);
+}
+
+.alarm-summary .alarm-source-stat-data span {
+  color: #8deeff;
+}
+
 .alarm-summary strong {
   display: block;
   font-size: 18px;
@@ -2834,6 +2948,12 @@ h2 {
   border: 1px solid rgba(185, 92, 255, 0.5);
   background: rgba(185, 92, 255, 0.12);
   color: #ead0ff;
+}
+
+.alarm-source-data {
+  border: 1px solid rgba(0, 215, 255, 0.5);
+  background: rgba(0, 215, 255, 0.12);
+  color: #b8f5ff;
 }
 
 .alarm-body strong {
@@ -4087,6 +4207,20 @@ h2 {
 
 .alarm-source-corner-device > span {
   text-shadow: 0 0 8px rgba(185, 92, 255, 0.42);
+}
+
+.alarm-source-corner-data {
+  color: #8deeff;
+}
+
+.alarm-source-corner-data::before {
+  background: linear-gradient(135deg, rgba(0, 215, 255, 0.18), rgba(0, 215, 255, 0.04));
+  border-top: 1px solid rgba(0, 215, 255, 0.28);
+  border-left: 1px solid rgba(0, 215, 255, 0.28);
+}
+
+.alarm-source-corner-data > span {
+  text-shadow: 0 0 8px rgba(0, 215, 255, 0.42);
 }
 
 .alarm-group-table-wrap {

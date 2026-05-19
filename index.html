@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>集中监测 - 远景数智运营系统</title>
-    <link rel="stylesheet" href="styles.css?v=20260518-compact-donut-legends" />
+    <link rel="stylesheet" href="styles.css?v=20260519-panorama-monitor-donuts" />
   </head>
   <body>
     <div class="shell">
@@ -19,10 +19,18 @@
           </div>
         </div>
         <nav class="nav" id="pageTabs" aria-label="主导航">
-          <a href="#"><span class="nav-icon">▣</span>全景概览</a>
-          <button class="nav-link nav-page-link nav-primary-page active" data-page="overview" type="button">
-            <span class="nav-link-main"><span class="nav-icon">◈</span><span>集中监测</span></span>
-          </button>
+          <div class="nav-group is-open is-active">
+            <button class="nav-link nav-toggle" type="button" data-toggle-target="panoramaMonitorMenu" aria-expanded="true">
+              <span class="nav-link-main"><span class="nav-icon">▣</span><span>全景监测</span></span>
+              <span class="nav-caret" aria-hidden="true"></span>
+            </button>
+            <div class="nav-children" id="panoramaMonitorMenu">
+              <div class="nav-page-links" aria-label="全景监测页面切换">
+                <button class="nav-sublink" type="button">全景概览</button>
+                <button class="nav-sublink nav-page-link active" data-page="overview" type="button">集中监测</button>
+              </div>
+            </div>
+          </div>
           <div class="nav-group is-open is-active">
             <button class="nav-link nav-toggle" type="button" data-toggle-target="safetyWarningMenu" aria-expanded="true">
               <span class="nav-link-main"><span class="nav-icon">◉</span><span>安全预警</span></span>
@@ -86,7 +94,6 @@
                   <div class="panel-title"><span></span>预警清单</div>
                   <p>按风险严重度滚动刷新</p>
                 </div>
-                <button id="alarmDetailJump" class="alarm-detail-link" type="button">查看详情</button>
               </div>
               <div class="alarm-tabs" id="alarmTabs">
                 <button class="active" data-type="all" type="button">全部 <span id="alarmCountAll">0</span></button>
@@ -456,6 +463,6 @@
 
     <script src="site-data.js?v=20260415-siteconfig3"></script>
     <script src="risk-data.js?v=20260415-risk-list1"></script>
-    <script src="app.js?v=20260518-round-pies-topology-label"></script>
+    <script src="app.js?v=20260519-panorama-monitor-donuts"></script>
   </body>
 </html>
