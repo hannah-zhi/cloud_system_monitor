@@ -1956,6 +1956,83 @@ h2 {
   text-anchor: middle;
 }
 
+.overview-icon-metric {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 auto;
+  min-height: 158px;
+  display: grid;
+  grid-template-columns: 116px minmax(0, 1fr);
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  padding: 8px 42px 4px;
+  background: linear-gradient(180deg, rgba(20, 22, 31, 0), rgba(10, 12, 19, 0.18));
+}
+
+.overview-icon-wrap {
+  width: 108px;
+  height: 108px;
+  display: grid;
+  place-items: center;
+}
+
+.overview-index-icon {
+  width: 96px;
+  height: 96px;
+  overflow: visible;
+  filter: drop-shadow(0 0 18px rgba(18, 152, 255, 0.2));
+}
+
+.overview-index-icon .icon-shell {
+  fill: rgba(18, 152, 255, 0.1);
+  stroke: #1689ff;
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+
+.overview-index-icon.shield .icon-shell {
+  fill: rgba(19, 199, 129, 0.1);
+  stroke: #13c781;
+}
+
+.overview-index-icon .icon-cap,
+.overview-index-icon .icon-bolt {
+  fill: rgba(22, 137, 255, 0.26);
+  stroke: #1689ff;
+  stroke-width: 2.2;
+  stroke-linejoin: round;
+}
+
+.overview-index-icon.shield .icon-bolt {
+  fill: rgba(19, 199, 129, 0.2);
+  stroke: #13c781;
+}
+
+.overview-index-icon.battery .icon-fill {
+  fill: rgba(22, 137, 255, 0.34);
+  stroke: none;
+}
+
+.overview-icon-copy {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.overview-icon-copy span {
+  color: #aeb7c8;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.overview-icon-copy strong {
+  color: #f4f8ff;
+  font-size: 38px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
 .station-run-panel,
 .station-attr-panel,
 .storage-summary-panel {

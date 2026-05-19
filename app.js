@@ -2766,6 +2766,30 @@ function renderOverviewIndexGauge(value, label, unit = "") {
     </svg>`;
 }
 
+function renderOverviewIconMetric(type, value, label, unit = "%") {
+  const safeValue = `${Math.round(Math.max(0, Math.min(100, Number(value) || 0)))}${unit}`;
+  const icon =
+    type === "battery"
+      ? `<svg class="overview-index-icon battery" viewBox="0 0 96 96" role="img" aria-label="${label}">
+          <rect class="icon-shell" x="31" y="16" width="34" height="64" rx="6"></rect>
+          <path class="icon-cap" d="M40 10h16v8H40z"></path>
+          <rect class="icon-fill" x="36" y="48" width="24" height="26" rx="4"></rect>
+          <path class="icon-bolt" d="m51 26-15 24h11l-3 18 16-27H49l2-15Z"></path>
+        </svg>`
+      : `<svg class="overview-index-icon shield" viewBox="0 0 96 96" role="img" aria-label="${label}">
+          <path class="icon-shell" d="M48 9 76 20v20c0 22-11 37-28 46-17-9-28-24-28-46V20L48 9Z"></path>
+          <path class="icon-bolt" d="m53 27-18 28h13l-4 18 19-31H50l3-15Z"></path>
+        </svg>`;
+  return `
+    <div class="overview-icon-metric">
+      <div class="overview-icon-wrap">${icon}</div>
+      <div class="overview-icon-copy">
+        <span>${label}</span>
+        <strong>${safeValue}</strong>
+      </div>
+    </div>`;
+}
+
 function subsystemAlarmSummary(station, subsystemNo) {
   const alarms = [...state.allAlarms, ...state.homeDataAlarms].filter(
     (alarm) => alarm.stationId === station.id && alarm.location.includes(`#${subsystemNo}子系统`)
@@ -2823,11 +2847,11 @@ function renderStationOverview(station) {
       </article>
       <article class="panel overview-index-card">
         <div class="panel-title"><span></span>全站当前健康指数</div>
-        <div class="overview-index-gauge">${renderOverviewIndexGauge(healthIndex, "健康指数", "%")}</div>
+        ${renderOverviewIconMetric("shield", healthIndex, "健康指数")}
       </article>
       <article class="panel overview-index-card">
         <div class="panel-title"><span></span>当前可用电量</div>
-        <div class="overview-index-gauge">${renderOverviewIndexGauge(availablePercent, "可用电量", "%")}</div>
+        ${renderOverviewIconMetric("battery", availablePercent, "当前可用电量")}
       </article>
     </div>
     <div class="station-overview-top">
