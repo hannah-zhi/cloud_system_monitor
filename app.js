@@ -100,6 +100,7 @@ const state = {
   },
   activeFilter: "all",
   activeAlarmSource: "all",
+  detailAlarmSource: "all",
   overviewSortMode: "sosAsc",
   selectedStationIds: new Set(),
   selectedStation: null,
@@ -1092,7 +1093,10 @@ function renderAlarms() {
   els.alarmCountLevel1.textContent = rangeAlarms.filter((alarm) => alarm.type === "level1").length;
   els.alarmCountLevel2.textContent = rangeAlarms.filter((alarm) => alarm.type === "level2").length;
   els.alarmCountLevel3.textContent = rangeAlarms.filter((alarm) => alarm.type === "level3").length;
-  renderAlarmSourceSummary(els.alarmList.closest(".alarm-panel")?.querySelector(".alarm-source-summary"), levelAlarms, homeAlarmSourceLabels, true);
+  renderAlarmSourceSummary(els.alarmList.closest(".alarm-panel")?.querySelector(".alarm-source-summary"), levelAlarms, homeAlarmSourceLabels, {
+    interactive: true,
+    activeSource: state.activeAlarmSource,
+  });
   els.alarmList.innerHTML = alarms
     .map(
       (alarm) => `
@@ -1122,12 +1126,13 @@ function renderAlarms() {
   });
 }
 
-function renderAlarmSourceSummary(container, alarms, sources = alarmSourceLabels, interactive = false) {
+function renderAlarmSourceSummary(container, alarms, sources = alarmSourceLabels, options = {}) {
   if (!container) return;
+  const { interactive = false, activeSource = state.activeAlarmSource, onChange = null } = options;
   const counts = countAlarmSources(alarms, sources);
   container.innerHTML = sources
     .map((source) => {
-      const active = state.activeAlarmSource === source ? " active" : "";
+      const active = activeSource === source ? " active" : "";
       const attrs = interactive ? ` role="button" tabindex="0" data-source="${source}"` : "";
       return `<div class="alarm-source-stat alarm-source-stat-${alarmSourceClass(source)}${active}"${attrs}><strong>${counts[source] || 0}</strong><span>${source}</span></div>`;
     })
@@ -1135,8 +1140,13 @@ function renderAlarmSourceSummary(container, alarms, sources = alarmSourceLabels
   if (interactive) {
     container.querySelectorAll("[data-source]").forEach((item) => {
       const toggle = () => {
-        state.activeAlarmSource = state.activeAlarmSource === item.dataset.source ? "all" : item.dataset.source;
-        renderAlarms();
+        const nextSource = activeSource === item.dataset.source ? "all" : item.dataset.source;
+        if (onChange) {
+          onChange(nextSource);
+        } else {
+          state.activeAlarmSource = nextSource;
+          renderAlarms();
+        }
       };
       item.addEventListener("click", toggle);
       item.addEventListener("keydown", (event) => {
@@ -2609,6 +2619,7 @@ function showDetail(id) {
   state.detailAlarmDays = "all";
   state.detailAlarmStartDate = "";
   state.detailAlarmEndDate = "";
+  state.detailAlarmSource = "all";
   state.detailTab = "overview";
   els.detailAlarmTabs.querySelectorAll("button").forEach((button) => button.classList.toggle("active", button.dataset.type === "all"));
   els.detailAlarmTimeButtons.querySelectorAll("button").forEach((button) => button.classList.toggle("active", button.dataset.days === "all"));
@@ -3459,7 +3470,7 @@ function handleBoxHover(event) {
 }
 
 function renderDetailAlarms(station) {
-  const stationAlarms = state.allAlarms
+  const stationAlarms = [...state.allAlarms, ...state.homeDataAlarms]
     .filter((alarm) => alarm.stationId === station.id)
     .sort((a, b) => alarmOrder(a.type) - alarmOrder(b.type) || b.dateISO.localeCompare(a.dateISO));
   const rangeAlarms = filterAlarmsByWindow(
@@ -3468,13 +3479,21 @@ function renderDetailAlarms(station) {
     state.detailAlarmStartDate,
     state.detailAlarmEndDate
   );
-  const alarms = rangeAlarms.filter((alarm) => state.detailAlarmType === "all" || alarm.type === state.detailAlarmType);
+  const levelAlarms = rangeAlarms.filter((alarm) => state.detailAlarmType === "all" || alarm.type === state.detailAlarmType);
+  const alarms = levelAlarms.filter((alarm) => state.detailAlarmSource === "all" || alarm.source === state.detailAlarmSource);
   els.detailAlarmSubtitle.textContent = `${station.id}${station.name}`;
   els.detailAlarmCountAll.textContent = rangeAlarms.length;
   els.detailAlarmCountLevel1.textContent = rangeAlarms.filter((alarm) => alarm.type === "level1").length;
   els.detailAlarmCountLevel2.textContent = rangeAlarms.filter((alarm) => alarm.type === "level2").length;
   els.detailAlarmCountLevel3.textContent = rangeAlarms.filter((alarm) => alarm.type === "level3").length;
-  renderAlarmSourceSummary(els.detailAlarmList.closest(".alarm-panel")?.querySelector(".alarm-source-summary"), alarms);
+  renderAlarmSourceSummary(els.detailAlarmList.closest(".alarm-panel")?.querySelector(".alarm-source-summary"), levelAlarms, homeAlarmSourceLabels, {
+    interactive: true,
+    activeSource: state.detailAlarmSource,
+    onChange: (source) => {
+      state.detailAlarmSource = source;
+      renderDetailAlarms(station);
+    },
+  });
   els.detailAlarmList.innerHTML = alarms.length
     ? alarms
         .map(
@@ -3496,7 +3515,7 @@ function renderDetailAlarms(station) {
         </button>`
         )
         .join("")
-    : `<div class="empty detail-alarm-empty">当前场站暂无预警</div>`;
+    : `<div class="empty detail-alarm-empty">当前场站暂无预警/告警</div>`;
   els.detailAlarmList.querySelectorAll(".alarm-item").forEach((item) => {
     item.addEventListener("click", () => {
       const alarm = alarms.find((entry) => entry.id === item.dataset.alarmId);

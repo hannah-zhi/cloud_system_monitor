@@ -2691,6 +2691,9 @@ h2 {
   top: 70px;
   height: calc(100vh - 92px);
   min-height: 640px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
   border: 1px solid rgba(54, 59, 76, 0.78);
   border-radius: 6px;
   padding: 17px 10px 12px 17px;
@@ -2922,9 +2925,12 @@ h2 {
 }
 
 .alarm-list {
-  height: calc(100% - 258px);
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
   overflow: auto;
-  padding-right: 8px;
+  padding: 0 8px 28px 0;
+  scroll-padding-bottom: 28px;
 }
 
 .alarm-item {
