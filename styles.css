@@ -1886,7 +1886,7 @@ h2 {
 
 .overview-index-card {
   min-height: 124px;
-  padding: 14px 18px 16px;
+  padding: 12px 18px;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -1932,7 +1932,7 @@ h2 {
 
 .overview-gauge-label {
   fill: #aeb7c8;
-  font-size: 15px;
+  font-size: 24px;
   text-anchor: middle;
 }
 
@@ -1942,11 +1942,11 @@ h2 {
   flex: 1 1 auto;
   min-height: 82px;
   display: grid;
-  grid-template-columns: 112px minmax(0, 1fr);
+  grid-template-columns: 112px 132px;
   align-items: center;
   justify-content: center;
-  gap: 18px;
-  padding: 0 22px 2px 8px;
+  gap: 12px;
+  padding: 0 8px 2px;
   background: linear-gradient(180deg, rgba(20, 22, 31, 0), rgba(10, 12, 19, 0.18));
 }
 
@@ -2000,8 +2000,9 @@ h2 {
 
 .overview-icon-copy {
   display: grid;
-  gap: 9px;
+  gap: 8px;
   min-width: 0;
+  justify-items: start;
 }
 
 .overview-icon-copy span {
@@ -2012,7 +2013,7 @@ h2 {
 
 .overview-icon-copy strong {
   color: #f4f8ff;
-  font-size: 30px;
+  font-size: 27px;
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
@@ -2320,6 +2321,106 @@ h2 {
   justify-content: space-between;
 }
 
+.charge-stat-tabs {
+  display: inline-flex;
+  border: 1px solid rgba(55, 64, 86, 0.85);
+  background: rgba(12, 14, 23, 0.72);
+}
+
+.charge-stat-tabs button {
+  height: 24px;
+  min-width: 38px;
+  border: 0;
+  border-left: 1px solid rgba(55, 64, 86, 0.75);
+  background: transparent;
+  color: #8f99ac;
+  font-size: 11px;
+  padding: 0 8px;
+}
+
+.charge-stat-tabs button:first-child {
+  border-left: 0;
+}
+
+.charge-stat-tabs button.active {
+  color: #f2f7ff;
+  background: #1689ff;
+}
+
+.charge-stat-body {
+  min-height: 104px;
+  display: grid;
+  grid-template-columns: 1fr 1px 1fr;
+  align-items: center;
+  gap: 12px;
+  padding: 5px 8px 0;
+}
+
+.charge-stat-divider {
+  width: 1px;
+  height: 62px;
+  background: rgba(73, 80, 102, 0.64);
+}
+
+.charge-stat-item {
+  min-width: 0;
+  display: grid;
+  place-items: center;
+}
+
+.energy-wave {
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  color: #aeb7c8;
+  font-size: 11px;
+}
+
+.energy-wave svg {
+  width: 78px;
+  height: 86px;
+  display: block;
+}
+
+.energy-wave-shell,
+.energy-wave-outline {
+  fill: none;
+  stroke: rgba(91, 132, 189, 0.78);
+  stroke-width: 2;
+}
+
+.energy-wave-bg {
+  fill: rgba(27, 30, 42, 0.96);
+}
+
+.energy-wave-fill {
+  fill: #1689ff;
+}
+
+.energy-wave.discharge-wave .energy-wave-shell,
+.energy-wave.discharge-wave .energy-wave-outline {
+  stroke: rgba(19, 199, 129, 0.76);
+}
+
+.energy-wave.discharge-wave .energy-wave-fill {
+  fill: #13c781;
+}
+
+.energy-wave-value {
+  fill: #f4f8ff;
+  font-size: 14px;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
+.energy-wave-unit {
+  fill: #cbd4e5;
+  font-size: 10px;
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
 .storage-summary-panel .panel-title {
   flex: 0 0 auto;
   white-space: nowrap;
@@ -2327,7 +2428,7 @@ h2 {
 }
 
 .topology-panel {
-  min-height: 330px;
+  min-height: 360px;
 }
 
 .topology-toolbar {

@@ -2725,6 +2725,30 @@ function renderStorageSocTank(value) {
     </svg>`;
 }
 
+function renderEnergyWave(value, label, colorClass) {
+  const pct = Math.max(8, Math.min(92, Number(value) % 100));
+  const waveY = round(55 - pct * 0.42, 2);
+  return `
+    <div class="energy-wave ${colorClass}">
+      <svg viewBox="0 0 84 92" role="img" aria-label="${label}">
+        <defs>
+          <clipPath id="${colorClass}WaveClip">
+            <circle cx="42" cy="42" r="31"></circle>
+          </clipPath>
+        </defs>
+        <circle class="energy-wave-shell" cx="42" cy="42" r="31"></circle>
+        <g clip-path="url(#${colorClass}WaveClip)">
+          <rect class="energy-wave-bg" x="11" y="11" width="62" height="62"></rect>
+          <path class="energy-wave-fill" d="M11 ${waveY} C24 ${waveY - 5} 36 ${waveY + 5} 49 ${waveY} S67 ${waveY - 5} 73 ${waveY} L73 76 L11 76 Z"></path>
+        </g>
+        <circle class="energy-wave-outline" cx="42" cy="42" r="31"></circle>
+        <text class="energy-wave-value" x="42" y="39">${formatNumeric(value)}</text>
+        <text class="energy-wave-unit" x="42" y="55">MWh</text>
+      </svg>
+      <span>${label}</span>
+    </div>`;
+}
+
 function renderTopologyIcon(type) {
   const iconMap = {
     grid: "grid.svg",
@@ -2814,7 +2838,6 @@ function renderStationOverview(station) {
   const systemCount = Math.max(1, Math.round(Number(station.subsystemCount || 12)));
   const activePower = formatNumeric(station.active);
   const soc = formatNumeric(station.soc);
-  const storageSoc = Math.max(3, Math.min(99, Math.round(Number(station.soc || 0) / 8)));
   const dailyCharge = formatNumeric(Math.max(0, Number(station.ratedEnergy || 0) * 1000 * (0.18 + Number(station.soc || 0) / 360)));
   const dailyDischarge = formatNumeric(Math.max(0, Number(station.ratedEnergy || 0) * 1000 * (0.14 + Math.max(0, 100 - Number(station.soc || 0)) / 420)));
   const remaining = formatRemainingEnergy(station);
@@ -2832,34 +2855,23 @@ function renderStationOverview(station) {
   const systemOptions = systemItems
     .map((item) => `<option value="${item.n}">K${station.id.slice(2)}-${item.n}#子系统</option>`)
     .join("");
-  const busSystems = systemItems.map((item) => {
-    const alarmTip = subsystemAlarmSummary(station, item.n).replace(/"/g, "&quot;");
-    const warnCount = [...state.allAlarms, ...state.homeDataAlarms].filter(
-      (alarm) => alarm.stationId === station.id && alarm.location.includes(`#${item.n}子系统`)
-    ).length;
-    return `
-      <div class="bus-system ${warnCount ? "has-warning" : ""}" data-warning="${alarmTip}">
-        <i></i>
-        <div class="bus-breaker"></div>
-        <div class="bus-pack">
-          <span>SOH</span><strong>${formatNumeric(97.5 + ((item.n * 0.17) % 2))}%</strong>
-          <span>SOC</span><strong>${formatNumeric(item.localSoc)}%</strong>
-        </div>
-        <b>#${String(item.n).padStart(2, "0")}子系统</b>
-      </div>`;
-  }).join("");
+  const systems = systemItems.map((item) => `
+    <div class="storage-system-card ${item.statusClass}" data-system="${item.n}" title="${subsystemAlarmSummary(station, item.n).replace(/"/g, "&quot;")}">
+      <div class="storage-system-head"><strong>K${station.id.slice(2)}-${item.n}#子系统</strong><span>${item.status}</span></div>
+      <div class="system-row"><span>系统有功(PCS)功率</span><strong>${formatNumeric(item.localPower)} kW</strong></div>
+      <div class="system-row"><span>系统SOC</span><strong>${formatNumeric(item.localSoc)} %</strong></div>
+      <div class="mini-bars">${Array.from({ length: 12 }, (_, bar) => `<i style="opacity:${bar < Math.round(item.localSoc / 9) ? 0.95 : 0.18}"></i>`).join("")}</div>
+      <div class="system-row"><span>系统SOH</span><strong>${formatNumeric(97.5 + ((item.n * 0.17) % 2))} %</strong></div>
+    </div>`).join("");
   els.stationOverviewPanel.innerHTML = `
     <div class="overview-index-row">
       <article class="panel overview-index-card">
-        <div class="panel-title"><span></span>全站当前 SOS 安全指数</div>
         ${renderOverviewGaugeMetric(station.sos, "安全指数")}
       </article>
       <article class="panel overview-index-card">
-        <div class="panel-title"><span></span>全站当前健康指数</div>
         ${renderOverviewIconMetric("shield", healthIndex, "健康指数")}
       </article>
       <article class="panel overview-index-card">
-        <div class="panel-title"><span></span>当前可用电量</div>
         ${renderOverviewIconMetric("battery", availablePercent, "当前可用电量")}
       </article>
     </div>
@@ -2888,16 +2900,20 @@ function renderStationOverview(station) {
       </article>
       <article class="panel storage-summary-panel">
         <div class="panel-title-row">
-          <div class="panel-title"><span></span>储能系统 ›</div>
-          <label class="storage-system-filter">
-            <select aria-label="储能子系统筛选">${systemOptions}</select>
-          </label>
+          <div class="panel-title"><span></span>充放电统计</div>
+          <div class="charge-stat-tabs" aria-label="充放电统计时间窗口">
+            <button class="active" type="button">当日</button>
+            <button type="button">当月</button>
+            <button type="button">当年</button>
+          </div>
         </div>
-        <div class="storage-summary">
-          <div class="storage-ring">${renderStorageSocTank(storageSoc)}</div>
-          <div class="overview-metrics compact">
-            <div><span>当日充电量</span><strong>${dailyCharge} <em>kWh</em></strong></div>
-            <div><span>当日放电量</span><strong>${dailyDischarge} <em>kWh</em></strong></div>
+        <div class="charge-stat-body">
+          <div class="charge-stat-item">
+            ${renderEnergyWave(Number(dailyCharge) / 1000, "充电能量", "charge-wave")}
+          </div>
+          <div class="charge-stat-divider"></div>
+          <div class="charge-stat-item">
+            ${renderEnergyWave(Number(dailyDischarge) / 1000, "放电能量", "discharge-wave")}
           </div>
         </div>
       </article>
@@ -2906,11 +2922,7 @@ function renderStationOverview(station) {
       <div class="topology-toolbar">
         <div class="panel-title"><span></span>拓扑图</div>
       </div>
-      <div class="bus-topology" aria-label="子系统母线图">
-        <div class="bus-main"></div>
-        <div class="bus-source"></div>
-        <div class="bus-scroll">${busSystems}</div>
-      </div>
+      <div class="storage-system-grid">${systems}</div>
     </article>
     <article class="panel station-power-panel">
       <div class="panel-title-row">
