@@ -134,6 +134,9 @@ function bindElements() {
     "stationPickerMenu",
     "stationPickerList",
     "stationSelector",
+    "overviewSortControl",
+    "overviewSortButton",
+    "overviewSortMenu",
     "overviewSortSelect",
     "overviewSortLabel",
     "sosMinInput",
@@ -284,9 +287,19 @@ function bindEvents() {
   els.searchInput.addEventListener("input", applyFilters);
   els.overviewSortSelect?.addEventListener("change", () => {
     state.overviewSortMode = els.overviewSortSelect.value;
-    if (els.overviewSortLabel) {
-      els.overviewSortLabel.textContent = els.overviewSortSelect.selectedOptions[0]?.textContent || "";
-    }
+    syncOverviewSortControl();
+    applyFilters();
+  });
+  els.overviewSortControl?.addEventListener("click", (event) => {
+    if (event.target.closest(".overview-sort-menu")) return;
+    event.stopPropagation();
+    toggleOverviewSortMenu();
+  });
+  els.overviewSortMenu?.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-sort-value]");
+    if (!button) return;
+    setOverviewSortMode(button.dataset.sortValue);
+    closeOverviewSortMenu();
     applyFilters();
   });
   els.searchInput.addEventListener("focus", () => {
@@ -296,6 +309,9 @@ function bindEvents() {
   document.addEventListener("click", (event) => {
     if (!els.stationSelector.contains(event.target) && !els.stationPickerMenu.contains(event.target)) {
       closeStationPicker();
+    }
+    if (!els.overviewSortControl?.contains(event.target)) {
+      closeOverviewSortMenu();
     }
     hideAlarmRowContextMenu();
   });
@@ -1171,6 +1187,36 @@ function countAlarmSources(alarms, sources = alarmSourceLabels) {
     acc[source] = alarms.filter((alarm) => alarm.source === source).length;
     return acc;
   }, {});
+}
+
+function setOverviewSortMode(value) {
+  state.overviewSortMode = value || "sosAsc";
+  if (els.overviewSortSelect) els.overviewSortSelect.value = state.overviewSortMode;
+  syncOverviewSortControl();
+}
+
+function syncOverviewSortControl() {
+  const label = els.overviewSortSelect?.selectedOptions[0]?.textContent || "SOS数值-从低到高";
+  if (els.overviewSortLabel) els.overviewSortLabel.textContent = label;
+  els.overviewSortMenu?.querySelectorAll("button[data-sort-value]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.sortValue === state.overviewSortMode);
+  });
+}
+
+function toggleOverviewSortMenu() {
+  const isOpen = els.overviewSortControl?.classList.contains("open");
+  if (isOpen) closeOverviewSortMenu();
+  else openOverviewSortMenu();
+}
+
+function openOverviewSortMenu() {
+  els.overviewSortControl?.classList.add("open");
+  els.overviewSortButton?.setAttribute("aria-expanded", "true");
+}
+
+function closeOverviewSortMenu() {
+  els.overviewSortControl?.classList.remove("open");
+  els.overviewSortButton?.setAttribute("aria-expanded", "false");
 }
 
 function alarmSourceClass(source) {
@@ -2842,6 +2888,21 @@ function subsystemAlarmSummary(station, subsystemNo) {
   return `${grouped}\n最新：${latest.title}\n来源：${latest.source}`;
 }
 
+function subsystemAlarmTooltipHtml(station, subsystemNo) {
+  const alarms = [...state.allAlarms, ...state.homeDataAlarms].filter(
+    (alarm) => alarm.stationId === station.id && alarm.location.includes(`#${subsystemNo}子系统`)
+  );
+  if (!alarms.length) {
+    return `<div class="storage-system-tooltip"><strong>预警/告警：0</strong><p>当前子系统暂无预警/告警</p></div>`;
+  }
+  const topItems = alarms.slice(0, 5);
+  return `
+    <div class="storage-system-tooltip">
+      <strong>预警/告警：${alarms.length}</strong>
+      <ul>${topItems.map((alarm) => `<li>${alarm.title}</li>`).join("")}</ul>
+    </div>`;
+}
+
 function renderStationOverview(station) {
   if (!els.stationOverviewPanel) return;
   const systemCount = Math.max(1, Math.round(Number(station.subsystemCount || 12)));
@@ -2867,14 +2928,14 @@ function renderStationOverview(station) {
     .map((item) => `<option value="${item.n}">K${station.id.slice(2)}-${item.n}#子系统</option>`)
     .join("");
   const systems = systemItems.map((item) => {
-    const alarmSummary = subsystemAlarmSummary(station, item.n).replace(/"/g, "&quot;");
     return `
-    <div class="storage-system-card ${item.statusClass}" data-system="${item.n}" data-warning="${alarmSummary}">
+    <div class="storage-system-card ${item.statusClass}" data-system="${item.n}">
       <div class="storage-system-head"><strong>K${station.id.slice(2)}-${item.n}#子系统</strong><span>${item.status}</span></div>
       <div class="system-row"><span>系统有功(PCS)功率</span><strong>${formatNumeric(item.localPower)} kW</strong></div>
       <div class="system-row"><span>系统SOC</span><strong>${formatNumeric(item.localSoc)} %</strong></div>
       <div class="mini-bars">${Array.from({ length: 12 }, (_, bar) => `<i style="opacity:${bar < Math.round(item.localSoc / 9) ? 0.95 : 0.18}"></i>`).join("")}</div>
       <div class="system-row"><span>系统SOH</span><strong>${formatNumeric(97.5 + ((item.n * 0.17) % 2))} %</strong></div>
+      ${subsystemAlarmTooltipHtml(station, item.n)}
     </div>`;
   }).join("");
   els.stationOverviewPanel.innerHTML = `
@@ -2981,20 +3042,20 @@ function renderStorageBundleLines() {
     svg.innerHTML = "";
     return;
   }
-  const trunkX = 16;
+  const trunkX = 14;
   const cardRects = cards.map((card) => {
     const rect = card.getBoundingClientRect();
     return {
       top: rect.top - gridRect.top,
       centerX: rect.left - gridRect.left + rect.width / 2,
-      branchY: Math.max(10, rect.top - gridRect.top - 8),
+      branchY: Math.max(10, rect.top - gridRect.top - 16),
     };
   });
   const minY = Math.max(10, Math.min(...cardRects.map((rect) => rect.branchY)) - 12);
   const maxY = Math.max(...cardRects.map((rect) => rect.branchY));
   const paths = [
     `M ${trunkX - 8} ${minY} H ${trunkX} V ${maxY}`,
-    ...cardRects.map((rect) => `M ${trunkX} ${rect.branchY} H ${rect.centerX} V ${rect.top}`),
+    ...cardRects.map((rect) => `M ${trunkX} ${rect.branchY} H ${rect.centerX} V ${Math.max(rect.top - 2, rect.branchY)}`),
   ];
   svg.setAttribute("viewBox", `0 0 ${Math.ceil(gridRect.width)} ${Math.ceil(gridRect.height)}`);
   svg.innerHTML = `<path d="${paths.join(" ")}" />`;
