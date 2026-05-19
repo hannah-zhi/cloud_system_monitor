@@ -2734,40 +2734,35 @@ function renderTopologyIcon(type) {
   return `<img src="assets/topology-icons/${iconMap[type] || iconMap.grid}" alt="" loading="lazy" />`;
 }
 
-function renderOverviewSafetyGauge(value) {
+function renderOverviewIndexGauge(value, label, unit = "") {
   const percent = Math.max(0, Math.min(100, Number(value) || 0));
-  const angle = -180 + (percent / 100) * 180;
-  const pointerLength = 34;
-  const rad = (angle * Math.PI) / 180;
-  const x2 = 54 + Math.cos(rad) * pointerLength;
-  const y2 = 54 + Math.sin(rad) * pointerLength;
+  const ticks = Array.from({ length: 36 }, (_, index) => {
+    const ratio = index / 35;
+    const angle = Math.PI + ratio * Math.PI;
+    const x1 = 150 + Math.cos(angle) * 88;
+    const y1 = 118 + Math.sin(angle) * 88;
+    const x2 = 150 + Math.cos(angle) * 116;
+    const y2 = 118 + Math.sin(angle) * 116;
+    const active = percent >= 99.999 || ratio * 100 <= percent;
+    return `<line class="overview-gauge-tick ${active ? "active" : ""}" x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" style="--tick-color:${gaugeColor(ratio)}"></line>`;
+  }).join("");
+  const scale = [0, 20, 40, 60, 80, 100]
+    .map((mark) => {
+      const angle = Math.PI + (mark / 100) * Math.PI;
+      const x1 = 150 + Math.cos(angle) * 62;
+      const y1 = 118 + Math.sin(angle) * 62;
+      const x2 = 150 + Math.cos(angle) * 72;
+      const y2 = 118 + Math.sin(angle) * 72;
+      return `<line class="overview-gauge-scale" x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"></line>`;
+    })
+    .join("");
+  const displayValue = unit ? `${Math.round(percent)}${unit}` : formatSosValue(percent);
   return `
-    <svg class="overview-index-gauge-svg" viewBox="0 0 108 66" aria-hidden="true">
-      <path class="index-gauge-track" d="M14 54 A40 40 0 0 1 94 54"></path>
-      <path class="index-gauge-danger" d="M14 54 A40 40 0 0 1 31 21"></path>
-      <path class="index-gauge-warn" d="M31 21 A40 40 0 0 1 65 16"></path>
-      <path class="index-gauge-ok" d="M65 16 A40 40 0 0 1 94 54"></path>
-      <line class="index-gauge-needle" x1="54" y1="54" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"></line>
-      <circle class="index-gauge-hub" cx="54" cy="54" r="3.5"></circle>
-      <text class="index-gauge-label" x="54" y="61">SOS</text>
-    </svg>`;
-}
-
-function renderShieldIcon() {
-  return `
-    <svg class="overview-index-icon shield" viewBox="0 0 72 72" aria-hidden="true">
-      <path d="M36 7 57 15v15c0 17-8 28-21 35-13-7-21-18-21-35V15l21-8Z"></path>
-      <path d="m39 19-13 21h10l-3 14 14-23H37l2-12Z"></path>
-    </svg>`;
-}
-
-function renderBatteryIcon() {
-  return `
-    <svg class="overview-index-icon battery" viewBox="0 0 72 72" aria-hidden="true">
-      <rect x="21" y="11" width="30" height="50" rx="5"></rect>
-      <path d="M30 8h12v5H30z"></path>
-      <path d="m38 24-10 16h8l-2 11 11-18h-8l1-9Z"></path>
-      <rect class="battery-fill" x="25" y="35" width="22" height="20" rx="3"></rect>
+    <svg class="overview-index-gauge-svg" viewBox="0 0 300 150" role="img" aria-label="${label} ${displayValue}">
+      <g>${ticks}</g>
+      <g>${scale}</g>
+      <text class="overview-gauge-value" x="150" y="112">${displayValue}</text>
+      <text class="overview-gauge-label" x="150" y="138">${label}</text>
     </svg>`;
 }
 
@@ -2823,16 +2818,16 @@ function renderStationOverview(station) {
   els.stationOverviewPanel.innerHTML = `
     <div class="overview-index-row">
       <article class="panel overview-index-card">
-        <div class="index-visual gauge">${renderOverviewSafetyGauge(station.sos)}</div>
-        <div class="index-copy"><span>安全指数</span><strong>${formatSosValue(station.sos)}</strong></div>
+        <div class="panel-title"><span></span>全站当前 SOS 安全指数</div>
+        <div class="overview-index-gauge">${renderOverviewIndexGauge(station.sos, "SOS")}</div>
       </article>
       <article class="panel overview-index-card">
-        <div class="index-visual">${renderShieldIcon()}</div>
-        <div class="index-copy"><span>健康指数</span><strong>${healthIndex}%</strong></div>
+        <div class="panel-title"><span></span>全站当前健康指数</div>
+        <div class="overview-index-gauge">${renderOverviewIndexGauge(healthIndex, "健康指数", "%")}</div>
       </article>
       <article class="panel overview-index-card">
-        <div class="index-visual">${renderBatteryIcon()}</div>
-        <div class="index-copy"><span>当前可用电量</span><strong>${availablePercent}%</strong></div>
+        <div class="panel-title"><span></span>当前可用电量</div>
+        <div class="overview-index-gauge">${renderOverviewIndexGauge(availablePercent, "可用电量", "%")}</div>
       </article>
     </div>
     <div class="station-overview-top">

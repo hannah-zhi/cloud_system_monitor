@@ -1885,15 +1885,14 @@ h2 {
 }
 
 .overview-index-card {
-  min-height: 112px;
-  padding: 14px 18px;
-  display: grid;
-  grid-template-columns: 96px minmax(0, 1fr);
-  align-items: center;
-  gap: 18px;
+  min-height: 218px;
+  padding: 14px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   background:
     linear-gradient(180deg, rgba(32, 34, 46, 0.96), rgba(21, 23, 32, 0.98)),
-    radial-gradient(circle at 26% 50%, rgba(18, 152, 255, 0.12), transparent 42%);
+    radial-gradient(circle at 50% 72%, rgba(18, 152, 255, 0.12), transparent 44%);
 }
 
 .overview-index-card::after {
@@ -1908,103 +1907,53 @@ h2 {
   background-size: 8px 8px;
 }
 
-.index-visual {
-  width: 92px;
-  height: 72px;
-  display: grid;
-  place-items: center;
+.overview-index-gauge {
   position: relative;
   z-index: 1;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 158px;
+  padding-top: 4px;
+  background: linear-gradient(180deg, rgba(20, 22, 31, 0), rgba(10, 12, 19, 0.2));
 }
 
 .overview-index-gauge-svg {
-  width: 96px;
-  height: 64px;
+  display: block;
+  width: min(100%, 330px);
+  height: 156px;
   overflow: visible;
 }
 
-.index-gauge-track,
-.index-gauge-danger,
-.index-gauge-warn,
-.index-gauge-ok {
-  fill: none;
-  stroke-width: 9;
-  stroke-linecap: butt;
-}
-
-.index-gauge-track {
-  stroke: rgba(61, 65, 82, 0.9);
-}
-
-.index-gauge-danger {
-  stroke: #ff5b68;
-}
-
-.index-gauge-warn {
-  stroke: #f4a51c;
-}
-
-.index-gauge-ok {
-  stroke: #13c781;
-}
-
-.index-gauge-needle {
-  stroke: #c9d2e2;
-  stroke-width: 2;
+.overview-gauge-tick {
+  stroke: rgba(46, 50, 63, 0.82);
+  stroke-width: 5.2;
   stroke-linecap: round;
 }
 
-.index-gauge-hub {
-  fill: #c9d2e2;
+.overview-gauge-tick.active {
+  stroke: var(--tick-color);
 }
 
-.index-gauge-label {
-  fill: #aeb7c8;
-  font-size: 10px;
+.overview-gauge-scale {
+  stroke: rgba(238, 247, 255, 0.42);
+  stroke-width: 1.2;
+  stroke-linecap: round;
+}
+
+.overview-gauge-value {
+  fill: #f4f8ff;
+  font-size: 34px;
+  font-weight: 700;
   text-anchor: middle;
+  dominant-baseline: middle;
 }
 
-.overview-index-icon {
-  width: 62px;
-  height: 62px;
-  overflow: visible;
-}
-
-.overview-index-icon path,
-.overview-index-icon rect {
-  fill: rgba(18, 152, 255, 0.12);
-  stroke: #1689ff;
-  stroke-width: 2.4;
-  stroke-linejoin: round;
-}
-
-.overview-index-icon.shield path {
-  stroke: #13c781;
-  fill: rgba(19, 199, 129, 0.1);
-}
-
-.overview-index-icon.battery .battery-fill {
-  fill: rgba(22, 137, 255, 0.32);
-  stroke: none;
-}
-
-.index-copy {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  gap: 8px;
-}
-
-.index-copy span {
-  color: #a9b2c4;
-  font-size: 13px;
-}
-
-.index-copy strong {
-  color: #f4f8ff;
-  font-size: 28px;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
+.overview-gauge-label {
+  fill: #aeb7c8;
+  font-size: 12px;
+  text-anchor: middle;
 }
 
 .station-run-panel,
