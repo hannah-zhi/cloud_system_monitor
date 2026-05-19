@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>集中监测 - 远景数智运营系统</title>
-    <link rel="stylesheet" href="styles.css?v=20260519-charge-stat-subsystem-grid" />
+    <link rel="stylesheet" href="styles.css?v=20260519-topology-bundle-health" />
   </head>
   <body>
     <div class="shell">
@@ -73,7 +73,8 @@
                 </label>
               </div>
               <label class="overview-sort combo-input">
-                <span aria-hidden="true">☷</span>
+                <span class="overview-sort-icon" aria-hidden="true">☷</span>
+                <span id="overviewSortLabel" class="overview-sort-label">SOS数值-从低到高</span>
                 <select id="overviewSortSelect" aria-label="场站排序">
                   <option value="sosAsc" selected>SOS数值-从低到高</option>
                   <option value="sosDesc">SOS数值-从高到低</option>
@@ -333,6 +334,7 @@
           <div class="detail-section-tabs" id="detailSectionTabs" aria-label="单站详情页面切换">
             <button class="active" data-detail-tab="overview" type="button">场站概览</button>
             <button data-detail-tab="diagnosis" type="button">安全诊断</button>
+            <button data-detail-tab="health" type="button">健康管理</button>
           </div>
 
           <div class="detail-tab-view active" id="detailOverviewTab">
@@ -465,6 +467,16 @@
               </article>
             </div>
           </div>
+          <div class="detail-tab-view" id="detailHealthTab">
+            <div class="health-management-panel panel">
+              <div class="panel-title"><span></span>健康管理</div>
+              <div class="health-management-grid">
+                <div><span>电池健康度</span><strong>91%</strong></div>
+                <div><span>关键设备健康度</span><strong>95%</strong></div>
+                <div><span>建议巡检项</span><strong>3</strong></div>
+              </div>
+            </div>
+          </div>
         </section>
       </main>
     </div>
@@ -474,6 +486,6 @@
 
     <script src="site-data.js?v=20260415-siteconfig3"></script>
     <script src="risk-data.js?v=20260415-risk-list1"></script>
-    <script src="app.js?v=20260519-charge-stat-subsystem-grid"></script>
+    <script src="app.js?v=20260519-topology-bundle-health"></script>
   </body>
 </html>

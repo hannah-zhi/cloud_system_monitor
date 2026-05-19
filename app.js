@@ -102,6 +102,7 @@ const state = {
   activeAlarmSource: "all",
   detailAlarmSource: "all",
   overviewSortMode: "sosAsc",
+  chargeStatWindow: "day",
   selectedStationIds: new Set(),
   selectedStation: null,
   detailTab: "overview",
@@ -134,6 +135,7 @@ function bindElements() {
     "stationPickerList",
     "stationSelector",
     "overviewSortSelect",
+    "overviewSortLabel",
     "sosMinInput",
     "sosMaxInput",
     "sosMinRange",
@@ -153,6 +155,7 @@ function bindElements() {
     "detailSectionTabs",
     "detailOverviewTab",
     "detailDiagnosisTab",
+    "detailHealthTab",
     "stationOverviewPanel",
     "overviewPowerCanvas",
     "overviewPowerTooltip",
@@ -281,6 +284,9 @@ function bindEvents() {
   els.searchInput.addEventListener("input", applyFilters);
   els.overviewSortSelect?.addEventListener("change", () => {
     state.overviewSortMode = els.overviewSortSelect.value;
+    if (els.overviewSortLabel) {
+      els.overviewSortLabel.textContent = els.overviewSortSelect.selectedOptions[0]?.textContent || "";
+    }
     applyFilters();
   });
   els.searchInput.addEventListener("focus", () => {
@@ -486,6 +492,7 @@ function bindEvents() {
     renderBars(state.detailSubsystems);
   });
   window.addEventListener("resize", () => {
+    renderStorageBundleLines();
     if (state.selectedStation) renderDetailCharts(state.selectedStation);
     if (state.activePage === "risk") renderRiskView();
   });
@@ -2620,6 +2627,7 @@ function showDetail(id) {
   state.detailAlarmStartDate = "";
   state.detailAlarmEndDate = "";
   state.detailAlarmSource = "all";
+  state.chargeStatWindow = "day";
   state.detailTab = "overview";
   els.detailAlarmTabs.querySelectorAll("button").forEach((button) => button.classList.toggle("active", button.dataset.type === "all"));
   els.detailAlarmTimeButtons.querySelectorAll("button").forEach((button) => button.classList.toggle("active", button.dataset.days === "all"));
@@ -2676,12 +2684,13 @@ function renderDetail(station) {
 }
 
 function showDetailTab(tabName, shouldRender = true) {
-  state.detailTab = tabName === "diagnosis" ? "diagnosis" : "overview";
+  state.detailTab = ["overview", "diagnosis", "health"].includes(tabName) ? tabName : "overview";
   els.detailSectionTabs?.querySelectorAll("button").forEach((button) => {
     button.classList.toggle("active", button.dataset.detailTab === state.detailTab);
   });
   els.detailOverviewTab?.classList.toggle("active", state.detailTab === "overview");
   els.detailDiagnosisTab?.classList.toggle("active", state.detailTab === "diagnosis");
+  els.detailHealthTab?.classList.toggle("active", state.detailTab === "health");
   if (shouldRender && state.selectedStation && state.detailTab === "diagnosis") {
     renderDetailCharts(state.selectedStation);
   }
@@ -2838,8 +2847,10 @@ function renderStationOverview(station) {
   const systemCount = Math.max(1, Math.round(Number(station.subsystemCount || 12)));
   const activePower = formatNumeric(station.active);
   const soc = formatNumeric(station.soc);
-  const dailyCharge = formatNumeric(Math.max(0, Number(station.ratedEnergy || 0) * 1000 * (0.18 + Number(station.soc || 0) / 360)));
-  const dailyDischarge = formatNumeric(Math.max(0, Number(station.ratedEnergy || 0) * 1000 * (0.14 + Math.max(0, 100 - Number(station.soc || 0)) / 420)));
+  const chargeMultiplierMap = { day: 1, month: 28, year: 330 };
+  const chargeMultiplier = chargeMultiplierMap[state.chargeStatWindow] || chargeMultiplierMap.day;
+  const dailyCharge = formatNumeric(Math.max(0, Number(station.ratedEnergy || 0) * 1000 * (0.18 + Number(station.soc || 0) / 360) * chargeMultiplier));
+  const dailyDischarge = formatNumeric(Math.max(0, Number(station.ratedEnergy || 0) * 1000 * (0.14 + Math.max(0, 100 - Number(station.soc || 0)) / 420) * chargeMultiplier));
   const remaining = formatRemainingEnergy(station);
   const runClass = operationStateClass(station.run);
   const runLabel = station.comm === "offline" ? "离线" : station.run;
@@ -2855,14 +2866,17 @@ function renderStationOverview(station) {
   const systemOptions = systemItems
     .map((item) => `<option value="${item.n}">K${station.id.slice(2)}-${item.n}#子系统</option>`)
     .join("");
-  const systems = systemItems.map((item) => `
-    <div class="storage-system-card ${item.statusClass}" data-system="${item.n}" title="${subsystemAlarmSummary(station, item.n).replace(/"/g, "&quot;")}">
+  const systems = systemItems.map((item) => {
+    const alarmSummary = subsystemAlarmSummary(station, item.n).replace(/"/g, "&quot;");
+    return `
+    <div class="storage-system-card ${item.statusClass}" data-system="${item.n}" data-warning="${alarmSummary}">
       <div class="storage-system-head"><strong>K${station.id.slice(2)}-${item.n}#子系统</strong><span>${item.status}</span></div>
       <div class="system-row"><span>系统有功(PCS)功率</span><strong>${formatNumeric(item.localPower)} kW</strong></div>
       <div class="system-row"><span>系统SOC</span><strong>${formatNumeric(item.localSoc)} %</strong></div>
       <div class="mini-bars">${Array.from({ length: 12 }, (_, bar) => `<i style="opacity:${bar < Math.round(item.localSoc / 9) ? 0.95 : 0.18}"></i>`).join("")}</div>
       <div class="system-row"><span>系统SOH</span><strong>${formatNumeric(97.5 + ((item.n * 0.17) % 2))} %</strong></div>
-    </div>`).join("");
+    </div>`;
+  }).join("");
   els.stationOverviewPanel.innerHTML = `
     <div class="overview-index-row">
       <article class="panel overview-index-card">
@@ -2902,9 +2916,9 @@ function renderStationOverview(station) {
         <div class="panel-title-row">
           <div class="panel-title"><span></span>充放电统计</div>
           <div class="charge-stat-tabs" aria-label="充放电统计时间窗口">
-            <button class="active" type="button">当日</button>
-            <button type="button">当月</button>
-            <button type="button">当年</button>
+            <button class="${state.chargeStatWindow === "day" ? "active" : ""}" data-charge-window="day" type="button">当日</button>
+            <button class="${state.chargeStatWindow === "month" ? "active" : ""}" data-charge-window="month" type="button">当月</button>
+            <button class="${state.chargeStatWindow === "year" ? "active" : ""}" data-charge-window="year" type="button">当年</button>
           </div>
         </div>
         <div class="charge-stat-body">
@@ -2922,7 +2936,10 @@ function renderStationOverview(station) {
       <div class="topology-toolbar">
         <div class="panel-title"><span></span>拓扑图</div>
       </div>
-      <div class="storage-system-grid">${systems}</div>
+      <div class="storage-system-grid">
+        <svg id="storageBundleSvg" class="storage-bundle-svg" aria-hidden="true"></svg>
+        ${systems}
+      </div>
     </article>
     <article class="panel station-power-panel">
       <div class="panel-title-row">
@@ -2950,7 +2967,37 @@ function renderStationOverview(station) {
   els.overviewPowerTooltip = document.getElementById("overviewPowerTooltip");
   els.overviewChargeCanvas = document.getElementById("overviewChargeCanvas");
   els.overviewChargeTooltip = document.getElementById("overviewChargeTooltip");
+  requestAnimationFrame(renderStorageBundleLines);
   renderOverviewCharts(station);
+}
+
+function renderStorageBundleLines() {
+  const grid = els.stationOverviewPanel?.querySelector(".storage-system-grid");
+  const svg = document.getElementById("storageBundleSvg");
+  if (!grid || !svg) return;
+  const cards = [...grid.querySelectorAll(".storage-system-card")];
+  const gridRect = grid.getBoundingClientRect();
+  if (!cards.length || gridRect.width <= 0 || gridRect.height <= 0) {
+    svg.innerHTML = "";
+    return;
+  }
+  const trunkX = 16;
+  const cardRects = cards.map((card) => {
+    const rect = card.getBoundingClientRect();
+    return {
+      top: rect.top - gridRect.top,
+      centerX: rect.left - gridRect.left + rect.width / 2,
+      branchY: Math.max(10, rect.top - gridRect.top - 8),
+    };
+  });
+  const minY = Math.max(10, Math.min(...cardRects.map((rect) => rect.branchY)) - 12);
+  const maxY = Math.max(...cardRects.map((rect) => rect.branchY));
+  const paths = [
+    `M ${trunkX - 8} ${minY} H ${trunkX} V ${maxY}`,
+    ...cardRects.map((rect) => `M ${trunkX} ${rect.branchY} H ${rect.centerX} V ${rect.top}`),
+  ];
+  svg.setAttribute("viewBox", `0 0 ${Math.ceil(gridRect.width)} ${Math.ceil(gridRect.height)}`);
+  svg.innerHTML = `<path d="${paths.join(" ")}" />`;
 }
 
 function createOverviewChartData(station) {
@@ -3110,6 +3157,12 @@ function handleOverviewChartHover(event) {
 }
 
 function handleOverviewDateClick(event) {
+  const chargeButton = event.target.closest("[data-charge-window]");
+  if (chargeButton) {
+    state.chargeStatWindow = chargeButton.dataset.chargeWindow;
+    if (state.selectedStation) renderStationOverview(state.selectedStation);
+    return;
+  }
   const range = event.target.closest(".chart-date-range");
   if (!range || event.target.matches("input")) return;
   const input = range.querySelector("input[type='date']");
