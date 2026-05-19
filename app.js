@@ -1410,7 +1410,12 @@ function renderRiskPie(stations) {
   const ctx = canvas.getContext("2d");
   const counts = summarize(stations).risk;
   const entries = ["high", "mid", "low", "healthy"].map((key) => [key, counts[key]]);
-  drawDonutChart(ctx, canvas, entries, (key) => riskMeta[key].color);
+  drawDonutChart(ctx, canvas, entries, (key) => riskMeta[key].color, {
+    radius: 58,
+    lineWidth: 30,
+    font: "22px Microsoft YaHei",
+    centerYOffset: 8,
+  });
   els.riskPieLegend.innerHTML = entries
     .map(
       ([key, count]) => `
@@ -3064,14 +3069,26 @@ function renderStorageBundleLines() {
       branchY: Math.max(16, rect.top - gridRect.top - 14),
     };
   });
-  const minY = Math.max(8, Math.min(...cardRects.map((rect) => rect.branchY)) - 12);
-  const maxY = Math.max(...cardRects.map((rect) => rect.branchY));
+  const rows = [...cardRects.reduce((map, rect) => {
+    const key = Math.round(rect.branchY);
+    const row = map.get(key) || { y: rect.branchY, minX: rect.centerX, maxX: rect.centerX, cards: [] };
+    row.minX = Math.min(row.minX, rect.centerX);
+    row.maxX = Math.max(row.maxX, rect.centerX);
+    row.cards.push(rect);
+    map.set(key, row);
+    return map;
+  }, new Map()).values()].sort((a, b) => a.y - b.y);
+  const busTopY = Math.max(8, rows[0].y - 12);
   const paths = [
-    `M ${trunkX - 9} ${minY} H ${trunkX + 12}`,
-    `M ${trunkX - 6} ${minY} V ${maxY}`,
-    `M ${trunkX} ${minY} V ${maxY}`,
-    `M ${trunkX + 6} ${minY} V ${maxY}`,
-    ...cardRects.map((rect) => `M ${trunkX} ${rect.branchY} H ${rect.centerX} V ${Math.max(rect.top - 2, rect.branchY)}`),
+    `M ${trunkX - 9} ${busTopY} H ${trunkX + 12}`,
+    ...rows.map((row, index) => {
+      const rowBusX = trunkX + index * 6;
+      return [
+        `M ${rowBusX} ${busTopY} V ${row.y}`,
+        `M ${rowBusX} ${row.y} H ${row.maxX}`,
+        ...row.cards.map((rect) => `M ${rect.centerX} ${row.y} V ${Math.max(rect.top - 2, row.y)}`),
+      ].join(" ");
+    }),
   ];
   svg.setAttribute("viewBox", `0 0 ${Math.ceil(gridRect.width)} ${Math.ceil(gridRect.height)}`);
   svg.innerHTML = `<path d="${paths.join(" ")}" />`;

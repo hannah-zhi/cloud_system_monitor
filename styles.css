@@ -2838,7 +2838,7 @@ h2 {
 
 .storage-system-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(170px, 190px));
   column-gap: 8px;
   row-gap: 28px;
   margin-top: 10px;
@@ -2846,6 +2846,7 @@ h2 {
   padding-left: 32px;
   overflow: visible;
   position: relative;
+  justify-content: center;
 }
 
 .storage-bundle-svg {
@@ -3921,13 +3922,14 @@ h2 {
 }
 
 .risk-summary-layout .donut-wrap {
-  grid-template-columns: 190px max-content;
-  min-height: 236px;
+  grid-template-columns: 160px max-content;
+  min-height: 218px;
+  overflow: hidden;
 }
 
 .risk-summary-layout .donut-wrap canvas {
-  width: 190px;
-  height: 190px;
+  width: 160px;
+  height: 160px;
   aspect-ratio: 1 / 1;
 }
 
