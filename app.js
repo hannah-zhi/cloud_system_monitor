@@ -2734,7 +2734,7 @@ function renderTopologyIcon(type) {
   return `<img src="assets/topology-icons/${iconMap[type] || iconMap.grid}" alt="" loading="lazy" />`;
 }
 
-function renderOverviewIndexGauge(value, label, unit = "") {
+function renderOverviewIndexGauge(value, label = "SOS") {
   const percent = Math.max(0, Math.min(100, Number(value) || 0));
   const ticks = Array.from({ length: 36 }, (_, index) => {
     const ratio = index / 35;
@@ -2756,13 +2756,11 @@ function renderOverviewIndexGauge(value, label, unit = "") {
       return `<line class="overview-gauge-scale" x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"></line>`;
     })
     .join("");
-  const displayValue = unit ? `${Math.round(percent)}${unit}` : formatSosValue(percent);
   return `
-    <svg class="overview-index-gauge-svg" viewBox="0 0 300 150" role="img" aria-label="${label} ${displayValue}">
+    <svg class="overview-index-gauge-svg" viewBox="0 0 300 150" role="img" aria-label="${label} ${formatSosValue(percent)}">
       <g>${ticks}</g>
       <g>${scale}</g>
-      <text class="overview-gauge-value" x="150" y="112">${displayValue}</text>
-      <text class="overview-gauge-label" x="150" y="138">${label}</text>
+      <text class="overview-gauge-label" x="150" y="118">${label}</text>
     </svg>`;
 }
 
@@ -2786,6 +2784,17 @@ function renderOverviewIconMetric(type, value, label, unit = "%") {
       <div class="overview-icon-copy">
         <span>${label}</span>
         <strong>${safeValue}</strong>
+      </div>
+    </div>`;
+}
+
+function renderOverviewGaugeMetric(value, label) {
+  return `
+    <div class="overview-icon-metric overview-gauge-metric">
+      <div class="overview-icon-wrap gauge-wrap">${renderOverviewIndexGauge(value, "SOS")}</div>
+      <div class="overview-icon-copy">
+        <span>${label}</span>
+        <strong>${formatSosValue(value)}</strong>
       </div>
     </div>`;
 }
@@ -2843,7 +2852,7 @@ function renderStationOverview(station) {
     <div class="overview-index-row">
       <article class="panel overview-index-card">
         <div class="panel-title"><span></span>全站当前 SOS 安全指数</div>
-        <div class="overview-index-gauge">${renderOverviewIndexGauge(station.sos, "SOS")}</div>
+        ${renderOverviewGaugeMetric(station.sos, "安全指数")}
       </article>
       <article class="panel overview-index-card">
         <div class="panel-title"><span></span>全站当前健康指数</div>

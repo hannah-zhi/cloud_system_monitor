@@ -1885,11 +1885,11 @@ h2 {
 }
 
 .overview-index-card {
-  min-height: 218px;
-  padding: 14px 16px 16px;
+  min-height: 124px;
+  padding: 14px 18px 16px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   background:
     linear-gradient(180deg, rgba(32, 34, 46, 0.96), rgba(21, 23, 32, 0.98)),
     radial-gradient(circle at 50% 72%, rgba(18, 152, 255, 0.12), transparent 44%);
@@ -1907,28 +1907,16 @@ h2 {
   background-size: 8px 8px;
 }
 
-.overview-index-gauge {
-  position: relative;
-  z-index: 1;
-  flex: 1 1 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 158px;
-  padding-top: 4px;
-  background: linear-gradient(180deg, rgba(20, 22, 31, 0), rgba(10, 12, 19, 0.2));
-}
-
 .overview-index-gauge-svg {
   display: block;
-  width: min(100%, 330px);
-  height: 156px;
+  width: 112px;
+  height: 72px;
   overflow: visible;
 }
 
 .overview-gauge-tick {
   stroke: rgba(46, 50, 63, 0.82);
-  stroke-width: 5.2;
+  stroke-width: 7;
   stroke-linecap: round;
 }
 
@@ -1938,21 +1926,13 @@ h2 {
 
 .overview-gauge-scale {
   stroke: rgba(238, 247, 255, 0.42);
-  stroke-width: 1.2;
+  stroke-width: 1.8;
   stroke-linecap: round;
-}
-
-.overview-gauge-value {
-  fill: #f4f8ff;
-  font-size: 34px;
-  font-weight: 700;
-  text-anchor: middle;
-  dominant-baseline: middle;
 }
 
 .overview-gauge-label {
   fill: #aeb7c8;
-  font-size: 12px;
+  font-size: 15px;
   text-anchor: middle;
 }
 
@@ -1960,26 +1940,30 @@ h2 {
   position: relative;
   z-index: 1;
   flex: 1 1 auto;
-  min-height: 158px;
+  min-height: 82px;
   display: grid;
-  grid-template-columns: 116px minmax(0, 1fr);
+  grid-template-columns: 112px minmax(0, 1fr);
   align-items: center;
   justify-content: center;
-  gap: 28px;
-  padding: 8px 42px 4px;
+  gap: 18px;
+  padding: 0 22px 2px 8px;
   background: linear-gradient(180deg, rgba(20, 22, 31, 0), rgba(10, 12, 19, 0.18));
 }
 
 .overview-icon-wrap {
-  width: 108px;
-  height: 108px;
+  width: 112px;
+  height: 78px;
   display: grid;
   place-items: center;
 }
 
+.overview-icon-wrap.gauge-wrap {
+  align-items: end;
+}
+
 .overview-index-icon {
-  width: 96px;
-  height: 96px;
+  width: 72px;
+  height: 72px;
   overflow: visible;
   filter: drop-shadow(0 0 18px rgba(18, 152, 255, 0.2));
 }
@@ -2016,19 +2000,19 @@ h2 {
 
 .overview-icon-copy {
   display: grid;
-  gap: 12px;
+  gap: 9px;
   min-width: 0;
 }
 
 .overview-icon-copy span {
   color: #aeb7c8;
-  font-size: 14px;
+  font-size: 13px;
   white-space: nowrap;
 }
 
 .overview-icon-copy strong {
   color: #f4f8ff;
-  font-size: 38px;
+  font-size: 30px;
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
