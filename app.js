@@ -563,7 +563,7 @@ function stationTypeForIndex(index, total) {
 }
 
 function communicationStateForIndex(n) {
-  if (n % 23 === 0 || n % 41 === 0) return "offline";
+  if (n % 2 === 0 || n % 23 === 0 || n % 41 === 0) return "offline";
   if (n % 13 === 0 || n % 17 === 0) return "down";
   if (n % 7 === 0 || n % 11 === 0) return "partial";
   return "ok";
@@ -2734,9 +2734,56 @@ function renderTopologyIcon(type) {
   return `<img src="assets/topology-icons/${iconMap[type] || iconMap.grid}" alt="" loading="lazy" />`;
 }
 
+function renderOverviewSafetyGauge(value) {
+  const percent = Math.max(0, Math.min(100, Number(value) || 0));
+  const angle = -180 + (percent / 100) * 180;
+  const pointerLength = 34;
+  const rad = (angle * Math.PI) / 180;
+  const x2 = 54 + Math.cos(rad) * pointerLength;
+  const y2 = 54 + Math.sin(rad) * pointerLength;
+  return `
+    <svg class="overview-index-gauge-svg" viewBox="0 0 108 66" aria-hidden="true">
+      <path class="index-gauge-track" d="M14 54 A40 40 0 0 1 94 54"></path>
+      <path class="index-gauge-danger" d="M14 54 A40 40 0 0 1 31 21"></path>
+      <path class="index-gauge-warn" d="M31 21 A40 40 0 0 1 65 16"></path>
+      <path class="index-gauge-ok" d="M65 16 A40 40 0 0 1 94 54"></path>
+      <line class="index-gauge-needle" x1="54" y1="54" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"></line>
+      <circle class="index-gauge-hub" cx="54" cy="54" r="3.5"></circle>
+      <text class="index-gauge-label" x="54" y="61">SOS</text>
+    </svg>`;
+}
+
+function renderShieldIcon() {
+  return `
+    <svg class="overview-index-icon shield" viewBox="0 0 72 72" aria-hidden="true">
+      <path d="M36 7 57 15v15c0 17-8 28-21 35-13-7-21-18-21-35V15l21-8Z"></path>
+      <path d="m39 19-13 21h10l-3 14 14-23H37l2-12Z"></path>
+    </svg>`;
+}
+
+function renderBatteryIcon() {
+  return `
+    <svg class="overview-index-icon battery" viewBox="0 0 72 72" aria-hidden="true">
+      <rect x="21" y="11" width="30" height="50" rx="5"></rect>
+      <path d="M30 8h12v5H30z"></path>
+      <path d="m38 24-10 16h8l-2 11 11-18h-8l1-9Z"></path>
+      <rect class="battery-fill" x="25" y="35" width="22" height="20" rx="3"></rect>
+    </svg>`;
+}
+
+function subsystemAlarmSummary(station, subsystemNo) {
+  const alarms = [...state.allAlarms, ...state.homeDataAlarms].filter(
+    (alarm) => alarm.stationId === station.id && alarm.location.includes(`#${subsystemNo}子系统`)
+  );
+  if (!alarms.length) return "当前子系统暂无预警/告警";
+  const grouped = ["一级", "二级", "三级"].map((level) => `${level}${alarms.filter((alarm) => alarm.level === level).length}`).join(" / ");
+  const latest = alarms[0];
+  return `${grouped}\n最新：${latest.title}\n来源：${latest.source}`;
+}
+
 function renderStationOverview(station) {
   if (!els.stationOverviewPanel) return;
-  const systemCount = Math.max(6, Math.min(18, Math.round(Number(station.subsystemCount || 12))));
+  const systemCount = Math.max(1, Math.round(Number(station.subsystemCount || 12)));
   const activePower = formatNumeric(station.active);
   const soc = formatNumeric(station.soc);
   const storageSoc = Math.max(3, Math.min(99, Math.round(Number(station.soc || 0) / 8)));
@@ -2744,6 +2791,9 @@ function renderStationOverview(station) {
   const dailyDischarge = formatNumeric(Math.max(0, Number(station.ratedEnergy || 0) * 1000 * (0.14 + Math.max(0, 100 - Number(station.soc || 0)) / 420)));
   const remaining = formatRemainingEnergy(station);
   const runClass = operationStateClass(station.run);
+  const runLabel = station.comm === "offline" ? "离线" : station.run;
+  const healthIndex = Math.round(Math.max(72, Math.min(99, 100 - Math.max(0, 100 - Number(station.sos || 0)) * 0.18)));
+  const availablePercent = Math.round(Math.max(5, Math.min(100, (Number(remaining) / Math.max(1, Number(station.ratedEnergy || 1) * 1000)) * 100)));
   const systemItems = Array.from({ length: systemCount }, (_, index) => {
     const n = index + 1;
     const localSoc = n % 7 === 0 ? 95 : n % 5 === 0 ? 47.9 : 5;
@@ -2754,17 +2804,37 @@ function renderStationOverview(station) {
   const systemOptions = systemItems
     .map((item) => `<option value="${item.n}">K${station.id.slice(2)}-${item.n}#子系统</option>`)
     .join("");
-  const systems = systemItems.map((item) => {
+  const busSystems = systemItems.map((item) => {
+    const alarmTip = subsystemAlarmSummary(station, item.n).replace(/"/g, "&quot;");
+    const warnCount = [...state.allAlarms, ...state.homeDataAlarms].filter(
+      (alarm) => alarm.stationId === station.id && alarm.location.includes(`#${item.n}子系统`)
+    ).length;
     return `
-      <div class="storage-system-card ${item.statusClass}" data-system="${item.n}">
-        <div class="storage-system-head"><strong>K${station.id.slice(2)}-${item.n}#子系统</strong><span>${item.status}</span></div>
-        <div class="system-row"><span>系统有功(PCS)功率</span><strong>${formatNumeric(item.localPower)} kW</strong></div>
-        <div class="system-row"><span>系统SOC</span><strong>${formatNumeric(item.localSoc)} %</strong></div>
-        <div class="mini-bars">${Array.from({ length: 12 }, (_, bar) => `<i style="opacity:${bar < Math.round(item.localSoc / 9) ? 0.95 : 0.18}"></i>`).join("")}</div>
-        <div class="system-row"><span>系统SOH</span><strong>${formatNumeric(97.5 + ((item.n * 0.17) % 2))} %</strong></div>
+      <div class="bus-system ${warnCount ? "has-warning" : ""}" data-warning="${alarmTip}">
+        <i></i>
+        <div class="bus-breaker"></div>
+        <div class="bus-pack">
+          <span>SOH</span><strong>${formatNumeric(97.5 + ((item.n * 0.17) % 2))}%</strong>
+          <span>SOC</span><strong>${formatNumeric(item.localSoc)}%</strong>
+        </div>
+        <b>#${String(item.n).padStart(2, "0")}子系统</b>
       </div>`;
   }).join("");
   els.stationOverviewPanel.innerHTML = `
+    <div class="overview-index-row">
+      <article class="panel overview-index-card">
+        <div class="index-visual gauge">${renderOverviewSafetyGauge(station.sos)}</div>
+        <div class="index-copy"><span>安全指数</span><strong>${formatSosValue(station.sos)}</strong></div>
+      </article>
+      <article class="panel overview-index-card">
+        <div class="index-visual">${renderShieldIcon()}</div>
+        <div class="index-copy"><span>健康指数</span><strong>${healthIndex}%</strong></div>
+      </article>
+      <article class="panel overview-index-card">
+        <div class="index-visual">${renderBatteryIcon()}</div>
+        <div class="index-copy"><span>当前可用电量</span><strong>${availablePercent}%</strong></div>
+      </article>
+    </div>
     <div class="station-overview-top">
       <article class="panel station-run-panel">
         <div class="panel-title"><span></span>场站运行</div>
@@ -2774,7 +2844,7 @@ function renderStationOverview(station) {
             <div class="soc-gauge-readout"><span>场站SOC</span><strong>${soc}<em>%</em></strong></div>
           </div>
           <div class="run-kpis">
-            <div><span>场站运行状态</span><strong class="${runClass}">${station.run}</strong></div>
+            <div><span>场站运行状态</span><strong class="${runClass}">${runLabel}</strong></div>
             <div><span>场站实时出力</span><strong>${activePower} <em>kW</em></strong></div>
           </div>
         </div>
@@ -2808,14 +2878,11 @@ function renderStationOverview(station) {
       <div class="topology-toolbar">
         <div class="panel-title"><span></span>拓扑图</div>
       </div>
-      <div class="topology-canvas">
-        <div class="topo-node grid"><i>${renderTopologyIcon("grid")}</i><span>电网</span></div>
-        <div class="topo-node step"><i>${renderTopologyIcon("step")}</i><span>110kV-220kV 升压站</span></div>
-        <div class="topo-node wind"><i>${renderTopologyIcon("wind")}</i><span>风电配套</span></div>
-        <div class="topo-line vertical"></div>
-        <div class="topo-line branch"></div>
+      <div class="bus-topology" aria-label="子系统母线图">
+        <div class="bus-main"></div>
+        <div class="bus-source"></div>
+        <div class="bus-scroll">${busSystems}</div>
       </div>
-      <div class="storage-system-grid">${systems}</div>
     </article>
     <article class="panel station-power-panel">
       <div class="panel-title-row">
@@ -3087,7 +3154,8 @@ function renderDetailCharts(station) {
 }
 
 function createSubsystems(station) {
-  return Array.from({ length: 30 }, (_, index) => {
+  const total = Math.max(1, Math.round(Number(station.subsystemCount || 30)));
+  return Array.from({ length: total }, (_, index) => {
     const n = index + 1;
     const drift = Math.sin((n + station.sos) * 0.55) * 14 - (n % 8 === 0 ? 22 : 0) + (n % 6 === 0 ? 9 : 0);
     const score = round(Math.min(100, Math.max(35, station.sos + drift)), 2);
@@ -3515,7 +3583,9 @@ function renderDetailAlarms(station) {
         </button>`
         )
         .join("")
-    : `<div class="empty detail-alarm-empty">当前场站暂无预警/告警</div>`;
+    : `<div class="empty detail-alarm-empty">${
+        state.detailAlarmSource === "all" ? "当前场站暂无预警/告警" : `当前场站无${state.detailAlarmSource}`
+      }</div>`;
   els.detailAlarmList.querySelectorAll(".alarm-item").forEach((item) => {
     item.addEventListener("click", () => {
       const alarm = alarms.find((entry) => entry.id === item.dataset.alarmId);
