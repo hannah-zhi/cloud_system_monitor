@@ -1411,8 +1411,8 @@ function renderRiskPie(stations) {
   const counts = summarize(stations).risk;
   const entries = ["high", "mid", "low", "healthy"].map((key) => [key, counts[key]]);
   drawDonutChart(ctx, canvas, entries, (key) => riskMeta[key].color, {
-    radius: 58,
-    lineWidth: 30,
+    radius: 64,
+    lineWidth: 32,
     font: "22px Microsoft YaHei",
     centerYOffset: 8,
   });
@@ -3079,13 +3079,13 @@ function renderStorageBundleLines() {
     return map;
   }, new Map()).values()].sort((a, b) => a.y - b.y);
   const busTopY = Math.max(8, rows[0].y - 12);
+  const maxY = rows[rows.length - 1].y;
   const paths = [
     `M ${trunkX - 9} ${busTopY} H ${trunkX + 12}`,
-    ...rows.map((row, index) => {
-      const rowBusX = trunkX + index * 6;
+    `M ${trunkX} ${busTopY} V ${maxY}`,
+    ...rows.map((row) => {
       return [
-        `M ${rowBusX} ${busTopY} V ${row.y}`,
-        `M ${rowBusX} ${row.y} H ${row.maxX}`,
+        `M ${trunkX} ${row.y} H ${row.maxX}`,
         ...row.cards.map((rect) => `M ${rect.centerX} ${row.y} V ${Math.max(rect.top - 2, row.y)}`),
       ].join(" ");
     }),
