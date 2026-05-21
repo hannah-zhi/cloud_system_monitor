@@ -1614,7 +1614,9 @@ h2 {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 392px;
   gap: 18px;
-  align-items: start;
+  align-items: stretch;
+  height: calc(100vh - 126px);
+  min-height: 640px;
   position: relative;
   z-index: 1;
 }
@@ -1622,6 +1624,9 @@ h2 {
 .station-workbench {
   min-width: 0;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .overview-filter-row {
@@ -1829,7 +1834,9 @@ h2 {
 .station-grid {
   grid-template-columns: repeat(auto-fill, 286px);
   gap: 14px;
-  max-height: calc(100vh - 220px);
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
 }
 
 .station-card,
@@ -3987,6 +3994,12 @@ h2 {
   grid-template-columns: 172px max-content;
   min-height: 218px;
   overflow: hidden;
+}
+
+.home-grid > .alarm-panel {
+  height: auto;
+  min-height: 0;
+  align-self: stretch;
 }
 
 .risk-summary-layout .donut-wrap canvas {
