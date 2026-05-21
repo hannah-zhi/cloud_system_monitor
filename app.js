@@ -1318,7 +1318,7 @@ function renderRiskTopList(stations) {
     )
     .join("");
   els.riskTopList.querySelectorAll("button").forEach((button) => {
-    button.addEventListener("click", () => showDetail(button.dataset.station));
+    button.addEventListener("click", () => showDetail(button.dataset.station, "diagnosis"));
   });
 }
 
@@ -2721,7 +2721,7 @@ function handleAlarmTrendHover(event) {
   els.alarmTrendTooltip.classList.add("show");
 }
 
-function showDetail(id) {
+function showDetail(id, initialTab = "overview") {
   const station = state.stations.find((item) => item.id === id);
   if (!station) return;
   state.selectedStation = station;
@@ -2736,7 +2736,7 @@ function showDetail(id) {
   state.detailAlarmEndDate = "";
   state.detailAlarmSource = "all";
   state.chargeStatWindow = "day";
-  state.detailTab = "overview";
+  state.detailTab = ["overview", "diagnosis", "health"].includes(initialTab) ? initialTab : "overview";
   els.detailAlarmTabs.querySelectorAll("button").forEach((button) => button.classList.toggle("active", button.dataset.type === "all"));
   els.detailAlarmTimeButtons.querySelectorAll("button").forEach((button) => button.classList.toggle("active", button.dataset.days === "all"));
   els.detailAlarmStartDate.value = "";
@@ -2746,7 +2746,7 @@ function showDetail(id) {
   els.alarmDetailView.classList.remove("active-view");
   els.detailView.classList.add("active-view");
   document.getElementById("pageTitle").textContent = "";
-  showDetailTab("overview", false);
+  showDetailTab(state.detailTab, false);
   renderDetail(station);
   window.scrollTo({ top: 0, behavior: "smooth" });
   const url = new URL(window.location.href);
