@@ -471,6 +471,7 @@ function bindEvents() {
     renderSafely(() => renderRiskTrend(state.stations, state.riskTrendRange));
     els.riskTrendTooltip.classList.remove("show");
   });
+  window.addEventListener("resize", syncDetailAlarmPanelHeight);
   els.stationOverviewPanel?.addEventListener("mousemove", handleOverviewChartHover);
   els.stationOverviewPanel?.addEventListener("mouseleave", (event) => {
     if (!event.relatedTarget || !els.stationOverviewPanel.contains(event.relatedTarget)) {
@@ -2753,6 +2754,7 @@ function renderDetail(station) {
   renderDetailCharts(station);
   renderTable();
   renderDetailAlarms(station);
+  syncDetailAlarmPanelHeight();
 }
 
 function showDetailTab(tabName, shouldRender = true) {
@@ -2763,8 +2765,9 @@ function showDetailTab(tabName, shouldRender = true) {
   els.detailOverviewTab?.classList.toggle("active", state.detailTab === "overview");
   els.detailDiagnosisTab?.classList.toggle("active", state.detailTab === "diagnosis");
   els.detailHealthTab?.classList.toggle("active", state.detailTab === "health");
-  if (shouldRender && state.selectedStation && state.detailTab === "diagnosis") {
-    renderDetailCharts(state.selectedStation);
+  if (shouldRender && state.selectedStation) {
+    if (state.detailTab === "diagnosis") renderDetailCharts(state.selectedStation);
+    if (state.detailTab === "overview") syncDetailAlarmPanelHeight();
   }
 }
 
@@ -3069,6 +3072,16 @@ function renderStationOverview(station) {
   els.overviewChargeTooltip = document.getElementById("overviewChargeTooltip");
   requestAnimationFrame(renderStorageBundleLines);
   renderOverviewCharts(station);
+  syncDetailAlarmPanelHeight();
+}
+
+function syncDetailAlarmPanelHeight() {
+  requestAnimationFrame(() => {
+    const panel = els.detailAlarmList?.closest(".detail-alarm-panel");
+    if (!panel || !els.stationOverviewPanel || state.detailTab !== "overview") return;
+    const leftHeight = Math.ceil(els.stationOverviewPanel.getBoundingClientRect().height);
+    panel.style.setProperty("--detail-alarm-height", `${Math.max(420, leftHeight)}px`);
+  });
 }
 
 function renderStorageBundleLines() {
@@ -3801,6 +3814,7 @@ function renderDetailAlarms(station) {
       openAlarmModal(alarm);
     });
   });
+  syncDetailAlarmPanelHeight();
 }
 
 function renderTable() {

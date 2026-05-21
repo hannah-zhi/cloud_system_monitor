@@ -1041,12 +1041,12 @@ h2 {
 .alarm-panel.detail-alarm-panel {
   position: static;
   top: auto;
-  height: calc(100vh - 166px);
+  height: var(--detail-alarm-height, calc(100vh - 166px));
   min-height: 0;
   align-self: start;
   display: flex;
   flex-direction: column;
-  max-height: calc(100vh - 166px);
+  max-height: none;
 }
 
 .detail-alarm-tabs {
