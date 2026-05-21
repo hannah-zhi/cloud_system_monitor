@@ -1022,14 +1022,14 @@ function createStationCard(station) {
         <span>SOS</span><strong>${formatSosValue(station.sos)}</strong><i></i>
       </div>
       <div class="card-health-line" style="--health-width:${healthPercent}%">
-        <span>健康度评分</span><strong>${formatNumeric(healthScore)}</strong><i></i>
+        <span>健康度</span><strong>${formatNumeric(healthScore)}</strong><i></i>
       </div>
       <div class="metrics central-monitor-metrics">
         <div class="metric"><span>通讯状态</span><strong>${comm.label}</strong></div>
         <div class="metric"><span>额定能量/容量</span><strong>${station.rated}MW/${station.ratedEnergy}MWh</strong></div>
         <div class="metric"><span>子系统数量</span><strong>${station.subsystemCount}</strong></div>
         <div class="metric"><span>场站SOC</span><strong>${formatNumeric(station.soc)} <em>%</em></strong></div>
-        <div class="metric metric-wide"><span>SOP/SOE</span><strong>${sopSoe}</strong></div>
+        <div class="metric metric-wide"><span>场站SOP/SOE</span><strong>${sopSoe}</strong></div>
       </div>
     </button>`;
 }
@@ -1040,12 +1040,13 @@ function operationStateClass(stateName) {
     放电: "is-discharging",
     待机: "is-standby",
     停机: "is-stopped",
+    离线: "is-offline",
   };
   return classMap[stateName] || "is-standby";
 }
 
 function subsystemRunState(station, n, systemCount) {
-  if (station.comm === "offline") return "停机";
+  if (station.comm === "offline") return "离线";
   const primary = ["充电", "放电"].includes(station.run) ? station.run : station.run === "停机" ? "停机" : "待机";
   const standbyEvery = Math.max(6, Math.round(systemCount / 2));
   if ((n + stationIndexSeed(station)) % standbyEvery === 0 && primary !== "待机") return "待机";
@@ -2968,10 +2969,10 @@ function renderStationOverview(station) {
     const alarmTone = subsystemAlarmTone(subsystemAlarms);
     return `
     <div class="storage-system-card ${item.statusClass} alarm-${alarmTone}" data-system="${item.n}">
-      <div class="storage-system-head"><strong>K${station.id.slice(2)}-${item.n}#子系统</strong><span>${item.status}</span></div>
+      <div class="storage-system-head"><span class="system-status-pill ${item.statusClass}">${item.status}</span><strong>K${station.id.slice(2)}-${item.n}#子系统</strong></div>
       <div class="system-row"><span>系统有功(PCS)功率</span><strong>${formatNumeric(item.localPower)} kW</strong></div>
       <div class="system-row"><span>系统SOC</span><strong>${formatNumeric(item.localSoc)} %</strong></div>
-      <div class="mini-bars">${Array.from({ length: 12 }, (_, bar) => `<i style="opacity:${bar < Math.round(item.localSoh / 8.4) ? 0.95 : 0.18}"></i>`).join("")}</div>
+      <div class="mini-bars">${Array.from({ length: 12 }, (_, bar) => `<i style="opacity:${bar < Math.round(item.localSoc / 8.4) ? 0.95 : 0.18}"></i>`).join("")}</div>
       <div class="system-row"><span>系统SOH</span><strong>${formatNumeric(item.localSoh)} %</strong></div>
       ${subsystemAlarmTooltipHtml(station, item.n)}
     </div>`;

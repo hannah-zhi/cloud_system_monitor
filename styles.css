@@ -3005,18 +3005,63 @@ h2 {
 .storage-system-head,
 .system-row {
   display: flex;
-  justify-content: space-between;
   gap: 6px;
   font-size: 11px;
 }
 
+.system-row {
+  justify-content: space-between;
+}
+
 .storage-system-head {
+  align-items: center;
   margin-bottom: 8px;
   color: #e8edf7;
 }
 
+.storage-system-head strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .storage-system-head span {
   color: #9da7ba;
+}
+
+.system-status-pill {
+  min-width: 34px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  padding: 0 7px;
+  font-size: 10px;
+  line-height: 1;
+  border: 1px solid currentColor;
+  background: color-mix(in srgb, currentColor 13%, transparent);
+}
+
+.system-status-pill.is-charging {
+  color: #13c781;
+}
+
+.system-status-pill.is-discharging {
+  color: #23b0ff;
+}
+
+.system-status-pill.is-standby {
+  color: #aeb8c8;
+}
+
+.system-status-pill.is-stopped {
+  color: #7c8799;
+}
+
+.system-status-pill.is-offline {
+  color: #6f7a8d;
 }
 
 .mini-bars {
@@ -3233,7 +3278,7 @@ h2 {
 .card-sos-line,
 .card-health-line {
   display: grid;
-  grid-template-columns: auto auto minmax(0, 1fr);
+  grid-template-columns: 58px 48px minmax(0, 1fr);
   align-items: center;
   gap: 8px;
   margin: -4px 0 8px;
@@ -3249,7 +3294,7 @@ h2 {
 }
 
 .card-health-line strong {
-  color: #13c781;
+  color: #d58cff;
 }
 
 .card-sos-line i,
@@ -3271,7 +3316,7 @@ h2 {
 
 .card-health-line i::before {
   width: var(--health-width);
-  background: #13c781;
+  background: #d58cff;
 }
 
 .central-monitor-metrics .metric-wide strong {
