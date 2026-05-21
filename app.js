@@ -1006,9 +1006,11 @@ function createStationCard(station) {
   const commClass = commStatusClass(station.comm);
   const comm = commMeta[station.comm];
   const risk = riskMeta[station.risk];
-  const remainingEnergy = formatRemainingEnergy(station);
+  const sopSoe = formatSopSoe(station);
+  const healthScore = stationHealthScore(station);
   const operationTag = station.comm === "offline" ? "" : `<span class="operation-tag ${stateClass}">${station.run}</span>`;
   const sosPercent = Math.max(0, Math.min(100, Number(station.sos || 0)));
+  const healthPercent = Math.max(0, Math.min(100, healthScore));
   return `
     <button class="station-card risk-${risk.className} ${commClass}" data-id="${station.id}" type="button">
       <div class="card-head">
@@ -1019,13 +1021,15 @@ function createStationCard(station) {
       <div class="card-sos-line" style="--sos-color:${risk.color};--sos-width:${sosPercent}%">
         <span>SOS</span><strong>${formatSosValue(station.sos)}</strong><i></i>
       </div>
+      <div class="card-health-line" style="--health-width:${healthPercent}%">
+        <span>健康度评分</span><strong>${formatNumeric(healthScore)}</strong><i></i>
+      </div>
       <div class="metrics central-monitor-metrics">
         <div class="metric"><span>通讯状态</span><strong>${comm.label}</strong></div>
         <div class="metric"><span>额定能量/容量</span><strong>${station.rated}MW/${station.ratedEnergy}MWh</strong></div>
         <div class="metric"><span>子系统数量</span><strong>${station.subsystemCount}</strong></div>
         <div class="metric"><span>场站SOC</span><strong>${formatNumeric(station.soc)} <em>%</em></strong></div>
-        <div class="metric"><span>场站有功功率</span><strong>${formatNumeric(station.active)} <em>kW</em></strong></div>
-        <div class="metric"><span>剩余电量</span><strong>${remainingEnergy} <em>kWh</em></strong></div>
+        <div class="metric metric-wide"><span>SOP/SOE</span><strong>${sopSoe}</strong></div>
       </div>
     </button>`;
 }
@@ -1038,6 +1042,22 @@ function operationStateClass(stateName) {
     停机: "is-stopped",
   };
   return classMap[stateName] || "is-standby";
+}
+
+function subsystemRunState(station, n, systemCount) {
+  if (station.comm === "offline") return "停机";
+  const primary = ["充电", "放电"].includes(station.run) ? station.run : station.run === "停机" ? "停机" : "待机";
+  const standbyEvery = Math.max(6, Math.round(systemCount / 2));
+  if ((n + stationIndexSeed(station)) % standbyEvery === 0 && primary !== "待机") return "待机";
+  if ((n + stationIndexSeed(station)) % 17 === 0) return "停机";
+  return primary;
+}
+
+function subsystemPowerByState(station, status, n) {
+  const unitPower = Math.max(0.4, Number(station.rated || 0) / Math.max(1, Number(station.subsystemCount || 1)));
+  if (status === "充电") return round(unitPower * (0.72 + (n % 4) * 0.06), 2);
+  if (status === "放电") return round(-unitPower * (0.68 + (n % 5) * 0.05), 2);
+  return 0;
 }
 
 function commStatusClass(commState) {
@@ -2933,9 +2953,10 @@ function renderStationOverview(station) {
   const systemItems = Array.from({ length: systemCount }, (_, index) => {
     const n = index + 1;
     const localSoc = n % 7 === 0 ? 95 : n % 5 === 0 ? 47.9 : 5;
-    const localPower = station.run === "放电" && n % 5 === 0 ? 3.7 : station.run === "充电" && n % 4 === 0 ? 2.4 : 0;
-    const status = n % 8 === 0 ? "停机" : n % 5 === 0 ? "放电" : "待机";
-    return { n, localSoc, localPower, status, statusClass: operationStateClass(status) };
+    const localSoh = 97.5 + ((n * 0.17) % 2);
+    const status = subsystemRunState(station, n, systemCount);
+    const localPower = subsystemPowerByState(station, status, n);
+    return { n, localSoc, localSoh, localPower, status, statusClass: operationStateClass(status) };
   });
   const systemOptions = systemItems
     .map((item) => `<option value="${item.n}">K${station.id.slice(2)}-${item.n}#子系统</option>`)
@@ -2950,8 +2971,8 @@ function renderStationOverview(station) {
       <div class="storage-system-head"><strong>K${station.id.slice(2)}-${item.n}#子系统</strong><span>${item.status}</span></div>
       <div class="system-row"><span>系统有功(PCS)功率</span><strong>${formatNumeric(item.localPower)} kW</strong></div>
       <div class="system-row"><span>系统SOC</span><strong>${formatNumeric(item.localSoc)} %</strong></div>
-      <div class="mini-bars">${Array.from({ length: 12 }, (_, bar) => `<i style="opacity:${bar < Math.round(item.localSoc / 9) ? 0.95 : 0.18}"></i>`).join("")}</div>
-      <div class="system-row"><span>系统SOH</span><strong>${formatNumeric(97.5 + ((item.n * 0.17) % 2))} %</strong></div>
+      <div class="mini-bars">${Array.from({ length: 12 }, (_, bar) => `<i style="opacity:${bar < Math.round(item.localSoh / 8.4) ? 0.95 : 0.18}"></i>`).join("")}</div>
+      <div class="system-row"><span>系统SOH</span><strong>${formatNumeric(item.localSoh)} %</strong></div>
       ${subsystemAlarmTooltipHtml(station, item.n)}
     </div>`;
   }).join("");
@@ -3977,6 +3998,37 @@ function formatNumeric(value) {
 
 function formatRemainingEnergy(station) {
   return formatNumeric(Number(station.ratedEnergy || 0) * (Number(station.soc || 0) / 100) * 1000);
+}
+
+function formatSopSoe(station) {
+  const ratedPower = Number(station.rated || 0);
+  const ratedEnergy = Number(station.ratedEnergy || 0);
+  const seed = stationIndexSeed(station);
+  const powerRatio = 0.88 + (seed % 6) * 0.01;
+  const energyRatio = 0.87 + (seed % 7) * 0.01;
+  const sop = Math.max(0.1, ratedPower * powerRatio);
+  const soe = Math.max(0.1, ratedEnergy * energyRatio);
+  return `${formatCompactCapacity(sop)}MW/${formatCompactCapacity(soe)}MWh`;
+}
+
+function formatCompactCapacity(value) {
+  const num = Number(value || 0);
+  if (Math.abs(num) >= 100) return String(Math.round(num));
+  if (Math.abs(num) >= 10) return num.toFixed(1).replace(/\.0$/, "");
+  return num.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
+}
+
+function stationHealthScore(station) {
+  const seed = stationIndexSeed(station);
+  const sos = Number(station.sos || 0);
+  const base = 92 + (seed % 9) * 0.45;
+  const penalty = Math.max(0, 72 - sos) * 0.08;
+  return Math.round(Math.max(86, Math.min(98.5, base - penalty)) * 10) / 10;
+}
+
+function stationIndexSeed(station) {
+  const numericId = String(station.id || "").match(/\d+/g)?.join("") || "0";
+  return Number(numericId.slice(-4)) || 0;
 }
 
 function scoreClass(score) {

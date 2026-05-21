@@ -3227,38 +3227,55 @@ h2 {
 }
 
 .central-monitor-metrics {
-  gap: 9px;
+  gap: 8px;
 }
 
-.card-sos-line {
+.card-sos-line,
+.card-health-line {
   display: grid;
   grid-template-columns: auto auto minmax(0, 1fr);
   align-items: center;
   gap: 8px;
-  margin: -4px 0 12px;
+  margin: -4px 0 8px;
   color: #9aa4b8;
   font-size: 12px;
 }
 
-.card-sos-line strong {
+.card-sos-line strong,
+.card-health-line strong {
   color: var(--sos-color);
   font-size: 16px;
   font-weight: 500;
 }
 
-.card-sos-line i {
+.card-health-line strong {
+  color: #13c781;
+}
+
+.card-sos-line i,
+.card-health-line i {
   height: 4px;
   background: rgba(127, 137, 164, 0.38);
   position: relative;
   overflow: hidden;
 }
 
-.card-sos-line i::before {
+.card-sos-line i::before,
+.card-health-line i::before {
   content: "";
   position: absolute;
   inset: 0 auto 0 0;
   width: var(--sos-width);
   background: var(--sos-color);
+}
+
+.card-health-line i::before {
+  width: var(--health-width);
+  background: #13c781;
+}
+
+.central-monitor-metrics .metric-wide strong {
+  font-size: 15px;
 }
 
 .comm-dot {
