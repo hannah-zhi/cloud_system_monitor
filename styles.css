@@ -1866,9 +1866,9 @@ h2 {
 }
 
 .station-card {
-  min-height: 228px;
+  min-height: 248px;
   border-top-width: 1px;
-  padding: 15px 14px;
+  padding: 14px 14px 13px;
   z-index: 0;
 }
 
@@ -3238,7 +3238,7 @@ h2 {
 }
 
 .card-head {
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 
 .station-name {
@@ -3279,7 +3279,29 @@ h2 {
 }
 
 .central-monitor-metrics {
+  gap: 7px;
+}
+
+.central-monitor-metrics .metric {
+  display: grid;
+  grid-template-columns: 94px minmax(0, 1fr);
+  align-items: baseline;
   gap: 8px;
+  font-size: 13px;
+}
+
+.central-monitor-metrics .metric span {
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.central-monitor-metrics .metric strong {
+  min-width: 0;
+  justify-self: end;
+  overflow: visible;
+  white-space: nowrap;
+  font-size: 14px;
+  line-height: 1.2;
 }
 
 .card-sos-line,
@@ -3288,7 +3310,7 @@ h2 {
   grid-template-columns: 58px 48px minmax(0, 1fr);
   align-items: center;
   gap: 8px;
-  margin: -4px 0 8px;
+  margin: -3px 0 7px;
   color: #9aa4b8;
   font-size: 12px;
 }
@@ -3327,7 +3349,7 @@ h2 {
 }
 
 .central-monitor-metrics .metric-wide strong {
-  font-size: 15px;
+  font-size: 14px;
 }
 
 .comm-dot {
