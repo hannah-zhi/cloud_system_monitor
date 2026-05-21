@@ -1908,7 +1908,7 @@ h2 {
   grid-template-columns: 92px max-content;
   align-items: center;
   justify-content: center;
-  gap: 22px;
+  gap: 18px;
   width: 100%;
 }
 
@@ -1938,17 +1938,17 @@ h2 {
 .overview-donut-legend {
   display: grid;
   gap: 5px;
-  width: 132px;
+  width: 164px;
 }
 
 .overview-donut-legend button {
-  width: auto;
+  width: 100%;
   height: 22px;
   display: grid;
-  grid-template-columns: minmax(64px, max-content) 30px;
+  grid-template-columns: minmax(0, 112px) 34px;
   align-items: center;
-  justify-content: start;
-  gap: 12px;
+  justify-content: center;
+  column-gap: 10px;
   border: 0;
   background: transparent;
   color: #cbd4e6;

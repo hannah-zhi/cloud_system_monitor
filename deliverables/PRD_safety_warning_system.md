@@ -281,3 +281,7 @@
 ## 15. 2026-05-21 Central Monitoring Donut Layout
 
 - The three donut filter cards at the top of the central-monitoring home page must stay visually centered inside each card. Use a compact fixed-width donut-plus-legend group so legend labels and numbers do not spread apart on wide external displays or at 67% browser zoom.
+
+## 16. 2026-05-21 Communication Donut Legend
+
+- The communication-status donut legend on the central-monitoring home page must show full labels, including the longest 部分通讯中断 label, without ellipsis. Legend counts must use a fixed right-aligned numeric column so all numbers line up vertically.
