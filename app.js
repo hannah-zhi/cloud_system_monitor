@@ -241,8 +241,7 @@ function bindElements() {
     "alarmModalClose",
     "alarmTrendChart",
     "alarmTrendTooltip",
-    "alarmCloseActionBtn",
-    "alarmSrActionBtn",
+    "alarmProcessBtn",
     "alarmAnalysisBtn",
     "alarmProcessModal",
     "alarmProcessModalMask",
@@ -405,12 +404,7 @@ function bindEvents() {
   els.alarmModalMask.addEventListener("click", closeAlarmModal);
   els.alarmProcessModalClose?.addEventListener("click", closeAlarmProcessModal);
   els.alarmProcessModalMask?.addEventListener("click", closeAlarmProcessModal);
-  els.alarmCloseActionBtn?.addEventListener("click", () => {
-    const latest = state.selectedAlarmGroup?.latest;
-    state.alarmProcessMode = latest?.srCloseReason || latest?.pendingRootCause ? "srResult" : "close";
-    renderAlarmProcessPanel();
-  });
-  els.alarmSrActionBtn?.addEventListener("click", () => {
+  els.alarmProcessBtn?.addEventListener("click", () => {
     const latest = state.selectedAlarmGroup?.latest;
     state.alarmProcessMode = latest?.srCloseReason || latest?.pendingRootCause
       ? "srResult"
@@ -418,7 +412,7 @@ function bindEvents() {
         ? "srClose"
         : state.selectedAlarmGroup?.srIssued
           ? "srSubmitted"
-          : "sr";
+          : "choose";
     renderAlarmProcessPanel();
   });
   els.alarmAnalysisBtn?.addEventListener("click", () => {});
@@ -2371,12 +2365,10 @@ function renderAlarmInspector(alarmOrGroup) {
     renderAlarmInspector(state.selectedAlarmGroup);
     renderAlarmTable();
   });
-  if (els.alarmCloseActionBtn && els.alarmSrActionBtn) {
+  if (els.alarmProcessBtn) {
     const locked = Boolean(group.latest.stationHandled);
-    els.alarmCloseActionBtn.disabled = locked;
-    els.alarmSrActionBtn.disabled = locked;
-    els.alarmCloseActionBtn.title = locked ? "站端已处理完成，无需再次处理" : "";
-    els.alarmSrActionBtn.title = locked ? "站端已处理完成，无需再次处理" : "";
+    els.alarmProcessBtn.disabled = locked;
+    els.alarmProcessBtn.title = locked ? "站端已处理完成，无需再次处理" : "";
   }
 }
 
@@ -2406,11 +2398,9 @@ function closeAlarmModal() {
   els.alarmDetailModal.classList.remove("show");
   els.alarmDetailModal.setAttribute("aria-hidden", "true");
   els.alarmTrendTooltip.classList.remove("show");
-  if (els.alarmCloseActionBtn && els.alarmSrActionBtn) {
-    els.alarmCloseActionBtn.disabled = false;
-    els.alarmSrActionBtn.disabled = false;
-    els.alarmCloseActionBtn.title = "";
-    els.alarmSrActionBtn.title = "";
+  if (els.alarmProcessBtn) {
+    els.alarmProcessBtn.disabled = false;
+    els.alarmProcessBtn.title = "";
   }
   state.alarmProcessMode = null;
   closeAlarmProcessModal();
