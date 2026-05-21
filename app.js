@@ -241,7 +241,8 @@ function bindElements() {
     "alarmModalClose",
     "alarmTrendChart",
     "alarmTrendTooltip",
-    "alarmProcessBtn",
+    "alarmCloseActionBtn",
+    "alarmSrActionBtn",
     "alarmAnalysisBtn",
     "alarmProcessModal",
     "alarmProcessModalMask",
@@ -404,7 +405,12 @@ function bindEvents() {
   els.alarmModalMask.addEventListener("click", closeAlarmModal);
   els.alarmProcessModalClose?.addEventListener("click", closeAlarmProcessModal);
   els.alarmProcessModalMask?.addEventListener("click", closeAlarmProcessModal);
-  els.alarmProcessBtn?.addEventListener("click", () => {
+  els.alarmCloseActionBtn?.addEventListener("click", () => {
+    const latest = state.selectedAlarmGroup?.latest;
+    state.alarmProcessMode = latest?.srCloseReason || latest?.pendingRootCause ? "srResult" : "close";
+    renderAlarmProcessPanel();
+  });
+  els.alarmSrActionBtn?.addEventListener("click", () => {
     const latest = state.selectedAlarmGroup?.latest;
     state.alarmProcessMode = latest?.srCloseReason || latest?.pendingRootCause
       ? "srResult"
@@ -412,7 +418,7 @@ function bindEvents() {
         ? "srClose"
         : state.selectedAlarmGroup?.srIssued
           ? "srSubmitted"
-          : "choose";
+          : "sr";
     renderAlarmProcessPanel();
   });
   els.alarmAnalysisBtn?.addEventListener("click", () => {});
@@ -1866,9 +1872,10 @@ function renderAlarmDetailPage() {
       .map((group, index) => {
         const alarm = group.latest;
         const sources = uniqueSorted(group.alarms.map((item) => item.source)).join("/");
+        const alarmCode = alarmCodeForGroup(group);
         return `
       <tr data-alarm-id="${group.id}" class="${state.detailAlarmSelectedIds.has(group.id) ? "selected" : ""}">
-        <td class="alarm-index-cell"><div class="alarm-index-inner">${group.srCompleted ? '<span class="alarm-mail-badge" title="SR已返回">✉</span>' : ""}<span class="alarm-row-index">${index + 1}</span></div></td>
+        <td class="alarm-index-cell"><div class="alarm-index-inner"><span class="alarm-row-index">${alarmCode}</span></div></td>
         <td class="alarm-level-cell">
           <div class="alarm-level-cell-inner ${state.detailAlarmSelectionMode ? "selection-mode" : ""}">
             ${
@@ -1885,7 +1892,7 @@ function renderAlarmDetailPage() {
         <td>${alarm.location}</td>
         <td>${alarm.eventTime}</td>
         <td>${alarm.warningTime}</td>
-        <td><span class="alarm-status-pill ${statusClass(alarm.status)}">${alarm.status}</span></td>
+        <td><div class="alarm-status-cell">${group.srCompleted ? '<span class="alarm-mail-badge" title="SR已返回">✉</span>' : ""}<span class="alarm-status-pill ${statusClass(alarm.status)}">${alarm.status}</span></div></td>
         <td><span class="alarm-source alarm-source-${alarmSourceClass(sources)}">${sources}</span></td>
       </tr>`;
       })
@@ -2021,6 +2028,11 @@ function beijingDateTimeLocal(date = new Date()) {
   return beijing.toISOString().slice(0, 16);
 }
 
+function formatDateTimeLocalLabel(value) {
+  const [datePart = "", timePart = ""] = String(value || "").split("T");
+  return `${datePart.replace(/-/g, "/")} ${timePart}`.trim();
+}
+
 function addDaysToDateTimeLocal(value, days) {
   const [datePart = "", timePart = "00:00"] = String(value || "").split("T");
   const [year, month, day] = datePart.split("-").map(Number);
@@ -2143,7 +2155,7 @@ function renderSrAlarmContext(alarm) {
 function renderSrIssueForm(group) {
   const alarm = group.latest;
   const srNo = alarm.srNo || `S${263 + (alarm.id.length % 70)}`;
-  const srSendTime = alarm.srSendDate || beijingDateTimeLocal();
+  const srSendTime = alarm.srIssued ? alarm.srSendDate || beijingDateTimeLocal() : beijingDateTimeLocal();
   const srDueTime = alarm.srDueDate || addDaysToDateTimeLocal(srSendTime, 14);
   return `
     <div class="process-head"><strong>下发 SR</strong></div>
@@ -2152,7 +2164,7 @@ function renderSrIssueForm(group) {
       <label class="sr-full-field"><span>SR编号</span><input id="srNoInput" value="${srNo}" /></label>
       <label class="sr-guide-field"><span>操作指导</span><textarea id="srGuideInput"></textarea></label>
       <label class="sr-full-field"><span>附件</span><input id="srAttachmentInput" type="file" multiple /></label>
-      <label><span>SR下发时间</span><input id="srSendDateInput" type="datetime-local" value="${srSendTime}" /></label>
+      <label><span>SR下发时间</span><input id="srSendDateInput" type="text" value="${formatDateTimeLocalLabel(srSendTime)}" data-sr-value="${srSendTime}" readonly /></label>
       <label><span>期望完成时间</span><input id="srDueDateInput" type="datetime-local" value="${srDueTime}" /></label>
     </div>
     <div class="process-actions">
@@ -2212,6 +2224,24 @@ function getAlarmGroupFromAlarm(alarm) {
   if (!alarm) return null;
   const source = alarm.source === "数据告警" ? state.homeDataAlarms : state.allAlarms;
   return groupAlarmsForTable(source.filter((item) => alarmGroupKey(item) === alarmGroupKey(alarm)))[0] || null;
+}
+
+function alarmCodeForGroup(group) {
+  const alarm = group.latest || group.alarms?.[0] || {};
+  const prefix = String(alarm.source || "").includes("云端")
+    ? "CW"
+    : String(alarm.source || "").includes("站端")
+      ? "SW"
+      : "EA";
+  const date = String(alarm.dateISO || alarm.warningTime || "")
+    .slice(0, 10)
+    .replace(/\D/g, "")
+    .padEnd(8, "0")
+    .slice(0, 8);
+  const key = group.id || `${alarm.id || ""}${alarm.title || ""}${alarm.stationId || ""}`;
+  const serialSeed = Array.from(String(key)).reduce((sum, char, index) => sum + char.charCodeAt(0) * (index + 3), 0);
+  const serial = String((serialSeed % 99999) + 1).padStart(5, "0");
+  return `${prefix}-${date}${serial}`;
 }
 
 function getAlarmGroup(groupOrAlarm) {
@@ -2341,9 +2371,12 @@ function renderAlarmInspector(alarmOrGroup) {
     renderAlarmInspector(state.selectedAlarmGroup);
     renderAlarmTable();
   });
-  if (els.alarmProcessBtn) {
-    els.alarmProcessBtn.disabled = Boolean(group.latest.stationHandled);
-    els.alarmProcessBtn.title = group.latest.stationHandled ? "站端已处理完成，无需再次处理" : "";
+  if (els.alarmCloseActionBtn && els.alarmSrActionBtn) {
+    const locked = Boolean(group.latest.stationHandled);
+    els.alarmCloseActionBtn.disabled = locked;
+    els.alarmSrActionBtn.disabled = locked;
+    els.alarmCloseActionBtn.title = locked ? "站端已处理完成，无需再次处理" : "";
+    els.alarmSrActionBtn.title = locked ? "站端已处理完成，无需再次处理" : "";
   }
 }
 
@@ -2373,9 +2406,11 @@ function closeAlarmModal() {
   els.alarmDetailModal.classList.remove("show");
   els.alarmDetailModal.setAttribute("aria-hidden", "true");
   els.alarmTrendTooltip.classList.remove("show");
-  if (els.alarmProcessBtn) {
-    els.alarmProcessBtn.disabled = false;
-    els.alarmProcessBtn.title = "";
+  if (els.alarmCloseActionBtn && els.alarmSrActionBtn) {
+    els.alarmCloseActionBtn.disabled = false;
+    els.alarmSrActionBtn.disabled = false;
+    els.alarmCloseActionBtn.title = "";
+    els.alarmSrActionBtn.title = "";
   }
   state.alarmProcessMode = null;
   closeAlarmProcessModal();
@@ -2429,7 +2464,7 @@ function renderAlarmProcessPanel() {
     `;
   } else if (state.alarmProcessMode === "sr") {
     const srNo = group.latest.srNo || `S${263 + (group.latest.id.length % 70)}`;
-    const srSendTime = group.latest.srSendDate || beijingDateTimeLocal();
+    const srSendTime = group.latest.srIssued ? group.latest.srSendDate || beijingDateTimeLocal() : beijingDateTimeLocal();
     const srDueTime = group.latest.srDueDate || addDaysToDateTimeLocal(srSendTime, 14);
     els.alarmProcessPanel.innerHTML = `
       <div class="process-head"><strong>下发 SR</strong></div>
@@ -2437,7 +2472,7 @@ function renderAlarmProcessPanel() {
         <label class="sr-full-field"><span>SR编号</span><input id="srNoInput" value="${srNo}" /></label>
         <label class="sr-guide-field"><span>操作指导</span><textarea id="srGuideInput"></textarea></label>
         <label class="sr-full-field"><span>附件</span><input id="srAttachmentInput" type="file" multiple /></label>
-        <label><span>SR下发时间</span><input id="srSendDateInput" type="datetime-local" value="${srSendTime}" /></label>
+        <label><span>SR下发时间</span><input id="srSendDateInput" type="text" value="${formatDateTimeLocalLabel(srSendTime)}" data-sr-value="${srSendTime}" readonly /></label>
         <label><span>期望完成时间</span><input id="srDueDateInput" type="datetime-local" value="${srDueTime}" /></label>
       </div>
       <div class="process-actions">
@@ -2448,7 +2483,7 @@ function renderAlarmProcessPanel() {
     els.alarmProcessPanel.innerHTML = `
       <div class="process-head"><strong>SR 已下发</strong><span>列表状态已变更为“排查中”</span></div>
       <div class="sr-return-card">
-        <span>等待 SR 完成返回。演示态可点击下方按钮模拟返回，返回后列表等级列前会出现信封标记。</span>
+        <span>等待 SR 完成返回。演示态可点击下方按钮模拟返回，返回后列表状态列前会出现信封标记。</span>
         <button type="button" data-process-action="complete-sr">模拟 SR 完成返回</button>
       </div>
     `;
@@ -2523,7 +2558,7 @@ function handleAlarmProcessAction(action) {
       srCompleted: false,
       srNo: els.alarmProcessPanel.querySelector("#srNoInput")?.value.trim() || "",
       srGuide: els.alarmProcessPanel.querySelector("#srGuideInput")?.value.trim() || "",
-      srSendDate: els.alarmProcessPanel.querySelector("#srSendDateInput")?.value || "",
+      srSendDate: beijingDateTimeLocal(),
       srDueDate: els.alarmProcessPanel.querySelector("#srDueDateInput")?.value || "",
       srAttachmentCount: els.alarmProcessPanel.querySelector("#srAttachmentInput")?.files.length || 0,
     });

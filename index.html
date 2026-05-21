@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>集中监测 - 远景数智运营系统</title>
-    <link rel="stylesheet" href="styles.css?v=20260521-detail-height-sync" />
+    <link rel="stylesheet" href="styles.css?v=20260521-alarm-actions-codes" />
   </head>
   <body>
     <div class="shell">
@@ -213,34 +213,34 @@
         <section id="alarmDetailView" class="view alarm-detail-view" aria-label="预警详情">
           <div class="risk-alarm-grid alarm-overview-grid">
             <article class="panel">
-              <div class="panel-title"><span></span>预警等级占比</div>
+              <div class="panel-title"><span></span>预警/告警等级占比</div>
               <div class="donut-wrap">
                 <canvas id="riskAlarmPieCanvas" width="300" height="300" data-square-canvas="true"></canvas>
                 <div id="riskAlarmPieLegend" class="legend"></div>
               </div>
             </article>
             <article class="panel">
-              <div class="panel-title"><span></span>预警来源分布</div>
+              <div class="panel-title"><span></span>预警/告警来源分布</div>
               <div class="donut-wrap">
                 <canvas id="riskAlarmSourcePieCanvas" width="300" height="300" data-square-canvas="true"></canvas>
                 <div id="riskAlarmSourcePieLegend" class="legend"></div>
               </div>
             </article>
             <article class="panel risk-wide-panel">
-              <div class="panel-title"><span></span>预警模块分布</div>
+              <div class="panel-title"><span></span>预警/告警模块分布</div>
               <div class="donut-wrap">
                 <canvas id="riskModuleCanvas" width="300" height="300" data-square-canvas="true"></canvas>
                 <div id="riskModuleLegend" class="legend"></div>
               </div>
             </article>
             <article class="panel risk-alarm-top-panel">
-              <div class="panel-title"><span></span>预警类型 TOP5</div>
+              <div class="panel-title"><span></span>预警/告警类型 TOP5</div>
               <div id="riskAlarmNameTopList" class="risk-alarm-top-list"></div>
             </article>
           </div>
           <div class="panel alarm-detail-main">
             <div class="panel-title-row">
-              <div class="panel-title"><span></span>风险预警列表</div>
+              <div class="panel-title"><span></span>预警/告警列表</div>
               <button class="export-btn" type="button">导出</button>
             </div>
             <div class="alarm-detail-filterbar">
@@ -264,7 +264,7 @@
               <table class="alarm-detail-table">
                 <thead>
                   <tr>
-                    <th>序号</th>
+                    <th>编号</th>
                     <th>等级</th>
                     <th>预警名称</th>
                     <th>模块</th>
@@ -310,7 +310,8 @@
                 <div id="alarmTrendTooltip" class="risk-bars-tooltip"></div>
               </div>
               <div class="alarm-modal-actions">
-                <button id="alarmProcessBtn" type="button">处理</button>
+                <button id="alarmCloseActionBtn" type="button">关闭</button>
+                <button id="alarmSrActionBtn" type="button">下发SR</button>
                 <button id="alarmAnalysisBtn" type="button">分析</button>
               </div>
             </div>
@@ -494,6 +495,6 @@
 
     <script src="site-data.js?v=20260415-siteconfig3"></script>
     <script src="risk-data.js?v=20260415-risk-list1"></script>
-    <script src="app.js?v=20260521-detail-height-sync"></script>
+    <script src="app.js?v=20260521-alarm-actions-codes"></script>
   </body>
 </html>
