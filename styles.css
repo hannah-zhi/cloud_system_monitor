@@ -1041,12 +1041,12 @@ h2 {
 .alarm-panel.detail-alarm-panel {
   position: static;
   top: auto;
-  height: auto;
+  height: calc(100vh - 166px);
   min-height: 0;
-  align-self: stretch;
+  align-self: start;
   display: flex;
   flex-direction: column;
-  max-height: none;
+  max-height: calc(100vh - 166px);
 }
 
 .detail-alarm-tabs {
@@ -1055,8 +1055,12 @@ h2 {
 
 .alarm-panel.detail-alarm-panel .detail-alarm-list {
   flex: 1 1 auto;
+  min-height: 0;
   height: auto;
   max-height: none;
+  overflow-y: auto;
+  padding-bottom: 28px;
+  scroll-padding-bottom: 28px;
 }
 
 .detail-alarm-list .alarm-location {
@@ -1976,7 +1980,7 @@ h2 {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 392px;
   gap: 16px;
-  align-items: stretch;
+  align-items: start;
 }
 
 .station-overview-panel {
