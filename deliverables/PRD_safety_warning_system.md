@@ -277,3 +277,7 @@
 - 集中监测首页在筛选后即使只剩 1 个或少量场站，场站卡片也必须保持固定宽高比例，不得因网格剩余高度被拉伸。
 - K-0005 等单站清单数量较多时，右侧“预警/告警清单”需固定在视口可用高度内并出现纵向滚动条；左侧“场站概览”各面板必须按内容高度排列，不得被右侧清单高度拉伸。
 - 单站“场站概览”左右栏高度同步以左侧自然内容高度为准：左侧面板保持内容高度不拉伸，右侧“预警/告警清单”通过同步高度与左侧底边对齐，清单内容超出时仅清单区域出现纵向滚动条。
+
+## 15. 2026-05-21 Central Monitoring Donut Layout
+
+- The three donut filter cards at the top of the central-monitoring home page must stay visually centered inside each card. Use a compact fixed-width donut-plus-legend group so legend labels and numbers do not spread apart on wide external displays or at 67% browser zoom.

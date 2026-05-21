@@ -1905,9 +1905,11 @@ h2 {
 
 .overview-donut-content {
   display: grid;
-  grid-template-columns: 86px minmax(0, 1fr);
+  grid-template-columns: 92px max-content;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
+  gap: 22px;
+  width: 100%;
 }
 
 .overview-filter-donut {
@@ -1936,15 +1938,17 @@ h2 {
 .overview-donut-legend {
   display: grid;
   gap: 5px;
+  width: 132px;
 }
 
 .overview-donut-legend button {
-  width: 100%;
+  width: auto;
   height: 22px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 28px;
+  grid-template-columns: minmax(64px, max-content) 30px;
   align-items: center;
-  gap: 8px;
+  justify-content: start;
+  gap: 12px;
   border: 0;
   background: transparent;
   color: #cbd4e6;
@@ -1978,6 +1982,7 @@ h2 {
 .overview-donut-legend strong {
   color: #f4f7ff;
   text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .detail-overview-layout {
