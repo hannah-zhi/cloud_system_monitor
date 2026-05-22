@@ -1784,7 +1784,7 @@ function renderAlarmDetailFilters() {
     level: { el: els.alarmDetailLevel, label: "全部等级", searchable: false, options: ["一级", "二级", "三级"] },
     status: { el: els.alarmDetailStatus, label: "全部状态", searchable: false, options: statusOptions },
     module: { el: els.alarmDetailModule, label: "全部模块", searchable: false, options: ["电池系统", "电气系统", "环控系统", "消防系统"] },
-    name: { el: els.alarmDetailName, label: "全部预警名称", searchable: true, options: uniqueSorted(alarms.map((alarm) => alarm.title)) },
+    name: { el: els.alarmDetailName, label: "全部预警/告警名称", searchable: true, options: uniqueSorted(alarms.map((alarm) => alarm.title)) },
     station: { el: els.alarmDetailStation, label: "全部场站", searchable: true, options: uniqueSorted(alarms.map((alarm) => `${alarm.stationId}${alarm.stationName}`)) },
     location: { el: els.alarmDetailLocation, label: "全部位置", searchable: true, options: uniqueSorted(alarms.map((alarm) => alarm.location)) },
     source: { el: els.alarmDetailSource, label: "全部来源", searchable: false, options: alarmSourceLabels },
@@ -2088,6 +2088,7 @@ function renderStationHandledPanel(alarm) {
 
 function renderClosedAlarmSummary(alarm) {
   if (!String(alarm.status || "").includes("关闭")) return "";
+  const alarmNoun = alarmNounForSource(alarm.source);
   const srNo = alarm.srNo || "--";
   const actionLabel = alarm.stationHandled ? "处理动作" : "操作指导";
   const guide = alarm.srGuide || (alarm.stationHandled ? alarm.stationAction || "站端已完成现场处理，无需下发 SR。" : "--");
@@ -2103,7 +2104,7 @@ function renderClosedAlarmSummary(alarm) {
       <div><span>SR编号</span><strong>${srNo}</strong></div>
       <div><span>${actionLabel}</span><strong>${guide}</strong></div>
       <div><span>排查结论</span><strong>${conclusion}</strong></div>
-      <div><span>预警准确性</span><strong>${accuracy}</strong></div>
+      <div><span>${alarmNoun}准确性</span><strong>${accuracy}</strong></div>
       <div><span>失效类型</span><strong>${failureMode}</strong></div>
       ${rootCause ? `<div class="closed-summary-root-cause"><span>根因</span><strong>${rootCause}</strong></div>` : ""}
     </div>
@@ -2134,14 +2135,23 @@ function renderSrResultReview(group) {
   `;
 }
 
+function alarmNounForSource(source) {
+  return String(source || "").includes("告警") ? "告警" : "预警";
+}
+
+function alarmTimeLabelForSource(source) {
+  return `${alarmNounForSource(source)}时间`;
+}
+
 function renderSrAlarmContext(alarm) {
+  const alarmNoun = alarmNounForSource(alarm.source);
   const stationLabel = `${alarm.stationId || ""}${alarm.stationName || ""}`;
   return `
     <div class="sr-alarm-context">
       <div><span>场站</span><strong title="${stationLabel}">${stationLabel}</strong></div>
       <div><span>位置</span><strong title="${alarm.location}">${alarm.location}</strong></div>
       <div><span>模块</span><strong>${alarm.module}</strong></div>
-      <div><span>预警名称</span><strong>${alarm.title}</strong></div>
+      <div><span>${alarmNoun}名称</span><strong>${alarm.title}</strong></div>
     </div>
   `;
 }
@@ -2286,6 +2296,7 @@ function renderAlarmInspector(alarmOrGroup) {
     return;
   }
   const linked = alarm.linkedAlarmId ? state.allAlarms.find((item) => item.id === alarm.linkedAlarmId) : null;
+  const alarmTimeLabel = alarmTimeLabelForSource(alarm.source);
   els.alarmInspectorBody.innerHTML = `
     <div class="alarm-detail-hero alarm-hero-${alarm.type}">
       <span class="alarm-source-corner alarm-source-corner-${alarmSourceClass(alarm.source)}"><span>${alarm.source}</span></span>
@@ -2310,7 +2321,7 @@ function renderAlarmInspector(alarmOrGroup) {
             <th>序号</th>
             <th>等级</th>
             <th>事件时间</th>
-            <th>预警时间</th>
+            <th>${alarmTimeLabel}</th>
             <th>关闭时间</th>
             <th>持续时长</th>
             <th>状态</th>

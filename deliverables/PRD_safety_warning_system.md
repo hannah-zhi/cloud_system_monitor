@@ -293,3 +293,15 @@
 ## 18. 2026-05-22 Scrollable Subsystem SOS Bars
 
 - When the single-station Safety Diagnosis 各子系统 SOS 安全指数 chart contains many subsystem bars, render it on a wider canvas inside a horizontal scroll viewport instead of compressing all bars into the visible panel. Bar spacing must stay readable, X-axis labels must not be clipped, and subsystem ID sorting must be numeric so #90 appears before #104 in ascending order.
+
+## 19. 2026-05-22 Alarm List Header Naming
+
+- In the alarm-management 预警/告警列表, table headers that include 预警 must use 预警/告警, such as 预警/告警名称 and 预警/告警时间.
+
+## 20. 2026-05-22 Alarm Name Filter Label
+
+- In the alarm-management filter bar above 预警/告警列表, the name filter placeholder must use 全部预警/告警名称 instead of 全部预警名称, matching the updated table header wording.
+
+## 21. 2026-05-22 Detail Modal Source-Based Labels
+
+- The alarm-management main mixed list and filter bar use 预警/告警 wording. Detail modal labels must be source-based: 云端预警 and 站端预警 use 预警; 设备告警 and other *告警 sources use 告警.
