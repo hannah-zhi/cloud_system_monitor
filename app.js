@@ -3585,6 +3585,7 @@ function renderBars(subsystems) {
   drawThreshold(ctx, pad, w, h, 80, "#f4a51c");
   const slot = (w - pad.left - pad.right) / data.length;
   const barWidth = Math.max(4, Math.min(8, slot * 0.34));
+  const labelStep = getSubsystemBarLabelStep(data.length, slot);
   state.detailBarHitboxes = [];
   data.forEach((item, index) => {
     const x = pad.left + index * slot + (slot - barWidth) / 2;
@@ -3605,13 +3606,20 @@ function renderBars(subsystems) {
     ctx.fillRect(x, y, barWidth, Math.min(3, barHeight));
     ctx.shadowBlur = 0;
     state.detailBarHitboxes.push({ x: x - 4, y, width: barWidth + 8, height: barHeight, item });
-    if (index % 5 === 0) {
+    if (index % labelStep === 0 || index === data.length - 1) {
       ctx.fillStyle = "#8f97a8";
       ctx.font = "11px Microsoft YaHei";
       ctx.textAlign = "center";
       ctx.fillText(item.name.replace("子系统", ""), x + barWidth / 2, h - 18);
     }
   });
+}
+
+function getSubsystemBarLabelStep(length, slotWidth) {
+  if (length <= 0) return 1;
+  if (length <= 8) return 1;
+  const estimatedLabelWidth = 32;
+  return Math.max(1, Math.ceil(estimatedLabelWidth / Math.max(1, slotWidth)));
 }
 
 function sortSubsystemBars(subsystems) {

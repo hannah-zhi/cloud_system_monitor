@@ -285,3 +285,7 @@
 ## 16. 2026-05-21 Communication Donut Legend
 
 - The communication-status donut legend on the central-monitoring home page must show full labels, including the longest 部分通讯中断 label, without ellipsis. Legend counts must use a fixed right-aligned numeric column so all numbers line up vertically.
+
+## 17. 2026-05-22 Subsystem SOS Axis Labels
+
+- In the single-station Safety Diagnosis tab, the 各子系统 SOS 安全指数 X-axis labels must adapt to subsystem count and available bar slot width. When only a few bars are displayed, every subsystem label must be shown instead of using fixed label thinning.
