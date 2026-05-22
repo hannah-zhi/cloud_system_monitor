@@ -1255,7 +1255,28 @@ canvas {
 }
 
 .detail-bars-viewport {
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 12px;
+}
+
+.detail-bars-viewport canvas {
+  width: auto;
+  min-width: 100%;
+  max-width: none;
+}
+
+.detail-bars-viewport::-webkit-scrollbar {
+  height: 12px;
+}
+
+.detail-bars-viewport::-webkit-scrollbar-track {
+  background: rgba(48, 52, 64, 0.56);
+}
+
+.detail-bars-viewport::-webkit-scrollbar-thumb {
+  background: rgba(143, 151, 168, 0.72);
+  border-radius: 4px;
 }
 
 .parts-panel canvas {

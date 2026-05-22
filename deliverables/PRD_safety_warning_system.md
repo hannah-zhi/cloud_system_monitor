@@ -289,3 +289,7 @@
 ## 17. 2026-05-22 Subsystem SOS Axis Labels
 
 - In the single-station Safety Diagnosis tab, the 各子系统 SOS 安全指数 X-axis labels must adapt to subsystem count and available bar slot width. When only a few bars are displayed, every subsystem label must be shown instead of using fixed label thinning.
+
+## 18. 2026-05-22 Scrollable Subsystem SOS Bars
+
+- When the single-station Safety Diagnosis 各子系统 SOS 安全指数 chart contains many subsystem bars, render it on a wider canvas inside a horizontal scroll viewport instead of compressing all bars into the visible panel. Bar spacing must stay readable, X-axis labels must not be clipped, and subsystem ID sorting must be numeric so #90 appears before #104 in ascending order.

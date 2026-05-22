@@ -3573,10 +3573,14 @@ function drawDonutChart(ctx, canvas, entries, colorForKey, options = {}) {
 }
 
 function renderBars(subsystems) {
-  const canvas = setupCanvas(els.barCanvas);
-  const ctx = canvas.getContext("2d");
   const data = sortSubsystemBars(subsystems);
   const pad = { left: 42, right: 18, top: 28, bottom: 52 };
+  const viewportWidth = Math.max(0, els.detailBarsViewport?.clientWidth || 0);
+  const desiredSlot = data.length > 40 ? 18 : data.length > 16 ? 28 : 72;
+  const desiredWidth = Math.max(viewportWidth, pad.left + pad.right + data.length * desiredSlot);
+  els.barCanvas.style.width = `${Math.ceil(desiredWidth)}px`;
+  const canvas = setupCanvas(els.barCanvas);
+  const ctx = canvas.getContext("2d");
   const w = canvas.width;
   const h = canvas.height;
   clear(ctx, w, h);
@@ -3618,17 +3622,24 @@ function renderBars(subsystems) {
 function getSubsystemBarLabelStep(length, slotWidth) {
   if (length <= 0) return 1;
   if (length <= 8) return 1;
-  const estimatedLabelWidth = 32;
+  const estimatedLabelWidth = 34;
   return Math.max(1, Math.ceil(estimatedLabelWidth / Math.max(1, slotWidth)));
 }
 
 function sortSubsystemBars(subsystems) {
   return [...subsystems].sort((a, b) => {
-    if (state.sortSubsystemMode === "idDesc") return b.name.localeCompare(a.name, "zh-CN");
-    if (state.sortSubsystemMode === "sosAsc") return a.score - b.score || a.name.localeCompare(b.name, "zh-CN");
-    if (state.sortSubsystemMode === "sosDesc") return b.score - a.score || a.name.localeCompare(b.name, "zh-CN");
-    return a.name.localeCompare(b.name, "zh-CN");
+    const aNo = subsystemNumber(a);
+    const bNo = subsystemNumber(b);
+    if (state.sortSubsystemMode === "idDesc") return bNo - aNo || b.name.localeCompare(a.name, "zh-CN");
+    if (state.sortSubsystemMode === "sosAsc") return a.score - b.score || aNo - bNo;
+    if (state.sortSubsystemMode === "sosDesc") return b.score - a.score || aNo - bNo;
+    return aNo - bNo || a.name.localeCompare(b.name, "zh-CN");
   });
+}
+
+function subsystemNumber(item) {
+  const match = String(item?.name || "").match(/#(\d+)/);
+  return match ? Number(match[1]) : Number.MAX_SAFE_INTEGER;
 }
 
 function handleDetailBarHover(event) {
@@ -3655,7 +3666,11 @@ function handleDetailBarHover(event) {
     <span style="color:${riskMeta[hit.item.risk].color}">SOS ${formatSosValue(hit.item.score)}</span>
   `;
   const box = els.detailBarsViewport.getBoundingClientRect();
-  els.detailBarsTooltip.style.left = `${Math.min(els.detailBarsViewport.clientWidth - 230, Math.max(8, event.clientX - box.left + 12))}px`;
+  const tooltipWidth = 230;
+  const rawLeft = event.clientX - box.left + els.detailBarsViewport.scrollLeft + 12;
+  const minLeft = els.detailBarsViewport.scrollLeft + 8;
+  const maxLeft = els.detailBarsViewport.scrollLeft + els.detailBarsViewport.clientWidth - tooltipWidth - 8;
+  els.detailBarsTooltip.style.left = `${Math.max(minLeft, Math.min(maxLeft, rawLeft))}px`;
   els.detailBarsTooltip.style.top = `${Math.max(8, event.clientY - box.top + 12)}px`;
   els.detailBarsTooltip.classList.add("show");
 }
