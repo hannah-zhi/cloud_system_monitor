@@ -3716,6 +3716,17 @@ h2 {
     rgba(12, 14, 22, 0.34);
 }
 
+.alarm-source-summary .alarm-source-stat {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px;
+  align-items: center;
+  gap: 8px;
+}
+
+.alarm-source-summary .alarm-source-stat-data {
+  grid-template-columns: 1fr;
+}
+
 .alarm-summary [data-source],
 .alarm-summary [data-category] {
   cursor: pointer;
@@ -3810,22 +3821,25 @@ h2 {
 
 .alarm-source-subfilters {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 4px;
-  margin-top: 8px;
+  grid-template-columns: 1fr;
+  gap: 5px;
+  margin-top: 0;
 }
 
 .alarm-source-subfilters button {
-  height: 22px;
+  width: 100%;
+  height: 20px;
   border: 1px solid rgba(91, 99, 124, 0.62);
   border-radius: 3px;
   background: rgba(13, 16, 25, 0.42);
   color: #aeb8ca;
   font-size: 11px;
+  line-height: 1;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   gap: 4px;
+  padding: 0 5px;
   cursor: pointer;
 }
 
@@ -3834,6 +3848,31 @@ h2 {
   color: #fff;
   border-color: currentColor;
   background: rgba(18, 152, 255, 0.16);
+}
+
+.alarm-source-stat-warning .alarm-source-subfilters button[data-subfilter="level1"] {
+  color: #ff8da0;
+  border-color: rgba(255, 61, 89, 0.5);
+}
+
+.alarm-source-stat-warning .alarm-source-subfilters button[data-subfilter="level2"] {
+  color: #ffd17a;
+  border-color: rgba(244, 165, 28, 0.5);
+}
+
+.alarm-source-stat-alarm .alarm-source-subfilters button[data-subfilter="fault"] {
+  color: #ff8da0;
+  border-color: rgba(255, 61, 89, 0.5);
+}
+
+.alarm-source-stat-alarm .alarm-source-subfilters button[data-subfilter="alarm"] {
+  color: #d9adff;
+  border-color: rgba(185, 92, 255, 0.56);
+}
+
+.alarm-source-stat-warning .alarm-source-subfilters button.active,
+.alarm-source-stat-alarm .alarm-source-subfilters button.active {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .alarm-source-subfilters em {
@@ -3914,6 +3953,18 @@ h2 {
   background: linear-gradient(180deg, rgba(19, 199, 129, 0.15), rgba(19, 199, 129, 0.07));
 }
 
+.alarm-level.alarm-device-fault {
+  color: #ff8da0;
+  border: 1px solid rgba(255, 61, 89, 0.44);
+  background: linear-gradient(180deg, rgba(255, 61, 89, 0.18), rgba(255, 61, 89, 0.08));
+}
+
+.alarm-level.alarm-device-alarm {
+  color: #d9adff;
+  border: 1px solid rgba(185, 92, 255, 0.46);
+  background: linear-gradient(180deg, rgba(185, 92, 255, 0.17), rgba(185, 92, 255, 0.08));
+}
+
 .alarm-source {
   height: 22px;
   flex: 0 0 auto;
@@ -3957,9 +4008,9 @@ h2 {
 }
 
 .alarm-source-alarm {
-  border: 1px solid rgba(244, 165, 28, 0.52);
-  background: rgba(244, 165, 28, 0.12);
-  color: #ffe0a3;
+  border: 1px solid rgba(185, 92, 255, 0.58);
+  background: rgba(185, 92, 255, 0.13);
+  color: #ead0ff;
 }
 
 .alarm-source-warning {

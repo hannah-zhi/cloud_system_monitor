@@ -980,9 +980,26 @@ function homeAlarmDisplayLabel(alarm) {
   return homeDeviceAlarmSeverity(alarm) === "fault" ? "故障" : "告警";
 }
 
+function homeAlarmRightLabel(alarm) {
+  const category = homeAlarmCategory(alarm);
+  if (category === "data") return "数据";
+  if (category === "alarm") return "告警";
+  return "预警";
+}
+
+function homeAlarmLeftTags(alarm) {
+  const category = homeAlarmCategory(alarm);
+  if (category === "data") return "";
+  if (category === "alarm") {
+    const severity = homeDeviceAlarmSeverity(alarm);
+    return `<span class="alarm-level alarm-device-${severity}">${severity === "fault" ? "故障" : "告警"}</span><span>${alarm.module}</span>`;
+  }
+  return `<span class="alarm-level">${alarm.level}</span><span>${alarm.module}</span>`;
+}
+
 function homeAlarmPillClass(alarm) {
   const category = homeAlarmCategory(alarm);
-  if (category === "alarm") return homeDeviceAlarmSeverity(alarm);
+  if (category === "alarm") return "alarm";
   return category;
 }
 
@@ -1258,16 +1275,15 @@ function renderAlarms() {
   els.alarmList.innerHTML = alarms
     .map(
       (alarm) => {
-        const displayLabel = homeAlarmDisplayLabel(alarm);
-        const showLevel = homeAlarmCategory(alarm) === "data" ? "数据" : alarm.level;
+        const leftTags = homeAlarmLeftTags(alarm);
         return `
       <button class="alarm-item alarm-${alarm.type}" type="button" data-station="${alarm.stationId}" data-alarm-id="${alarm.id}">
         <div class="alarm-body">
           <div class="alarm-row">
             <div class="alarm-tags">
-              <span class="alarm-level">${showLevel}</span><span>${alarm.module}</span>
+              ${leftTags}
             </div>
-            <span class="alarm-source alarm-source-${homeAlarmPillClass(alarm)}">${displayLabel}</span>
+            <span class="alarm-source alarm-source-${homeAlarmPillClass(alarm)}">${homeAlarmRightLabel(alarm)}</span>
           </div>
           <strong>${alarm.title}</strong>
           <div class="alarm-meta">
@@ -1354,7 +1370,7 @@ function renderHomeAlarmCategorySummary(container, alarms, options = {}) {
             .map((item) => `<button class="${activeCategory === entry.key && activeSubfilter === item.key ? "active" : ""}" data-category="${entry.key}" data-subfilter="${item.key}" type="button">${item.label}<em>${item.count}</em></button>`)
             .join("")}</div>`
         : "";
-      return `<div class="alarm-source-stat alarm-source-stat-${entry.key}${active}"${attrs}><strong>${entry.count}</strong><span>${entry.label}</span>${subfilters}</div>`;
+      return `<div class="alarm-source-stat alarm-source-stat-${entry.key}${active}"${attrs}><div class="alarm-source-main"><strong>${entry.count}</strong><span>${entry.label}</span></div>${subfilters}</div>`;
     })
     .join("");
   if (!interactive) return;
@@ -4033,16 +4049,15 @@ function renderDetailAlarms(station) {
     ? alarms
         .map(
           (alarm) => {
-            const displayLabel = homeAlarmDisplayLabel(alarm);
-            const showLevel = homeAlarmCategory(alarm) === "data" ? "数据" : alarm.level;
+            const leftTags = homeAlarmLeftTags(alarm);
             return `
         <button class="alarm-item alarm-${alarm.type}" type="button" data-alarm-id="${alarm.id}">
           <div class="alarm-body">
             <div class="alarm-row">
               <div class="alarm-tags">
-                <span class="alarm-level">${showLevel}</span><span>${alarm.module}</span>
+                ${leftTags}
               </div>
-              <span class="alarm-source alarm-source-${homeAlarmPillClass(alarm)}">${displayLabel}</span>
+              <span class="alarm-source alarm-source-${homeAlarmPillClass(alarm)}">${homeAlarmRightLabel(alarm)}</span>
             </div>
             <strong>${alarm.title}</strong>
             <div class="alarm-meta">
