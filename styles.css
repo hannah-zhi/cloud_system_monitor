@@ -3841,15 +3841,15 @@ h2 {
   align-items: center;
   justify-content: space-between;
   gap: 5px;
-  padding: 0;
+  padding: 0 3px 0 5px;
   cursor: pointer;
   white-space: nowrap;
+  position: relative;
 }
 
 .alarm-source-subfilters button:hover,
 .alarm-source-subfilters button.active {
-  color: inherit;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.045);
 }
 
 .alarm-source-subfilters button:focus,
@@ -3857,35 +3857,45 @@ h2 {
   outline: none;
 }
 
-.alarm-source-subfilters button.active span,
-.alarm-source-subfilters button.active em {
-  text-decoration: underline;
-  text-underline-offset: 3px;
+.alarm-source-subfilters button.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 2px;
+  border-radius: 2px;
+  background: currentColor;
 }
 
-.alarm-source-stat-warning .alarm-source-subfilters button[data-subfilter="level1"] {
+.alarm-source-stat-warning .alarm-source-subfilters button[data-subfilter="level1"] span {
   color: #ff8da0;
 }
 
-.alarm-source-stat-warning .alarm-source-subfilters button[data-subfilter="level2"] {
+.alarm-source-stat-warning .alarm-source-subfilters button[data-subfilter="level2"] span {
   color: #ffd17a;
 }
 
+.alarm-source-stat-alarm .alarm-source-subfilters button[data-subfilter="fault"] span {
+  color: #ff8da0;
+}
+
+.alarm-source-stat-alarm .alarm-source-subfilters button[data-subfilter="alarm"] span {
+  color: #ffd17a;
+}
+
+.alarm-source-stat-warning .alarm-source-subfilters button[data-subfilter="level1"],
 .alarm-source-stat-alarm .alarm-source-subfilters button[data-subfilter="fault"] {
   color: #ff8da0;
 }
 
+.alarm-source-stat-warning .alarm-source-subfilters button[data-subfilter="level2"],
 .alarm-source-stat-alarm .alarm-source-subfilters button[data-subfilter="alarm"] {
   color: #ffd17a;
 }
 
-.alarm-source-stat-warning .alarm-source-subfilters button.active,
-.alarm-source-stat-alarm .alarm-source-subfilters button.active {
-  background: transparent;
-}
-
 .alarm-source-subfilters em {
-  color: currentColor;
+  color: #f4f7ff;
   font-style: normal;
   font-weight: 700;
 }
