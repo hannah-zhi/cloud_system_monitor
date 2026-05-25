@@ -15,6 +15,7 @@ const commMeta = {
 const stationAlarmMeta = {
   alarm: { label: "告警", color: "#f4a51c", className: "alarm" },
   fault: { label: "故障", color: "#ff3d59", className: "fault" },
+  none: { label: "无告警", color: "#7c8799", className: "none" },
 };
 
 const stationNames = [
@@ -840,7 +841,7 @@ function renderFilters() {
     },
     {
       title: "场站告警分布",
-      entries: ["fault", "alarm"].map((key) => ({
+      entries: ["fault", "alarm", "none"].map((key) => ({
         key: `stationAlarm:${key}`,
         label: stationAlarmMeta[key].label,
         count: counts.stationAlarm[key],
@@ -935,14 +936,14 @@ function summarize(stations) {
     comm: { ok: 0, partial: 0, down: 0, offline: 0 },
     risk: { high: 0, mid: 0, low: 0, healthy: 0 },
     alarm: { level1: 0, level2: 0, level3: 0, none: 0 },
-    stationAlarm: { fault: 0, alarm: 0 },
+    stationAlarm: { fault: 0, alarm: 0, none: 0 },
   };
   stations.forEach((station) => {
     counts.comm[station.comm] += 1;
     counts.risk[station.risk] += 1;
     counts.alarm[highestAlarmTypeForStation(station)] += 1;
     const severity = stationAlarmSeverity(station);
-    if (severity !== "none") counts.stationAlarm[severity] += 1;
+    counts.stationAlarm[severity] += 1;
   });
   return counts;
 }
