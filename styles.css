@@ -3850,11 +3850,20 @@ h2 {
 .alarm-source-subfilters button:hover,
 .alarm-source-subfilters button.active {
   background: rgba(255, 255, 255, 0.045);
+  border: 0;
+  box-shadow: none;
 }
 
 .alarm-source-subfilters button:focus,
 .alarm-source-subfilters button:focus-visible {
   outline: none;
+  box-shadow: none;
+}
+
+.alarm-summary .alarm-source-subfilters button[data-category]:hover,
+.alarm-summary .alarm-source-subfilters button[data-category].active {
+  background: rgba(255, 255, 255, 0.045);
+  box-shadow: none;
 }
 
 .alarm-source-subfilters button.active::before {

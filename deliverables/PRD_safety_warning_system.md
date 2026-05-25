@@ -330,3 +330,7 @@
 - 右侧来源框子筛选控件在不改变筛选功能的前提下应弱化按钮感，采用嵌入式右侧指标样式，减少视觉噪声；激活态使用轻量下划线/高亮即可。
 - 右侧来源框子筛选文字和数字均使用对应语义色：`一级/故障` 红色系，`二级/告警` 黄色系；鼠标点击或聚焦时不得出现额外外边框。
 - 右侧来源框子筛选仅标签文字使用语义色，数字保持白色；选中态不得出现方框边框，可使用低透明背景或左侧细线高亮。
+
+## 23. 2026-05-25 Side Subfilter Border Override
+
+- Source-box subfilter buttons must override generic category active styles so selected subfilters never show a boxed outline, border, or inset shadow; selection uses only a subtle background or left accent.
