@@ -1367,7 +1367,7 @@ function renderHomeAlarmCategorySummary(container, alarms, options = {}) {
       const attrs = interactive ? ` role="button" tabindex="0" data-category="${entry.key}"` : "";
       const subfilters = entry.subfilters.length
         ? `<div class="alarm-source-subfilters">${entry.subfilters
-            .map((item) => `<button class="${activeCategory === entry.key && activeSubfilter === item.key ? "active" : ""}" data-category="${entry.key}" data-subfilter="${item.key}" type="button">${item.label}<em>${item.count}</em></button>`)
+            .map((item) => `<button class="${activeCategory === entry.key && activeSubfilter === item.key ? "active" : ""}" data-category="${entry.key}" data-subfilter="${item.key}" type="button"><span>${item.label}</span><em>${item.count}</em></button>`)
             .join("")}</div>`
         : "";
       return `<div class="alarm-source-stat alarm-source-stat-${entry.key}${active}"${attrs}><div class="alarm-source-main"><strong>${entry.count}</strong><span>${entry.label}</span></div>${subfilters}</div>`;

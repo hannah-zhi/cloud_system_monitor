@@ -3708,19 +3708,19 @@ h2 {
 }
 
 .alarm-summary > div {
-  min-height: 42px;
-  padding: 7px 10px;
+  min-height: 48px;
+  padding: 8px 10px;
   border: 1px solid rgba(57, 63, 82, 0.76);
   background:
-    linear-gradient(180deg, rgba(31, 35, 48, 0.64), rgba(14, 17, 26, 0.54)),
+    linear-gradient(180deg, rgba(27, 31, 44, 0.78), rgba(13, 16, 25, 0.64)),
     rgba(12, 14, 22, 0.34);
 }
 
 .alarm-source-summary .alarm-source-stat {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 64px;
+  grid-template-columns: minmax(0, 1fr) 58px;
   align-items: center;
-  gap: 5px;
+  gap: 9px;
 }
 
 .alarm-source-summary .alarm-source-stat-data {
@@ -3737,9 +3737,9 @@ h2 {
 .alarm-summary [data-category]:hover,
 .alarm-summary [data-category].active {
   background:
-    linear-gradient(180deg, rgba(36, 43, 60, 0.82), rgba(16, 20, 31, 0.72)),
+    linear-gradient(180deg, rgba(34, 39, 55, 0.92), rgba(15, 19, 30, 0.82)),
     rgba(18, 152, 255, 0.08);
-  box-shadow: inset 0 0 0 1px currentColor, 0 0 18px rgba(18, 152, 255, 0.12);
+  box-shadow: inset 0 0 0 1px currentColor, 0 0 14px rgba(18, 152, 255, 0.1);
 }
 
 .alarm-summary .alarm-source-stat-cloud {
@@ -3822,57 +3822,61 @@ h2 {
 .alarm-source-subfilters {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 5px;
+  gap: 3px;
   margin-top: 0;
+  padding-left: 9px;
+  border-left: 1px solid rgba(111, 119, 146, 0.32);
 }
 
 .alarm-source-subfilters button {
   width: 100%;
-  height: 20px;
-  border: 1px solid rgba(91, 99, 124, 0.62);
-  border-radius: 3px;
-  background: rgba(13, 16, 25, 0.42);
+  height: 18px;
+  border: 0;
+  border-radius: 2px;
+  background: transparent;
   color: #aeb8ca;
   font-size: 11px;
   line-height: 1;
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
-  gap: 4px;
-  padding: 0 6px;
+  gap: 5px;
+  padding: 0;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .alarm-source-subfilters button:hover,
 .alarm-source-subfilters button.active {
   color: #fff;
-  border-color: currentColor;
-  background: rgba(18, 152, 255, 0.16);
+  background: transparent;
+}
+
+.alarm-source-subfilters button.active span,
+.alarm-source-subfilters button.active em {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .alarm-source-stat-warning .alarm-source-subfilters button[data-subfilter="level1"] {
   color: #ff8da0;
-  border-color: rgba(255, 61, 89, 0.5);
 }
 
 .alarm-source-stat-warning .alarm-source-subfilters button[data-subfilter="level2"] {
   color: #ffd17a;
-  border-color: rgba(244, 165, 28, 0.5);
 }
 
 .alarm-source-stat-alarm .alarm-source-subfilters button[data-subfilter="fault"] {
   color: #ff8da0;
-  border-color: rgba(255, 61, 89, 0.5);
 }
 
 .alarm-source-stat-alarm .alarm-source-subfilters button[data-subfilter="alarm"] {
   color: #ffd17a;
-  border-color: rgba(244, 165, 28, 0.5);
 }
 
 .alarm-source-stat-warning .alarm-source-subfilters button.active,
 .alarm-source-stat-alarm .alarm-source-subfilters button.active {
-  background: rgba(255, 255, 255, 0.1);
+  background: transparent;
 }
 
 .alarm-source-subfilters em {
