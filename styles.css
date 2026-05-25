@@ -1843,6 +1843,16 @@ h2 {
 
 .result-meta {
   margin-bottom: 10px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.result-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .result-meta button,
@@ -1865,6 +1875,10 @@ h2 {
   align-content: start;
   align-items: start;
   grid-auto-rows: max-content;
+}
+
+.station-grid.cards-collapsed {
+  grid-template-columns: repeat(auto-fill, 286px);
 }
 
 .station-card,
@@ -1899,6 +1913,12 @@ h2 {
   border-top-width: 1px;
   padding: 14px 14px 13px;
   z-index: 0;
+}
+
+.station-card.is-collapsed {
+  height: 148px;
+  min-height: 148px;
+  padding-bottom: 12px;
 }
 
 .overview-filter-row .filter-chip strong {
@@ -3314,6 +3334,16 @@ h2 {
   color: #c7cedd;
 }
 
+.operation-tag.is-alarm {
+  background: linear-gradient(90deg, #f5b83f, #d87b13);
+  box-shadow: 0 0 16px rgba(244, 165, 28, 0.3);
+}
+
+.operation-tag.is-fault {
+  background: linear-gradient(90deg, #ff4864, #b51f34);
+  box-shadow: 0 0 18px rgba(255, 61, 89, 0.35);
+}
+
 .central-monitor-metrics {
   gap: 7px;
 }
@@ -3338,6 +3368,20 @@ h2 {
   white-space: nowrap;
   font-size: 14px;
   line-height: 1.2;
+}
+
+.station-card.is-collapsed .central-monitor-metrics .metric:nth-child(2),
+.station-card.is-collapsed .central-monitor-metrics .metric:nth-child(3),
+.station-card.is-collapsed .central-monitor-metrics .metric:nth-child(4) {
+  display: none;
+}
+
+.station-card.is-collapsed .card-health-line {
+  display: none;
+}
+
+.station-card.is-collapsed .central-monitor-metrics {
+  gap: 8px;
 }
 
 .card-sos-line,
@@ -3426,6 +3470,20 @@ h2 {
 
 .station-card.risk-healthy {
   border-top-color: var(--blue);
+}
+
+.station-card.station-alarm {
+  border-color: rgba(244, 165, 28, 0.58);
+  background:
+    linear-gradient(180deg, rgba(56, 43, 20, 0.88), rgba(22, 21, 27, 0.98)),
+    radial-gradient(circle at 86% 12%, rgba(244, 165, 28, 0.24), transparent 42%);
+}
+
+.station-card.station-fault {
+  border-color: rgba(255, 61, 89, 0.7);
+  background:
+    linear-gradient(180deg, rgba(58, 24, 31, 0.9), rgba(23, 20, 27, 0.98)),
+    radial-gradient(circle at 86% 12%, rgba(255, 61, 89, 0.28), transparent 42%);
 }
 
 .comm-dot.comm-ok {
@@ -3640,6 +3698,10 @@ h2 {
   margin: 8px 8px 8px 0;
 }
 
+.alarm-source-summary {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .alarm-summary div {
   min-height: 42px;
   padding: 7px 10px;
@@ -3699,6 +3761,22 @@ h2 {
 
 .alarm-summary .alarm-source-stat-data span {
   color: #ffbf86;
+}
+
+.alarm-summary .alarm-source-stat-alarm {
+  border-color: rgba(244, 165, 28, 0.58);
+}
+
+.alarm-summary .alarm-source-stat-alarm span {
+  color: #ffd17a;
+}
+
+.alarm-summary .alarm-source-stat-fault {
+  border-color: rgba(255, 61, 89, 0.62);
+}
+
+.alarm-summary .alarm-source-stat-fault span {
+  color: #ff9aaa;
 }
 
 .alarm-summary strong {
@@ -3825,6 +3903,18 @@ h2 {
   border: 1px solid rgba(255, 134, 41, 0.56);
   background: rgba(255, 134, 41, 0.13);
   color: #ffd0a3;
+}
+
+.alarm-source-alarm {
+  border: 1px solid rgba(244, 165, 28, 0.52);
+  background: rgba(244, 165, 28, 0.12);
+  color: #ffe0a3;
+}
+
+.alarm-source-fault {
+  border: 1px solid rgba(255, 61, 89, 0.58);
+  background: rgba(255, 61, 89, 0.14);
+  color: #ffb4c0;
 }
 
 .alarm-body strong {

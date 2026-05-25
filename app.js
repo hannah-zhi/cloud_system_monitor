@@ -12,6 +12,11 @@ const commMeta = {
   offline: { label: "离线", tone: "tone-muted", color: "#7c8799" },
 };
 
+const stationAlarmMeta = {
+  alarm: { label: "告警", color: "#f4a51c", className: "alarm" },
+  fault: { label: "故障", color: "#ff3d59", className: "fault" },
+};
+
 const stationNames = [
   "远景乌兰察布关键节点电站",
   "枣庄市峄城石膏矿沉陷区",
@@ -100,9 +105,12 @@ const state = {
   },
   activeFilter: "all",
   activeAlarmSource: "all",
+  activeHomeAlarmCategory: "all",
   detailAlarmSource: "all",
+  detailAlarmCategory: "all",
   overviewSortMode: "sosAsc",
   chargeStatWindow: "day",
+  cardsCollapsed: false,
   selectedStationIds: new Set(),
   selectedStation: null,
   detailTab: "overview",
@@ -147,6 +155,7 @@ function bindElements() {
     "statusFilters",
     "selectedCount",
     "resultText",
+    "collapseCardsBtn",
     "clearFilterBtn",
     "pageTabs",
     "listView",
@@ -318,9 +327,16 @@ function bindEvents() {
   window.addEventListener("resize", positionStationPicker);
   window.addEventListener("scroll", positionStationPicker, true);
   bindSosRangeEvents();
+  els.collapseCardsBtn?.addEventListener("click", () => {
+    state.cardsCollapsed = !state.cardsCollapsed;
+    els.collapseCardsBtn.textContent = state.cardsCollapsed ? "展开" : "收起";
+    els.collapseCardsBtn.setAttribute("aria-pressed", String(state.cardsCollapsed));
+    renderStations(state.filtered);
+  });
   els.clearFilterBtn.addEventListener("click", () => {
     state.activeFilter = "all";
     state.activeAlarmSource = "all";
+    state.activeHomeAlarmCategory = "all";
     state.selectedStationIds.clear();
     setSosRange(0, 100, false);
     els.searchInput.value = "";
@@ -814,13 +830,22 @@ function renderFilters() {
       })),
     },
     {
-      title: "站内最高预警/告警等级",
+      title: "场站预警分布",
       entries: [
         { key: "alarm:level1", label: "一级", count: counts.alarm.level1, color: "#ff3d59" },
         { key: "alarm:level2", label: "二级", count: counts.alarm.level2, color: "#f4a51c" },
         { key: "alarm:level3", label: "三级", count: counts.alarm.level3, color: "#13c781" },
         { key: "alarm:none", label: "无预警", count: counts.alarm.none, color: "#1689ff" },
       ],
+    },
+    {
+      title: "场站告警分布",
+      entries: ["fault", "alarm"].map((key) => ({
+        key: `stationAlarm:${key}`,
+        label: stationAlarmMeta[key].label,
+        count: counts.stationAlarm[key],
+        color: stationAlarmMeta[key].color,
+      })),
     },
     {
       title: "通讯状态",
@@ -910,11 +935,14 @@ function summarize(stations) {
     comm: { ok: 0, partial: 0, down: 0, offline: 0 },
     risk: { high: 0, mid: 0, low: 0, healthy: 0 },
     alarm: { level1: 0, level2: 0, level3: 0, none: 0 },
+    stationAlarm: { fault: 0, alarm: 0 },
   };
   stations.forEach((station) => {
     counts.comm[station.comm] += 1;
     counts.risk[station.risk] += 1;
     counts.alarm[highestAlarmTypeForStation(station)] += 1;
+    const severity = stationAlarmSeverity(station);
+    if (severity !== "none") counts.stationAlarm[severity] += 1;
   });
   return counts;
 }
@@ -923,6 +951,40 @@ function highestAlarmTypeForStation(station) {
   const stationAlarms = state.allAlarms.filter((alarm) => alarm.stationId === station.id);
   if (!stationAlarms.length) return "none";
   return stationAlarms.sort((a, b) => alarmOrder(a.type) - alarmOrder(b.type))[0].type;
+}
+
+function homeVisibleAlarm(alarm) {
+  return alarm.source !== "站端预警";
+}
+
+function homeAlarmCategory(alarm) {
+  if (alarm.source === "数据告警") return "data";
+  if (alarm.source === "设备告警") {
+    const idTail = Number(String(alarm.id).split("-").pop());
+    return alarm.type === "level1" || (Number.isFinite(idTail) && idTail % 2 === 0) ? "fault" : "alarm";
+  }
+  return "alarm";
+}
+
+function homeAlarmDisplayLabel(alarm) {
+  const category = homeAlarmCategory(alarm);
+  if (category === "data") return "数据";
+  if (category === "fault") return "故障";
+  return "告警";
+}
+
+function homeAlarmTypeMatch(alarm, activeType) {
+  if (activeType === "all") return true;
+  if (activeType === "data") return homeAlarmCategory(alarm) === "data";
+  if (homeAlarmCategory(alarm) === "data") return false;
+  return alarm.type === activeType;
+}
+
+function stationAlarmSeverity(station) {
+  const stationAlarms = [...state.allAlarms, ...state.homeDataAlarms].filter((alarm) => alarm.stationId === station.id && homeVisibleAlarm(alarm));
+  if (stationAlarms.some((alarm) => homeAlarmCategory(alarm) === "fault")) return "fault";
+  if (stationAlarms.some((alarm) => homeAlarmCategory(alarm) === "alarm")) return "alarm";
+  return "none";
 }
 
 function applyFilters() {
@@ -935,7 +997,8 @@ function applyFilters() {
       state.activeFilter === "all" ||
       (filterType === "comm" && station.comm === filterValue) ||
       (filterType === "risk" && station.risk === filterValue) ||
-      (filterType === "alarm" && highestAlarmTypeForStation(station) === filterValue);
+      (filterType === "alarm" && highestAlarmTypeForStation(station) === filterValue) ||
+      (filterType === "stationAlarm" && stationAlarmSeverity(station) === filterValue);
     return matchSelected && matchKeyword && matchFilter;
   });
 
@@ -992,6 +1055,7 @@ function filterAlarmsByStations(stations, alarms = state.allAlarms) {
 function renderStations(stations) {
   els.selectedCount.textContent = state.selectedStationIds.size || stations.length;
   els.resultText.textContent = `共 ${stations.length} 个场站`;
+  els.stationGrid.classList.toggle("cards-collapsed", state.cardsCollapsed);
   if (!stations.length) {
     els.stationGrid.innerHTML = `<div class="empty">未找到匹配场站</div>`;
     return;
@@ -1003,17 +1067,21 @@ function renderStations(stations) {
 }
 
 function createStationCard(station) {
-  const stateClass = operationStateClass(station.run);
   const commClass = commStatusClass(station.comm);
   const comm = commMeta[station.comm];
   const risk = riskMeta[station.risk];
   const sopSoe = formatSopSoe(station);
   const healthScore = stationHealthScore(station);
-  const operationTag = station.comm === "offline" ? "" : `<span class="operation-tag ${stateClass}">${station.run}</span>`;
+  const alarmSeverity = stationAlarmSeverity(station);
+  const cardStateLabel = stationCardStateLabel(station, alarmSeverity);
+  const stateClass = operationStateClass(cardStateLabel);
+  const operationTag = cardStateLabel ? `<span class="operation-tag ${stateClass}">${cardStateLabel}</span>` : "";
   const sosPercent = Math.max(0, Math.min(100, Number(station.sos || 0)));
   const healthPercent = Math.max(0, Math.min(100, healthScore));
+  const collapsedClass = state.cardsCollapsed ? " is-collapsed" : "";
+  const alarmClass = alarmSeverity === "none" ? "" : ` station-${stationAlarmMeta[alarmSeverity].className}`;
   return `
-    <button class="station-card risk-${risk.className} ${commClass}" data-id="${station.id}" type="button">
+    <button class="station-card risk-${risk.className} ${commClass}${alarmClass}${collapsedClass}" data-id="${station.id}" type="button">
       <div class="card-head">
         ${operationTag}
         <span class="station-name" title="${station.id}${station.name}">${station.id}${station.name}</span>
@@ -1035,6 +1103,13 @@ function createStationCard(station) {
     </button>`;
 }
 
+function stationCardStateLabel(station, alarmSeverity) {
+  if (alarmSeverity === "fault") return "故障";
+  if (alarmSeverity === "alarm") return "告警";
+  if (station.comm === "offline") return "";
+  return station.run;
+}
+
 function operationStateClass(stateName) {
   const classMap = {
     充电: "is-charging",
@@ -1042,6 +1117,8 @@ function operationStateClass(stateName) {
     待机: "is-standby",
     停机: "is-stopped",
     离线: "is-offline",
+    告警: "is-alarm",
+    故障: "is-fault",
   };
   return classMap[stateName] || "is-standby";
 }
@@ -1131,27 +1208,34 @@ function positionStationPicker() {
 
 function renderAlarms() {
   if (!els.alarmList) return;
-  const rangeAlarms = filterAlarmsByTime(state.alarms);
-  const levelAlarms = rangeAlarms.filter((alarm) => state.activeAlarmType === "all" || alarm.type === state.activeAlarmType);
-  const alarms = levelAlarms.filter((alarm) => state.activeAlarmSource === "all" || alarm.source === state.activeAlarmSource);
+  const rangeAlarms = filterAlarmsByTime(state.alarms).filter(homeVisibleAlarm);
+  const levelAlarms = rangeAlarms.filter((alarm) => homeAlarmTypeMatch(alarm, state.activeAlarmType));
+  const alarms = levelAlarms.filter((alarm) => state.activeHomeAlarmCategory === "all" || homeAlarmCategory(alarm) === state.activeHomeAlarmCategory);
   els.alarmCountAll.textContent = rangeAlarms.length;
-  els.alarmCountLevel1.textContent = rangeAlarms.filter((alarm) => alarm.type === "level1").length;
-  els.alarmCountLevel2.textContent = rangeAlarms.filter((alarm) => alarm.type === "level2").length;
-  els.alarmCountLevel3.textContent = rangeAlarms.filter((alarm) => alarm.type === "level3").length;
-  renderAlarmSourceSummary(els.alarmList.closest(".alarm-panel")?.querySelector(".alarm-source-summary"), levelAlarms, homeAlarmSourceLabels, {
+  els.alarmCountLevel1.textContent = rangeAlarms.filter((alarm) => homeAlarmCategory(alarm) !== "data" && alarm.type === "level1").length;
+  els.alarmCountLevel2.textContent = rangeAlarms.filter((alarm) => homeAlarmCategory(alarm) !== "data" && alarm.type === "level2").length;
+  els.alarmCountLevel3.textContent = rangeAlarms.filter((alarm) => homeAlarmCategory(alarm) === "data").length;
+  renderHomeAlarmCategorySummary(els.alarmList.closest(".alarm-panel")?.querySelector(".alarm-source-summary"), levelAlarms, {
     interactive: true,
-    activeSource: state.activeAlarmSource,
+    activeCategory: state.activeHomeAlarmCategory,
+    onChange: (category) => {
+      state.activeHomeAlarmCategory = category;
+      renderAlarms();
+    },
   });
   els.alarmList.innerHTML = alarms
     .map(
-      (alarm) => `
+      (alarm) => {
+        const displayLabel = homeAlarmDisplayLabel(alarm);
+        const showLevel = homeAlarmCategory(alarm) === "data" ? "数据" : alarm.level;
+        return `
       <button class="alarm-item alarm-${alarm.type}" type="button" data-station="${alarm.stationId}" data-alarm-id="${alarm.id}">
         <div class="alarm-body">
           <div class="alarm-row">
             <div class="alarm-tags">
-              <span class="alarm-level">${alarm.level}</span><span>${alarm.module}</span>
+              <span class="alarm-level">${showLevel}</span><span>${alarm.module}</span>
             </div>
-            <span class="alarm-source alarm-source-${alarmSourceClass(alarm.source)}">${alarm.source}</span>
+            <span class="alarm-source alarm-source-${homeAlarmCategory(alarm)}">${displayLabel}</span>
           </div>
           <strong>${alarm.title}</strong>
           <div class="alarm-meta">
@@ -1160,7 +1244,8 @@ function renderAlarms() {
           </div>
           <div class="alarm-location">预警位置：${alarm.location}</div>
         </div>
-      </button>`
+      </button>`;
+      }
     )
     .join("");
   els.alarmList.querySelectorAll(".alarm-item").forEach((item) => {
@@ -1202,6 +1287,37 @@ function renderAlarmSourceSummary(container, alarms, sources = alarmSourceLabels
       });
     });
   }
+}
+
+function renderHomeAlarmCategorySummary(container, alarms, options = {}) {
+  if (!container) return;
+  const { interactive = false, activeCategory = "all", onChange = null } = options;
+  const entries = [
+    { key: "alarm", label: "告警", count: alarms.filter((alarm) => homeAlarmCategory(alarm) === "alarm").length },
+    { key: "fault", label: "故障", count: alarms.filter((alarm) => homeAlarmCategory(alarm) === "fault").length },
+    { key: "data", label: "数据", count: alarms.filter((alarm) => homeAlarmCategory(alarm) === "data").length },
+  ];
+  container.innerHTML = entries
+    .map((entry) => {
+      const active = activeCategory === entry.key ? " active" : "";
+      const attrs = interactive ? ` role="button" tabindex="0" data-category="${entry.key}"` : "";
+      return `<div class="alarm-source-stat alarm-source-stat-${entry.key}${active}"${attrs}><strong>${entry.count}</strong><span>${entry.label}</span></div>`;
+    })
+    .join("");
+  if (!interactive) return;
+  container.querySelectorAll("[data-category]").forEach((item) => {
+    const toggle = () => {
+      const nextCategory = activeCategory === item.dataset.category ? "all" : item.dataset.category;
+      if (onChange) onChange(nextCategory);
+    };
+    item.addEventListener("click", toggle);
+    item.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        toggle();
+      }
+    });
+  });
 }
 
 function countAlarmSources(alarms, sources = alarmSourceLabels) {
@@ -2736,6 +2852,7 @@ function showDetail(id, initialTab = "overview") {
   state.detailAlarmStartDate = "";
   state.detailAlarmEndDate = "";
   state.detailAlarmSource = "all";
+  state.detailAlarmCategory = "all";
   state.chargeStatWindow = "day";
   state.detailTab = ["overview", "diagnosis", "health"].includes(initialTab) ? initialTab : "overview";
   els.detailAlarmTabs.querySelectorAll("button").forEach((button) => button.classList.toggle("active", button.dataset.type === "all"));
@@ -3821,6 +3938,7 @@ function handleBoxHover(event) {
 function renderDetailAlarms(station) {
   const stationAlarms = [...state.allAlarms, ...state.homeDataAlarms]
     .filter((alarm) => alarm.stationId === station.id)
+    .filter(homeVisibleAlarm)
     .sort((a, b) => alarmOrder(a.type) - alarmOrder(b.type) || b.dateISO.localeCompare(a.dateISO));
   const rangeAlarms = filterAlarmsByWindow(
     stationAlarms,
@@ -3828,32 +3946,35 @@ function renderDetailAlarms(station) {
     state.detailAlarmStartDate,
     state.detailAlarmEndDate
   );
-  const levelAlarms = rangeAlarms.filter((alarm) => state.detailAlarmType === "all" || alarm.type === state.detailAlarmType);
-  const alarms = levelAlarms.filter((alarm) => state.detailAlarmSource === "all" || alarm.source === state.detailAlarmSource);
+  const levelAlarms = rangeAlarms.filter((alarm) => homeAlarmTypeMatch(alarm, state.detailAlarmType));
+  const alarms = levelAlarms.filter((alarm) => state.detailAlarmCategory === "all" || homeAlarmCategory(alarm) === state.detailAlarmCategory);
   els.detailAlarmSubtitle.textContent = `${station.id}${station.name}`;
   els.detailAlarmCountAll.textContent = rangeAlarms.length;
-  els.detailAlarmCountLevel1.textContent = rangeAlarms.filter((alarm) => alarm.type === "level1").length;
-  els.detailAlarmCountLevel2.textContent = rangeAlarms.filter((alarm) => alarm.type === "level2").length;
-  els.detailAlarmCountLevel3.textContent = rangeAlarms.filter((alarm) => alarm.type === "level3").length;
-  renderAlarmSourceSummary(els.detailAlarmList.closest(".alarm-panel")?.querySelector(".alarm-source-summary"), levelAlarms, homeAlarmSourceLabels, {
+  els.detailAlarmCountLevel1.textContent = rangeAlarms.filter((alarm) => homeAlarmCategory(alarm) !== "data" && alarm.type === "level1").length;
+  els.detailAlarmCountLevel2.textContent = rangeAlarms.filter((alarm) => homeAlarmCategory(alarm) !== "data" && alarm.type === "level2").length;
+  els.detailAlarmCountLevel3.textContent = rangeAlarms.filter((alarm) => homeAlarmCategory(alarm) === "data").length;
+  renderHomeAlarmCategorySummary(els.detailAlarmList.closest(".alarm-panel")?.querySelector(".alarm-source-summary"), levelAlarms, {
     interactive: true,
-    activeSource: state.detailAlarmSource,
-    onChange: (source) => {
-      state.detailAlarmSource = source;
+    activeCategory: state.detailAlarmCategory,
+    onChange: (category) => {
+      state.detailAlarmCategory = category;
       renderDetailAlarms(station);
     },
   });
   els.detailAlarmList.innerHTML = alarms.length
     ? alarms
         .map(
-          (alarm) => `
+          (alarm) => {
+            const displayLabel = homeAlarmDisplayLabel(alarm);
+            const showLevel = homeAlarmCategory(alarm) === "data" ? "数据" : alarm.level;
+            return `
         <button class="alarm-item alarm-${alarm.type}" type="button" data-alarm-id="${alarm.id}">
           <div class="alarm-body">
             <div class="alarm-row">
               <div class="alarm-tags">
-                <span class="alarm-level">${alarm.level}</span><span>${alarm.module}</span>
+                <span class="alarm-level">${showLevel}</span><span>${alarm.module}</span>
               </div>
-              <span class="alarm-source alarm-source-${alarmSourceClass(alarm.source)}">${alarm.source}</span>
+              <span class="alarm-source alarm-source-${homeAlarmCategory(alarm)}">${displayLabel}</span>
             </div>
             <strong>${alarm.title}</strong>
             <div class="alarm-meta">
@@ -3861,11 +3982,12 @@ function renderDetailAlarms(station) {
               <time>${alarm.time}</time>
             </div>
           </div>
-        </button>`
+        </button>`;
+          }
         )
         .join("")
     : `<div class="empty detail-alarm-empty">${
-        state.detailAlarmSource === "all" ? "当前场站暂无预警/告警" : `当前场站无${state.detailAlarmSource}`
+        state.detailAlarmCategory === "all" ? "当前场站暂无预警/告警" : `当前场站无${homeAlarmEmptyLabel(state.detailAlarmCategory)}`
       }</div>`;
   els.detailAlarmList.querySelectorAll(".alarm-item").forEach((item) => {
     item.addEventListener("click", () => {
@@ -3874,6 +3996,12 @@ function renderDetailAlarms(station) {
     });
   });
   syncDetailAlarmPanelHeight();
+}
+
+function homeAlarmEmptyLabel(category) {
+  if (category === "fault") return "故障";
+  if (category === "data") return "数据告警";
+  return "告警";
 }
 
 function renderTable() {
