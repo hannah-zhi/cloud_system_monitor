@@ -3848,8 +3848,13 @@ h2 {
 
 .alarm-source-subfilters button:hover,
 .alarm-source-subfilters button.active {
-  color: #fff;
+  color: inherit;
   background: transparent;
+}
+
+.alarm-source-subfilters button:focus,
+.alarm-source-subfilters button:focus-visible {
+  outline: none;
 }
 
 .alarm-source-subfilters button.active span,
@@ -3880,7 +3885,7 @@ h2 {
 }
 
 .alarm-source-subfilters em {
-  color: #f4f7ff;
+  color: currentColor;
   font-style: normal;
   font-weight: 700;
 }
