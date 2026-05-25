@@ -1951,6 +1951,7 @@ h2 {
   justify-content: center;
   gap: 18px;
   width: 100%;
+  min-height: 103px;
 }
 
 .overview-filter-donut {
@@ -1980,6 +1981,8 @@ h2 {
   display: grid;
   gap: 5px;
   width: 164px;
+  align-content: center;
+  min-height: 103px;
 }
 
 .overview-donut-legend button {
@@ -3370,9 +3373,7 @@ h2 {
   line-height: 1.2;
 }
 
-.station-card.is-collapsed .central-monitor-metrics .metric:nth-child(2),
-.station-card.is-collapsed .central-monitor-metrics .metric:nth-child(3),
-.station-card.is-collapsed .central-monitor-metrics .metric:nth-child(4) {
+.station-card.is-collapsed .central-monitor-metrics .metric:nth-child(-n + 4) {
   display: none;
 }
 
@@ -3473,17 +3474,17 @@ h2 {
 }
 
 .station-card.station-alarm {
-  border-color: rgba(244, 165, 28, 0.58);
   background:
     linear-gradient(180deg, rgba(56, 43, 20, 0.88), rgba(22, 21, 27, 0.98)),
     radial-gradient(circle at 86% 12%, rgba(244, 165, 28, 0.24), transparent 42%);
+  box-shadow: var(--shadow), inset 0 0 0 1px rgba(244, 165, 28, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.035);
 }
 
 .station-card.station-fault {
-  border-color: rgba(255, 61, 89, 0.7);
   background:
     linear-gradient(180deg, rgba(58, 24, 31, 0.9), rgba(23, 20, 27, 0.98)),
     radial-gradient(circle at 86% 12%, rgba(255, 61, 89, 0.28), transparent 42%);
+  box-shadow: var(--shadow), inset 0 0 0 1px rgba(255, 61, 89, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.035);
 }
 
 .comm-dot.comm-ok {
@@ -3771,6 +3772,14 @@ h2 {
   color: #ffd17a;
 }
 
+.alarm-summary .alarm-source-stat-warning {
+  border-color: rgba(18, 152, 255, 0.52);
+}
+
+.alarm-summary .alarm-source-stat-warning span {
+  color: #8fcfff;
+}
+
 .alarm-summary .alarm-source-stat-fault {
   border-color: rgba(255, 61, 89, 0.62);
 }
@@ -3909,6 +3918,12 @@ h2 {
   border: 1px solid rgba(244, 165, 28, 0.52);
   background: rgba(244, 165, 28, 0.12);
   color: #ffe0a3;
+}
+
+.alarm-source-warning {
+  border: 1px solid rgba(18, 152, 255, 0.52);
+  background: rgba(18, 152, 255, 0.12);
+  color: #d9ecff;
 }
 
 .alarm-source-fault {

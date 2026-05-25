@@ -959,31 +959,40 @@ function homeVisibleAlarm(alarm) {
 
 function homeAlarmCategory(alarm) {
   if (alarm.source === "数据告警") return "data";
-  if (alarm.source === "设备告警") {
-    const idTail = Number(String(alarm.id).split("-").pop());
-    return alarm.type === "level1" || (Number.isFinite(idTail) && idTail % 2 === 0) ? "fault" : "alarm";
-  }
-  return "alarm";
+  if (alarm.source === "设备告警") return "alarm";
+  return "warning";
+}
+
+function homeDeviceAlarmSeverity(alarm) {
+  if (homeAlarmCategory(alarm) !== "alarm") return "none";
+  const idTail = Number(String(alarm.id).split("-").pop());
+  return alarm.type === "level1" || (Number.isFinite(idTail) && idTail % 2 === 0) ? "fault" : "alarm";
 }
 
 function homeAlarmDisplayLabel(alarm) {
   const category = homeAlarmCategory(alarm);
   if (category === "data") return "数据";
-  if (category === "fault") return "故障";
-  return "告警";
+  if (category === "warning") return "预警";
+  return homeDeviceAlarmSeverity(alarm) === "fault" ? "故障" : "告警";
+}
+
+function homeAlarmPillClass(alarm) {
+  const category = homeAlarmCategory(alarm);
+  if (category === "alarm") return homeDeviceAlarmSeverity(alarm);
+  return category;
 }
 
 function homeAlarmTypeMatch(alarm, activeType) {
   if (activeType === "all") return true;
   if (activeType === "data") return homeAlarmCategory(alarm) === "data";
-  if (homeAlarmCategory(alarm) === "data") return false;
+  if (homeAlarmCategory(alarm) !== "warning") return false;
   return alarm.type === activeType;
 }
 
 function stationAlarmSeverity(station) {
   const stationAlarms = [...state.allAlarms, ...state.homeDataAlarms].filter((alarm) => alarm.stationId === station.id && homeVisibleAlarm(alarm));
-  if (stationAlarms.some((alarm) => homeAlarmCategory(alarm) === "fault")) return "fault";
-  if (stationAlarms.some((alarm) => homeAlarmCategory(alarm) === "alarm")) return "alarm";
+  if (stationAlarms.some((alarm) => homeDeviceAlarmSeverity(alarm) === "fault")) return "fault";
+  if (stationAlarms.some((alarm) => homeDeviceAlarmSeverity(alarm) === "alarm")) return "alarm";
   return "none";
 }
 
@@ -1212,10 +1221,10 @@ function renderAlarms() {
   const levelAlarms = rangeAlarms.filter((alarm) => homeAlarmTypeMatch(alarm, state.activeAlarmType));
   const alarms = levelAlarms.filter((alarm) => state.activeHomeAlarmCategory === "all" || homeAlarmCategory(alarm) === state.activeHomeAlarmCategory);
   els.alarmCountAll.textContent = rangeAlarms.length;
-  els.alarmCountLevel1.textContent = rangeAlarms.filter((alarm) => homeAlarmCategory(alarm) !== "data" && alarm.type === "level1").length;
-  els.alarmCountLevel2.textContent = rangeAlarms.filter((alarm) => homeAlarmCategory(alarm) !== "data" && alarm.type === "level2").length;
+  els.alarmCountLevel1.textContent = rangeAlarms.filter((alarm) => homeAlarmCategory(alarm) === "warning" && alarm.type === "level1").length;
+  els.alarmCountLevel2.textContent = rangeAlarms.filter((alarm) => homeAlarmCategory(alarm) === "warning" && alarm.type === "level2").length;
   els.alarmCountLevel3.textContent = rangeAlarms.filter((alarm) => homeAlarmCategory(alarm) === "data").length;
-  renderHomeAlarmCategorySummary(els.alarmList.closest(".alarm-panel")?.querySelector(".alarm-source-summary"), levelAlarms, {
+  renderHomeAlarmCategorySummary(els.alarmList.closest(".alarm-panel")?.querySelector(".alarm-source-summary"), rangeAlarms, {
     interactive: true,
     activeCategory: state.activeHomeAlarmCategory,
     onChange: (category) => {
@@ -1235,7 +1244,7 @@ function renderAlarms() {
             <div class="alarm-tags">
               <span class="alarm-level">${showLevel}</span><span>${alarm.module}</span>
             </div>
-            <span class="alarm-source alarm-source-${homeAlarmCategory(alarm)}">${displayLabel}</span>
+            <span class="alarm-source alarm-source-${homeAlarmPillClass(alarm)}">${displayLabel}</span>
           </div>
           <strong>${alarm.title}</strong>
           <div class="alarm-meta">
@@ -1293,8 +1302,8 @@ function renderHomeAlarmCategorySummary(container, alarms, options = {}) {
   if (!container) return;
   const { interactive = false, activeCategory = "all", onChange = null } = options;
   const entries = [
+    { key: "warning", label: "预警", count: alarms.filter((alarm) => homeAlarmCategory(alarm) === "warning").length },
     { key: "alarm", label: "告警", count: alarms.filter((alarm) => homeAlarmCategory(alarm) === "alarm").length },
-    { key: "fault", label: "故障", count: alarms.filter((alarm) => homeAlarmCategory(alarm) === "fault").length },
     { key: "data", label: "数据", count: alarms.filter((alarm) => homeAlarmCategory(alarm) === "data").length },
   ];
   container.innerHTML = entries
@@ -3950,10 +3959,10 @@ function renderDetailAlarms(station) {
   const alarms = levelAlarms.filter((alarm) => state.detailAlarmCategory === "all" || homeAlarmCategory(alarm) === state.detailAlarmCategory);
   els.detailAlarmSubtitle.textContent = `${station.id}${station.name}`;
   els.detailAlarmCountAll.textContent = rangeAlarms.length;
-  els.detailAlarmCountLevel1.textContent = rangeAlarms.filter((alarm) => homeAlarmCategory(alarm) !== "data" && alarm.type === "level1").length;
-  els.detailAlarmCountLevel2.textContent = rangeAlarms.filter((alarm) => homeAlarmCategory(alarm) !== "data" && alarm.type === "level2").length;
+  els.detailAlarmCountLevel1.textContent = rangeAlarms.filter((alarm) => homeAlarmCategory(alarm) === "warning" && alarm.type === "level1").length;
+  els.detailAlarmCountLevel2.textContent = rangeAlarms.filter((alarm) => homeAlarmCategory(alarm) === "warning" && alarm.type === "level2").length;
   els.detailAlarmCountLevel3.textContent = rangeAlarms.filter((alarm) => homeAlarmCategory(alarm) === "data").length;
-  renderHomeAlarmCategorySummary(els.detailAlarmList.closest(".alarm-panel")?.querySelector(".alarm-source-summary"), levelAlarms, {
+  renderHomeAlarmCategorySummary(els.detailAlarmList.closest(".alarm-panel")?.querySelector(".alarm-source-summary"), rangeAlarms, {
     interactive: true,
     activeCategory: state.detailAlarmCategory,
     onChange: (category) => {
@@ -3974,7 +3983,7 @@ function renderDetailAlarms(station) {
               <div class="alarm-tags">
                 <span class="alarm-level">${showLevel}</span><span>${alarm.module}</span>
               </div>
-              <span class="alarm-source alarm-source-${homeAlarmCategory(alarm)}">${displayLabel}</span>
+              <span class="alarm-source alarm-source-${homeAlarmPillClass(alarm)}">${displayLabel}</span>
             </div>
             <strong>${alarm.title}</strong>
             <div class="alarm-meta">
@@ -3999,8 +4008,8 @@ function renderDetailAlarms(station) {
 }
 
 function homeAlarmEmptyLabel(category) {
-  if (category === "fault") return "故障";
   if (category === "data") return "数据告警";
+  if (category === "warning") return "预警";
   return "告警";
 }
 
