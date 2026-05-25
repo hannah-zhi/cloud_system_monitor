@@ -3704,7 +3704,7 @@ h2 {
 }
 
 .alarm-source-summary {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.15fr) minmax(72px, 0.72fr);
 }
 
 .alarm-summary > div {
@@ -3718,9 +3718,9 @@ h2 {
 
 .alarm-source-summary .alarm-source-stat {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 44px;
+  grid-template-columns: minmax(0, 1fr) 64px;
   align-items: center;
-  gap: 8px;
+  gap: 5px;
 }
 
 .alarm-source-summary .alarm-source-stat-data {
@@ -3839,7 +3839,7 @@ h2 {
   align-items: center;
   justify-content: space-between;
   gap: 4px;
-  padding: 0 5px;
+  padding: 0 6px;
   cursor: pointer;
 }
 
@@ -3866,8 +3866,8 @@ h2 {
 }
 
 .alarm-source-stat-alarm .alarm-source-subfilters button[data-subfilter="alarm"] {
-  color: #d9adff;
-  border-color: rgba(185, 92, 255, 0.56);
+  color: #ffd17a;
+  border-color: rgba(244, 165, 28, 0.5);
 }
 
 .alarm-source-stat-warning .alarm-source-subfilters button.active,
@@ -3960,9 +3960,9 @@ h2 {
 }
 
 .alarm-level.alarm-device-alarm {
-  color: #d9adff;
-  border: 1px solid rgba(185, 92, 255, 0.46);
-  background: linear-gradient(180deg, rgba(185, 92, 255, 0.17), rgba(185, 92, 255, 0.08));
+  color: #ffd17a;
+  border: 1px solid rgba(244, 165, 28, 0.42);
+  background: linear-gradient(180deg, rgba(244, 165, 28, 0.17), rgba(244, 165, 28, 0.08));
 }
 
 .alarm-source {

@@ -989,7 +989,7 @@ function homeAlarmRightLabel(alarm) {
 
 function homeAlarmLeftTags(alarm) {
   const category = homeAlarmCategory(alarm);
-  if (category === "data") return "";
+  if (category === "data") return `<span>${alarm.module}</span>`;
   if (category === "alarm") {
     const severity = homeDeviceAlarmSeverity(alarm);
     return `<span class="alarm-level alarm-device-${severity}">${severity === "fault" ? "故障" : "告警"}</span><span>${alarm.module}</span>`;
