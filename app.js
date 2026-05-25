@@ -107,8 +107,10 @@ const state = {
   activeFilter: "all",
   activeAlarmSource: "all",
   activeHomeAlarmCategory: "all",
+  activeHomeAlarmSubfilter: "all",
   detailAlarmSource: "all",
   detailAlarmCategory: "all",
+  detailAlarmSubfilter: "all",
   overviewSortMode: "sosAsc",
   chargeStatWindow: "day",
   cardsCollapsed: false,
@@ -338,6 +340,7 @@ function bindEvents() {
     state.activeFilter = "all";
     state.activeAlarmSource = "all";
     state.activeHomeAlarmCategory = "all";
+    state.activeHomeAlarmSubfilter = "all";
     state.selectedStationIds.clear();
     setSosRange(0, 100, false);
     els.searchInput.value = "";
@@ -990,6 +993,17 @@ function homeAlarmTypeMatch(alarm, activeType) {
   return alarm.type === activeType;
 }
 
+function homeAlarmSubfilterMatch(alarm, subfilter) {
+  if (!subfilter || subfilter === "all") return true;
+  if (subfilter === "level1" || subfilter === "level2") {
+    return homeAlarmCategory(alarm) === "warning" && alarm.type === subfilter;
+  }
+  if (subfilter === "fault" || subfilter === "alarm") {
+    return homeAlarmCategory(alarm) === "alarm" && homeDeviceAlarmSeverity(alarm) === subfilter;
+  }
+  return true;
+}
+
 function stationAlarmSeverity(station) {
   const stationAlarms = [...state.allAlarms, ...state.homeDataAlarms].filter((alarm) => alarm.stationId === station.id && homeVisibleAlarm(alarm));
   if (stationAlarms.some((alarm) => homeDeviceAlarmSeverity(alarm) === "fault")) return "fault";
@@ -1219,8 +1233,8 @@ function positionStationPicker() {
 function renderAlarms() {
   if (!els.alarmList) return;
   const rangeAlarms = filterAlarmsByTime(state.alarms).filter(homeVisibleAlarm);
-  const levelAlarms = rangeAlarms.filter((alarm) => homeAlarmTypeMatch(alarm, state.activeAlarmType));
-  const alarms = levelAlarms.filter((alarm) => state.activeHomeAlarmCategory === "all" || homeAlarmCategory(alarm) === state.activeHomeAlarmCategory);
+  const categoryAlarms = rangeAlarms.filter((alarm) => state.activeHomeAlarmCategory === "all" || homeAlarmCategory(alarm) === state.activeHomeAlarmCategory);
+  const alarms = categoryAlarms.filter((alarm) => homeAlarmSubfilterMatch(alarm, state.activeHomeAlarmSubfilter));
   els.alarmCountAll.textContent = rangeAlarms.length;
   els.alarmCountLevel1.textContent = rangeAlarms.filter((alarm) => homeAlarmCategory(alarm) === "warning" && alarm.type === "level1").length;
   els.alarmCountLevel2.textContent = rangeAlarms.filter((alarm) => homeAlarmCategory(alarm) === "warning" && alarm.type === "level2").length;
@@ -1228,8 +1242,16 @@ function renderAlarms() {
   renderHomeAlarmCategorySummary(els.alarmList.closest(".alarm-panel")?.querySelector(".alarm-source-summary"), rangeAlarms, {
     interactive: true,
     activeCategory: state.activeHomeAlarmCategory,
+    activeSubfilter: state.activeHomeAlarmSubfilter,
     onChange: (category) => {
       state.activeHomeAlarmCategory = category;
+      state.activeHomeAlarmSubfilter = "all";
+      renderAlarms();
+    },
+    onSubChange: (category, subfilter) => {
+      const wasActive = state.activeHomeAlarmCategory === category && state.activeHomeAlarmSubfilter === subfilter;
+      state.activeHomeAlarmCategory = category;
+      state.activeHomeAlarmSubfilter = wasActive ? "all" : subfilter;
       renderAlarms();
     },
   });
@@ -1301,17 +1323,38 @@ function renderAlarmSourceSummary(container, alarms, sources = alarmSourceLabels
 
 function renderHomeAlarmCategorySummary(container, alarms, options = {}) {
   if (!container) return;
-  const { interactive = false, activeCategory = "all", onChange = null } = options;
+  const { interactive = false, activeCategory = "all", activeSubfilter = "all", onChange = null, onSubChange = null } = options;
   const entries = [
-    { key: "warning", label: "预警", count: alarms.filter((alarm) => homeAlarmCategory(alarm) === "warning").length },
-    { key: "alarm", label: "告警", count: alarms.filter((alarm) => homeAlarmCategory(alarm) === "alarm").length },
-    { key: "data", label: "数据", count: alarms.filter((alarm) => homeAlarmCategory(alarm) === "data").length },
+    {
+      key: "warning",
+      label: "预警",
+      count: alarms.filter((alarm) => homeAlarmCategory(alarm) === "warning").length,
+      subfilters: [
+        { key: "level1", label: "一级", count: alarms.filter((alarm) => homeAlarmCategory(alarm) === "warning" && alarm.type === "level1").length },
+        { key: "level2", label: "二级", count: alarms.filter((alarm) => homeAlarmCategory(alarm) === "warning" && alarm.type === "level2").length },
+      ],
+    },
+    {
+      key: "alarm",
+      label: "告警",
+      count: alarms.filter((alarm) => homeAlarmCategory(alarm) === "alarm").length,
+      subfilters: [
+        { key: "fault", label: "故障", count: alarms.filter((alarm) => homeAlarmCategory(alarm) === "alarm" && homeDeviceAlarmSeverity(alarm) === "fault").length },
+        { key: "alarm", label: "告警", count: alarms.filter((alarm) => homeAlarmCategory(alarm) === "alarm" && homeDeviceAlarmSeverity(alarm) === "alarm").length },
+      ],
+    },
+    { key: "data", label: "数据", count: alarms.filter((alarm) => homeAlarmCategory(alarm) === "data").length, subfilters: [] },
   ];
   container.innerHTML = entries
     .map((entry) => {
       const active = activeCategory === entry.key ? " active" : "";
       const attrs = interactive ? ` role="button" tabindex="0" data-category="${entry.key}"` : "";
-      return `<div class="alarm-source-stat alarm-source-stat-${entry.key}${active}"${attrs}><strong>${entry.count}</strong><span>${entry.label}</span></div>`;
+      const subfilters = entry.subfilters.length
+        ? `<div class="alarm-source-subfilters">${entry.subfilters
+            .map((item) => `<button class="${activeCategory === entry.key && activeSubfilter === item.key ? "active" : ""}" data-category="${entry.key}" data-subfilter="${item.key}" type="button">${item.label}<em>${item.count}</em></button>`)
+            .join("")}</div>`
+        : "";
+      return `<div class="alarm-source-stat alarm-source-stat-${entry.key}${active}"${attrs}><strong>${entry.count}</strong><span>${entry.label}</span>${subfilters}</div>`;
     })
     .join("");
   if (!interactive) return;
@@ -1326,6 +1369,12 @@ function renderHomeAlarmCategorySummary(container, alarms, options = {}) {
         event.preventDefault();
         toggle();
       }
+    });
+  });
+  container.querySelectorAll("[data-subfilter]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      if (onSubChange) onSubChange(button.dataset.category, button.dataset.subfilter);
     });
   });
 }
@@ -2863,6 +2912,7 @@ function showDetail(id, initialTab = "overview") {
   state.detailAlarmEndDate = "";
   state.detailAlarmSource = "all";
   state.detailAlarmCategory = "all";
+  state.detailAlarmSubfilter = "all";
   state.chargeStatWindow = "day";
   state.detailTab = ["overview", "diagnosis", "health"].includes(initialTab) ? initialTab : "overview";
   els.detailAlarmTabs.querySelectorAll("button").forEach((button) => button.classList.toggle("active", button.dataset.type === "all"));
@@ -3956,8 +4006,8 @@ function renderDetailAlarms(station) {
     state.detailAlarmStartDate,
     state.detailAlarmEndDate
   );
-  const levelAlarms = rangeAlarms.filter((alarm) => homeAlarmTypeMatch(alarm, state.detailAlarmType));
-  const alarms = levelAlarms.filter((alarm) => state.detailAlarmCategory === "all" || homeAlarmCategory(alarm) === state.detailAlarmCategory);
+  const categoryAlarms = rangeAlarms.filter((alarm) => state.detailAlarmCategory === "all" || homeAlarmCategory(alarm) === state.detailAlarmCategory);
+  const alarms = categoryAlarms.filter((alarm) => homeAlarmSubfilterMatch(alarm, state.detailAlarmSubfilter));
   els.detailAlarmSubtitle.textContent = `${station.id}${station.name}`;
   els.detailAlarmCountAll.textContent = rangeAlarms.length;
   els.detailAlarmCountLevel1.textContent = rangeAlarms.filter((alarm) => homeAlarmCategory(alarm) === "warning" && alarm.type === "level1").length;
@@ -3966,8 +4016,16 @@ function renderDetailAlarms(station) {
   renderHomeAlarmCategorySummary(els.detailAlarmList.closest(".alarm-panel")?.querySelector(".alarm-source-summary"), rangeAlarms, {
     interactive: true,
     activeCategory: state.detailAlarmCategory,
+    activeSubfilter: state.detailAlarmSubfilter,
     onChange: (category) => {
       state.detailAlarmCategory = category;
+      state.detailAlarmSubfilter = "all";
+      renderDetailAlarms(station);
+    },
+    onSubChange: (category, subfilter) => {
+      const wasActive = state.detailAlarmCategory === category && state.detailAlarmSubfilter === subfilter;
+      state.detailAlarmCategory = category;
+      state.detailAlarmSubfilter = wasActive ? "all" : subfilter;
       renderDetailAlarms(station);
     },
   });

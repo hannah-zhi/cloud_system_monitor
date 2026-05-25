@@ -1916,8 +1916,8 @@ h2 {
 }
 
 .station-card.is-collapsed {
-  height: 148px;
-  min-height: 148px;
+  height: 124px;
+  min-height: 124px;
   padding-bottom: 12px;
 }
 
@@ -3598,6 +3598,10 @@ h2 {
   background: rgba(60, 65, 82, 0.54);
 }
 
+.alarm-panel > .alarm-tabs {
+  display: none;
+}
+
 .alarm-tabs button {
   height: 28px;
   border: 0;
@@ -3703,7 +3707,7 @@ h2 {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.alarm-summary div {
+.alarm-summary > div {
   min-height: 42px;
   padding: 7px 10px;
   border: 1px solid rgba(57, 63, 82, 0.76);
@@ -3712,12 +3716,15 @@ h2 {
     rgba(12, 14, 22, 0.34);
 }
 
-.alarm-summary [data-source] {
+.alarm-summary [data-source],
+.alarm-summary [data-category] {
   cursor: pointer;
 }
 
 .alarm-summary [data-source]:hover,
-.alarm-summary [data-source].active {
+.alarm-summary [data-source].active,
+.alarm-summary [data-category]:hover,
+.alarm-summary [data-category].active {
   background:
     linear-gradient(180deg, rgba(36, 43, 60, 0.82), rgba(16, 20, 31, 0.72)),
     rgba(18, 152, 255, 0.08);
@@ -3765,11 +3772,12 @@ h2 {
 }
 
 .alarm-summary .alarm-source-stat-alarm {
-  border-color: rgba(244, 165, 28, 0.58);
+  color: #b95cff;
+  border-color: rgba(185, 92, 255, 0.62);
 }
 
 .alarm-summary .alarm-source-stat-alarm span {
-  color: #ffd17a;
+  color: #d9adff;
 }
 
 .alarm-summary .alarm-source-stat-warning {
@@ -3798,6 +3806,40 @@ h2 {
 .alarm-summary span {
   color: #8994a9;
   font-size: 12px;
+}
+
+.alarm-source-subfilters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.alarm-source-subfilters button {
+  height: 22px;
+  border: 1px solid rgba(91, 99, 124, 0.62);
+  border-radius: 3px;
+  background: rgba(13, 16, 25, 0.42);
+  color: #aeb8ca;
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.alarm-source-subfilters button:hover,
+.alarm-source-subfilters button.active {
+  color: #fff;
+  border-color: currentColor;
+  background: rgba(18, 152, 255, 0.16);
+}
+
+.alarm-source-subfilters em {
+  color: #f4f7ff;
+  font-style: normal;
+  font-weight: 700;
 }
 
 .alarm-list {
