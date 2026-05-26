@@ -82,8 +82,10 @@ const state = {
   riskTrendHover: null,
   overviewPowerHitboxes: [],
   overviewPowerHover: null,
+  overviewPowerHighlight: null,
   overviewChargeHitboxes: [],
   overviewChargeHover: null,
+  overviewChargeHighlight: null,
   overviewChartStartDate: "2026-02-03",
   overviewChartEndDate: "2026-02-13",
   riskBarSort: "sosAsc",
@@ -2922,6 +2924,8 @@ function showDetail(id, initialTab = "overview") {
   state.detailTableSort = { key: "score", direction: "asc" };
   state.detailTrendHover = null;
   state.detailBarHoverName = null;
+  state.overviewPowerHighlight = null;
+  state.overviewChargeHighlight = null;
   state.detailAlarmType = "all";
   state.detailAlarmDays = "all";
   state.detailAlarmStartDate = "";
@@ -3146,19 +3150,38 @@ function subsystemAlarmSummary(station, subsystemNo) {
   return `${grouped}\n最新：${latest.title}\n来源：${latest.source}`;
 }
 
-function subsystemAlarmTooltipHtml(station, subsystemNo) {
-  const alarms = [...state.allAlarms, ...state.homeDataAlarms].filter(
+function subsystemAlarmsForStation(station, subsystemNo) {
+  return [...state.allAlarms, ...state.homeDataAlarms].filter(
     (alarm) => alarm.stationId === station.id && alarm.location.includes(`#${subsystemNo}子系统`)
   );
+}
+
+function subsystemStatusFromAlarms(station, item, alarms) {
+  if (station.comm === "offline") return "离线";
+  if (alarms.some((alarm) => homeAlarmCategory(alarm) === "alarm" && homeDeviceAlarmSeverity(alarm) === "fault")) return "故障";
+  if (alarms.some((alarm) => homeAlarmCategory(alarm) === "alarm")) return "告警";
+  return item.status;
+}
+
+function subsystemAlarmTooltipHtml(station, subsystemNo) {
+  const alarms = subsystemAlarmsForStation(station, subsystemNo);
   const tone = subsystemAlarmTone(alarms);
   if (!alarms.length) {
     return `<div class="storage-system-tooltip ${tone}"><strong>预警/告警：0</strong><p>当前子系统暂无预警/告警</p></div>`;
   }
-  const topItems = alarms.slice(0, 5);
+  const alarmItems = alarms.filter((alarm) => homeAlarmCategory(alarm) === "alarm");
+  const warningItems = alarms.filter((alarm) => homeAlarmCategory(alarm) !== "alarm");
+  const sectionHtml = (title, items, className) =>
+    items.length
+      ? `<div class="storage-tooltip-section ${className}"><strong>${title}：${items.length}</strong><ul>${items
+          .slice(0, 8)
+          .map((alarm) => `<li>${alarm.title}</li>`)
+          .join("")}</ul></div>`
+      : `<div class="storage-tooltip-section ${className} muted"><strong>${title}：0</strong><p>暂无${title}</p></div>`;
   return `
     <div class="storage-system-tooltip ${tone}">
-      <strong>预警/告警：${alarms.length}</strong>
-      <ul>${topItems.map((alarm) => `<li>${alarm.title}</li>`).join("")}</ul>
+      ${sectionHtml("告警类", alarmItems, "alarm-section")}
+      ${sectionHtml("预警类", warningItems, "warning-section")}
     </div>`;
 }
 
@@ -3195,13 +3218,13 @@ function renderStationOverview(station) {
     .map((item) => `<option value="${item.n}">K${station.id.slice(2)}-${item.n}#子系统</option>`)
     .join("");
   const systems = systemItems.map((item) => {
-    const subsystemAlarms = [...state.allAlarms, ...state.homeDataAlarms].filter(
-      (alarm) => alarm.stationId === station.id && alarm.location.includes(`#${item.n}子系统`)
-    );
+    const subsystemAlarms = subsystemAlarmsForStation(station, item.n);
     const alarmTone = subsystemAlarmTone(subsystemAlarms);
+    const displayStatus = subsystemStatusFromAlarms(station, item, subsystemAlarms);
+    const displayStatusClass = operationStateClass(displayStatus);
     return `
-    <div class="storage-system-card ${item.statusClass} alarm-${alarmTone}" data-system="${item.n}">
-      <div class="storage-system-head"><span class="system-status-pill ${item.statusClass}">${item.status}</span><strong>K${station.id.slice(2)}-${item.n}#子系统</strong></div>
+    <div class="storage-system-card ${displayStatusClass} alarm-${alarmTone}" data-system="${item.n}">
+      <div class="storage-system-head"><span class="system-status-pill ${displayStatusClass}">${displayStatus}</span><strong>K${station.id.slice(2)}-${item.n}#子系统</strong></div>
       <div class="system-row"><span>系统有功(PCS)功率</span><strong>${formatNumeric(item.localPower)} kW</strong></div>
       <div class="system-row"><span>系统SOC</span><strong>${formatNumeric(item.localSoc)} %</strong></div>
       <div class="mini-bars">${Array.from({ length: 12 }, (_, bar) => `<i style="opacity:${bar < Math.round(item.localSoc / 8.4) ? 0.95 : 0.18}"></i>`).join("")}</div>
@@ -3282,7 +3305,11 @@ function renderStationOverview(station) {
         <canvas id="overviewPowerCanvas" width="900" height="250"></canvas>
         <div id="overviewPowerTooltip" class="risk-bars-tooltip"></div>
       </div>
-      <div class="chart-legend"><span class="blue-line">有功功率</span><span class="yellow-line">荷电状态</span></div>
+      <div class="chart-legend interactive-chart-legend" data-chart-legend="power">
+        <button class="${state.overviewPowerHighlight === "active" ? "active" : ""}" data-series="active" type="button"><span class="blue-line">有功功率</span></button>
+        <button class="${state.overviewPowerHighlight === "reactive" ? "active" : ""}" data-series="reactive" type="button"><span class="cyan-line">无功功率</span></button>
+        <button class="${state.overviewPowerHighlight === "soc" ? "active" : ""}" data-series="soc" type="button"><span class="yellow-line">荷电状态</span></button>
+      </div>
     </article>
     <article class="panel charge-chart-panel">
       <div class="panel-title-row">
@@ -3293,7 +3320,11 @@ function renderStationOverview(station) {
         <canvas id="overviewChargeCanvas" width="900" height="250"></canvas>
         <div id="overviewChargeTooltip" class="risk-bars-tooltip"></div>
       </div>
-      <div class="chart-legend"><span class="teal-bar">充电量</span><span class="blue-bar">放电量</span><span class="purple-line">循环次数</span></div>
+      <div class="chart-legend interactive-chart-legend" data-chart-legend="charge">
+        <button class="${state.overviewChargeHighlight === "charge" ? "active" : ""}" data-series="charge" type="button"><span class="teal-bar">充电量</span></button>
+        <button class="${state.overviewChargeHighlight === "discharge" ? "active" : ""}" data-series="discharge" type="button"><span class="blue-bar">放电量</span></button>
+        <button class="${state.overviewChargeHighlight === "cycles" ? "active" : ""}" data-series="cycles" type="button"><span class="purple-line">循环次数</span></button>
+      </div>
     </article>`;
   els.overviewPowerCanvas = document.getElementById("overviewPowerCanvas");
   els.overviewPowerTooltip = document.getElementById("overviewPowerTooltip");
@@ -3364,11 +3395,12 @@ function createOverviewChartData(station) {
     const label = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
     const wave = Math.sin(index * 1.37 + Number(station.soc || 0) / 18);
     const active = round(Math.max(-14, Math.min(15, (Number(station.active || 0) / 2.4) + wave * 8 + Math.cos(index * 0.9) * 4 - 2)), 2);
+    const reactive = round(Math.max(-10, Math.min(10, active * 0.42 + Math.sin(index * 0.82 + Number(station.rated || 0)) * 3.4)), 2);
     const soc = round(Math.max(8, Math.min(92, Number(station.soc || 0) + Math.sin(index * 1.1) * 18 - 12)), 2);
     const charge = round(Math.max(8, 48 + Math.sin(index * 0.83 + 0.4) * 24 + (index % 4) * 3), 2);
     const discharge = round(Math.max(4, 42 + Math.cos(index * 0.76 + 0.2) * 26 - (index % 3) * 4), 2);
     const cycles = round(Math.max(0.1, Math.min(0.9, 0.45 + Math.sin(index * 0.72) * 0.28 + (index % 5) * 0.03)), 2);
-    return { label, active, soc, charge, discharge, cycles };
+    return { label, active, reactive, soc, charge, discharge, cycles };
   });
 }
 
@@ -3401,21 +3433,29 @@ function renderOverviewCharts(station) {
 function renderOverviewPowerChart(data) {
   const canvas = setupCanvas(els.overviewPowerCanvas);
   const ctx = canvas.getContext("2d");
-  const pad = { left: 46, right: 38, top: 18, bottom: 44 };
+  const pad = { left: 52, right: 48, top: 20, bottom: 44 };
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  drawOverviewGrid(ctx, canvas, pad, ["15", "10", "5", "0", "-5", "-10", "-15"], "MW");
+  drawOverviewDualGrid(ctx, canvas, pad, {
+    leftTicks: ["15", "10", "5", "0", "-5", "-10", "-15"],
+    rightTicks: ["100", "80", "60", "40", "20", "0"],
+    leftUnit: "MW",
+    rightUnit: "SOC",
+  });
   const yPower = (value) => mapLinear(value, -15, 15, canvas.height - pad.bottom, pad.top);
   const ySoc = (value) => mapLinear(value, 0, 100, canvas.height - pad.bottom, pad.top);
   const xFor = (index) => pad.left + (index / Math.max(1, data.length - 1)) * (canvas.width - pad.left - pad.right);
   state.overviewPowerHitboxes = [];
-  drawOverviewLine(ctx, data.map((item, index) => ({ x: xFor(index), y: yPower(item.active) })), "#1689ff");
-  drawOverviewLine(ctx, data.map((item, index) => ({ x: xFor(index), y: ySoc(item.soc) })), "#ffd437");
+  const powerHighlight = state.overviewPowerHighlight;
+  drawOverviewLine(ctx, data.map((item, index) => ({ x: xFor(index), y: yPower(item.active) })), "#1689ff", seriesAlpha(powerHighlight, "active"));
+  drawOverviewLine(ctx, data.map((item, index) => ({ x: xFor(index), y: yPower(item.reactive) })), "#20d3c5", seriesAlpha(powerHighlight, "reactive"));
+  drawOverviewLine(ctx, data.map((item, index) => ({ x: xFor(index), y: ySoc(item.soc) })), "#ffd437", seriesAlpha(powerHighlight, "soc"));
   data.forEach((item, index) => {
     const x = xFor(index);
     const isHover = state.overviewPowerHover?.index === index;
     if (isHover) drawOverviewHoverGuide(ctx, x, pad, canvas.height);
-    drawOverviewPoint(ctx, x, yPower(item.active), "#1689ff", isHover);
-    drawOverviewPoint(ctx, x, ySoc(item.soc), "#ffd437", isHover);
+    drawOverviewPoint(ctx, x, yPower(item.active), "#1689ff", isHover || powerHighlight === "active", seriesAlpha(powerHighlight, "active"));
+    drawOverviewPoint(ctx, x, yPower(item.reactive), "#20d3c5", isHover || powerHighlight === "reactive", seriesAlpha(powerHighlight, "reactive"));
+    drawOverviewPoint(ctx, x, ySoc(item.soc), "#ffd437", isHover || powerHighlight === "soc", seriesAlpha(powerHighlight, "soc"));
     drawOverviewXAxis(ctx, item.label, x, canvas.height, pad, index, data.length);
     state.overviewPowerHitboxes.push({ index, x, item });
   });
@@ -3424,28 +3464,41 @@ function renderOverviewPowerChart(data) {
 function renderOverviewChargeChart(data) {
   const canvas = setupCanvas(els.overviewChargeCanvas);
   const ctx = canvas.getContext("2d");
-  const pad = { left: 46, right: 38, top: 18, bottom: 44 };
+  const pad = { left: 52, right: 48, top: 20, bottom: 44 };
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  drawOverviewGrid(ctx, canvas, pad, ["90", "70", "50", "30", "10"], "MWh");
+  drawOverviewDualGrid(ctx, canvas, pad, {
+    leftTicks: ["90", "70", "50", "30", "10", "0"],
+    rightTicks: ["0.9", "0.7", "0.5", "0.3", "0.1", "0"],
+    leftUnit: "MWh",
+    rightUnit: "次",
+  });
   const yEnergy = (value) => mapLinear(value, 0, 90, canvas.height - pad.bottom, pad.top);
   const yCycles = (value) => mapLinear(value, 0, 0.9, canvas.height - pad.bottom, pad.top);
   const slot = (canvas.width - pad.left - pad.right) / data.length;
   state.overviewChargeHitboxes = [];
   const linePoints = [];
+  const chargeHighlight = state.overviewChargeHighlight;
   data.forEach((item, index) => {
     const x = pad.left + slot * index + slot / 2;
     const isHover = state.overviewChargeHover?.index === index;
     if (isHover) drawOverviewHoverGuide(ctx, x, pad, canvas.height);
+    ctx.globalAlpha = seriesAlpha(chargeHighlight, "charge");
     ctx.fillStyle = "rgba(32, 211, 197, 0.82)";
     ctx.fillRect(x - 16, yEnergy(item.charge), 12, canvas.height - pad.bottom - yEnergy(item.charge));
+    ctx.globalAlpha = seriesAlpha(chargeHighlight, "discharge");
     ctx.fillStyle = "rgba(22, 137, 255, 0.86)";
     ctx.fillRect(x + 4, yEnergy(item.discharge), 12, canvas.height - pad.bottom - yEnergy(item.discharge));
+    ctx.globalAlpha = 1;
     linePoints.push({ x, y: yCycles(item.cycles) });
     drawOverviewXAxis(ctx, item.label, x, canvas.height, pad, index, data.length);
     state.overviewChargeHitboxes.push({ index, x, item });
   });
-  drawOverviewLine(ctx, linePoints, "#b95cff");
-  linePoints.forEach((point, index) => drawOverviewPoint(ctx, point.x, point.y, "#b95cff", state.overviewChargeHover?.index === index));
+  drawOverviewLine(ctx, linePoints, "#b95cff", seriesAlpha(chargeHighlight, "cycles"));
+  linePoints.forEach((point, index) => drawOverviewPoint(ctx, point.x, point.y, "#b95cff", state.overviewChargeHover?.index === index || chargeHighlight === "cycles", seriesAlpha(chargeHighlight, "cycles")));
+}
+
+function seriesAlpha(activeKey, key) {
+  return !activeKey || activeKey === key ? 1 : 0.26;
 }
 
 function drawOverviewGrid(ctx, canvas, pad, ticks, unit) {
@@ -3467,11 +3520,42 @@ function drawOverviewGrid(ctx, canvas, pad, ticks, unit) {
   ctx.fillText(unit, pad.left - 34, pad.top - 4);
 }
 
+function drawOverviewDualGrid(ctx, canvas, pad, options) {
+  const { leftTicks, rightTicks, leftUnit, rightUnit } = options;
+  ctx.strokeStyle = "rgba(142, 151, 170, 0.18)";
+  ctx.lineWidth = 1;
+  leftTicks.forEach((tick, index) => {
+    const y = pad.top + (index / Math.max(1, leftTicks.length - 1)) * (canvas.height - pad.top - pad.bottom);
+    ctx.beginPath();
+    ctx.moveTo(pad.left, y);
+    ctx.lineTo(canvas.width - pad.right, y);
+    ctx.stroke();
+    ctx.fillStyle = "#7f8798";
+    ctx.font = "12px Arial";
+    ctx.textAlign = "right";
+    ctx.fillText(tick, pad.left - 10, y + 4);
+  });
+  rightTicks.forEach((tick, index) => {
+    const y = pad.top + (index / Math.max(1, rightTicks.length - 1)) * (canvas.height - pad.top - pad.bottom);
+    ctx.fillStyle = "#7f8798";
+    ctx.font = "12px Arial";
+    ctx.textAlign = "left";
+    ctx.fillText(tick, canvas.width - pad.right + 10, y + 4);
+  });
+  ctx.fillStyle = "#8f98aa";
+  ctx.textAlign = "left";
+  ctx.fillText(leftUnit, pad.left - 42, pad.top - 6);
+  ctx.textAlign = "right";
+  ctx.fillText(rightUnit, canvas.width - 6, pad.top - 6);
+}
+
 function mapLinear(value, inMin, inMax, outMin, outMax) {
   return outMin + ((value - inMin) / Math.max(0.0001, inMax - inMin)) * (outMax - outMin);
 }
 
-function drawOverviewLine(ctx, points, color) {
+function drawOverviewLine(ctx, points, color, alpha = 1) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
   ctx.strokeStyle = color;
   ctx.lineWidth = 2;
   ctx.beginPath();
@@ -3479,13 +3563,17 @@ function drawOverviewLine(ctx, points, color) {
     index === 0 ? ctx.moveTo(point.x, point.y) : ctx.lineTo(point.x, point.y);
   });
   ctx.stroke();
+  ctx.restore();
 }
 
-function drawOverviewPoint(ctx, x, y, color, isHover) {
+function drawOverviewPoint(ctx, x, y, color, isHover, alpha = 1) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
   ctx.fillStyle = color;
   ctx.beginPath();
   ctx.arc(x, y, isHover ? 4 : 2.5, 0, Math.PI * 2);
   ctx.fill();
+  ctx.restore();
 }
 
 function drawOverviewHoverGuide(ctx, x, pad, height) {
@@ -3515,6 +3603,21 @@ function handleOverviewChartHover(event) {
 }
 
 function handleOverviewDateClick(event) {
+  const legendButton = event.target.closest("[data-chart-legend] button[data-series]");
+  if (legendButton) {
+    const legend = legendButton.closest("[data-chart-legend]");
+    const key = legendButton.dataset.series;
+    if (legend.dataset.chartLegend === "power") {
+      state.overviewPowerHighlight = state.overviewPowerHighlight === key ? null : key;
+      if (state.selectedStation) renderOverviewPowerChart(createOverviewChartData(state.selectedStation));
+    } else {
+      state.overviewChargeHighlight = state.overviewChargeHighlight === key ? null : key;
+      if (state.selectedStation) renderOverviewChargeChart(createOverviewChartData(state.selectedStation));
+    }
+    const activeKey = legend.dataset.chartLegend === "power" ? state.overviewPowerHighlight : state.overviewChargeHighlight;
+    legend.querySelectorAll("button").forEach((button) => button.classList.toggle("active", button.dataset.series === activeKey));
+    return;
+  }
   const chargeButton = event.target.closest("[data-charge-window]");
   if (chargeButton) {
     state.chargeStatWindow = chargeButton.dataset.chargeWindow;
@@ -3580,7 +3683,7 @@ function handleOverviewCanvasHover(event, type) {
   if (type === "power") {
     state.overviewPowerHover = hit;
     renderOverviewPowerChart(createOverviewChartData(state.selectedStation));
-    showOverviewTooltip(els.overviewPowerTooltip, event, `<strong>${hit.item.label}</strong><span style="color:#1689ff">有功功率 ${formatNumeric(hit.item.active)} MW</span><span style="color:#ffd437">荷电状态 ${formatNumeric(hit.item.soc)}%</span>`);
+    showOverviewTooltip(els.overviewPowerTooltip, event, `<strong>${hit.item.label}</strong><span style="color:#1689ff">有功功率 ${formatNumeric(hit.item.active)} MW</span><span style="color:#20d3c5">无功功率 ${formatNumeric(hit.item.reactive)} MVar</span><span style="color:#ffd437">荷电状态 ${formatNumeric(hit.item.soc)}</span>`);
   } else {
     state.overviewChargeHover = hit;
     renderOverviewChargeChart(createOverviewChartData(state.selectedStation));

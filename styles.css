@@ -2963,6 +2963,18 @@ h2 {
   border-color: rgba(104, 112, 134, 0.58);
 }
 
+.storage-system-card.is-alarm {
+  background:
+    linear-gradient(180deg, rgba(55, 42, 20, 0.9), rgba(24, 26, 36, 0.96)),
+    radial-gradient(circle at 88% 8%, rgba(244, 165, 28, 0.18), transparent 42%);
+}
+
+.storage-system-card.is-fault {
+  background:
+    linear-gradient(180deg, rgba(56, 24, 31, 0.9), rgba(24, 26, 36, 0.96)),
+    radial-gradient(circle at 88% 8%, rgba(255, 61, 89, 0.22), transparent 42%);
+}
+
 .storage-system-tooltip {
   position: absolute;
   left: 12px;
@@ -3031,6 +3043,24 @@ h2 {
   margin-bottom: 8px;
   color: var(--tip-color, #ff5a6d);
   font-size: 12px;
+}
+
+.storage-tooltip-section + .storage-tooltip-section {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(104, 112, 134, 0.28);
+}
+
+.storage-tooltip-section.alarm-section strong {
+  color: #ffd17a;
+}
+
+.storage-tooltip-section.warning-section strong {
+  color: #ff8da0;
+}
+
+.storage-tooltip-section.muted strong {
+  color: #8d96aa;
 }
 
 .storage-system-tooltip p {
@@ -3128,6 +3158,14 @@ h2 {
 
 .system-status-pill.is-offline {
   color: #6f7a8d;
+}
+
+.system-status-pill.is-alarm {
+  color: #ffd17a;
+}
+
+.system-status-pill.is-fault {
+  color: #ff8da0;
 }
 
 .mini-bars {
@@ -3260,6 +3298,25 @@ h2 {
   font-size: 12px;
 }
 
+.interactive-chart-legend {
+  gap: 12px;
+}
+
+.interactive-chart-legend button {
+  height: 22px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+  padding: 0 7px;
+  cursor: pointer;
+}
+
+.interactive-chart-legend button:hover,
+.interactive-chart-legend button.active {
+  background: rgba(255, 255, 255, 0.055);
+}
+
 .chart-legend span::before {
   content: "";
   display: inline-block;
@@ -3277,6 +3334,10 @@ h2 {
 
 .yellow-line {
   color: #ffd437;
+}
+
+.cyan-line {
+  color: #20d3c5;
 }
 
 .teal-bar {

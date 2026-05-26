@@ -334,3 +334,11 @@
 ## 23. 2026-05-25 Side Subfilter Border Override
 
 - Source-box subfilter buttons must override generic category active styles so selected subfilters never show a boxed outline, border, or inset shadow; selection uses only a subtle background or left accent.
+
+## 24. 2026-05-26 Detail Overview Dual-Axis Charts And Subsystem Status
+
+- Single-station `场站有功功率` chart must include active power, reactive power, and SOC. Power series use the left MW axis; SOC uses the right axis without a unit suffix. Legend clicks highlight the selected series while dimming others.
+- Single-station `场站充放电表现` chart must use dual axes: charge/discharge energy on the left MWh axis and cycle count on the right axis. Legend clicks highlight the selected bar/line series while dimming others.
+- Axis titles must be positioned away from tick labels on both charts.
+- Topology subsystem cards must use the same status label vocabulary as station cards: charging, discharging, standby, stopped, offline, alarm, and fault. Fault/alarm states change card background, while border color continues to follow the highest warning level.
+- Topology subsystem hover content must separate alarm-class and warning-class items, with alarm-class content listed first.
