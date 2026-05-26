@@ -1182,6 +1182,10 @@ function subsystemPowerByState(station, status, n) {
   return 0;
 }
 
+function subsystemDisplayName(station, n) {
+  return `${station.id}-#${n}子系统`;
+}
+
 function commStatusClass(commState) {
   const classMap = {
     ok: "comm-ok",
@@ -3221,7 +3225,7 @@ function renderStationOverview(station) {
     return { n, localSoc, localSoh, localPower, status, statusClass: operationStateClass(status) };
   });
   const systemOptions = systemItems
-    .map((item) => `<option value="${item.n}">K${station.id.slice(2)}-${item.n}#子系统</option>`)
+    .map((item) => `<option value="${item.n}">${subsystemDisplayName(station, item.n)}</option>`)
     .join("");
   const systems = systemItems.map((item) => {
     const subsystemAlarms = subsystemAlarmsForStation(station, item.n);
@@ -3230,7 +3234,7 @@ function renderStationOverview(station) {
     const displayStatusClass = subsystemStatusClassFromAlarms(station, item, subsystemAlarms);
     return `
     <div class="storage-system-card ${displayStatusClass} alarm-${alarmTone}" data-system="${item.n}">
-      <div class="storage-system-head"><strong>K${station.id.slice(2)}-${item.n}#子系统</strong><span class="system-status-pill ${displayStatusClass}">${displayStatus}</span></div>
+      <div class="storage-system-head"><strong>${subsystemDisplayName(station, item.n)}</strong><span class="system-status-pill ${displayStatusClass}">${displayStatus}</span></div>
       <div class="system-row"><span>系统有功(PCS)功率</span><strong>${formatNumeric(item.localPower)} kW</strong></div>
       <div class="system-row"><span>系统SOC</span><strong>${formatNumeric(item.localSoc)} %</strong></div>
       <div class="mini-bars">${Array.from({ length: 12 }, (_, bar) => `<i style="opacity:${bar < Math.round(item.localSoc / 8.4) ? 0.95 : 0.18}"></i>`).join("")}</div>
@@ -3720,7 +3724,7 @@ function createSubsystems(station) {
     const drift = Math.sin((n + station.sos) * 0.55) * 14 - (n % 8 === 0 ? 22 : 0) + (n % 6 === 0 ? 9 : 0);
     const score = round(Math.min(100, Math.max(35, station.sos + drift)), 2);
     return {
-      name: `子系统#${String(n).padStart(2, "0")}`,
+      name: subsystemDisplayName(station, n),
       score,
       risk: getRisk(score),
     };
