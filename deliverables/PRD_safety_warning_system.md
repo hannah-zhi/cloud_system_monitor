@@ -350,4 +350,5 @@
 - Subsystem status priority is `故障 > 告警 > 离线 > 充电/放电/待机/停机`; an offline subsystem with an alarm/fault still shows alarm/fault styling.
 - Tooltip warning-class text and bullets must follow the highest warning border color; tooltip alarm-class text and bullets must follow alarm/fault background color.
 - Subsystem tooltip data must match the single-station right-side `预警/告警清单` base dataset: same station, same visible sources, same time window, same sort order, and same classification into warning/alarm/data.
+- Single-station overview chart date ranges must allow independent start/end selection. Changing one date must not preserve a fixed 10-day window; only correct invalid ranges where start is later than end.
 - Dual-axis chart titles must be offset from the first tick label with enough vertical spacing to avoid visual overlap.
