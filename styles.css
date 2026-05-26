@@ -2963,16 +2963,18 @@ h2 {
   border-color: rgba(104, 112, 134, 0.58);
 }
 
-.storage-system-card.is-alarm {
+.storage-system-card.is-alarm,
+.storage-system-card:has(.system-status-pill.is-alarm) {
   background:
-    linear-gradient(180deg, rgba(55, 42, 20, 0.9), rgba(24, 26, 36, 0.96)),
-    radial-gradient(circle at 88% 8%, rgba(244, 165, 28, 0.18), transparent 42%);
+    linear-gradient(180deg, rgba(72, 50, 16, 0.94), rgba(31, 28, 24, 0.98)),
+    radial-gradient(circle at 88% 8%, rgba(244, 165, 28, 0.34), transparent 46%);
 }
 
-.storage-system-card.is-fault {
+.storage-system-card.is-fault,
+.storage-system-card:has(.system-status-pill.is-fault) {
   background:
-    linear-gradient(180deg, rgba(56, 24, 31, 0.9), rgba(24, 26, 36, 0.96)),
-    radial-gradient(circle at 88% 8%, rgba(255, 61, 89, 0.22), transparent 42%);
+    linear-gradient(180deg, rgba(72, 25, 34, 0.95), rgba(31, 24, 28, 0.98)),
+    radial-gradient(circle at 88% 8%, rgba(255, 61, 89, 0.36), transparent 46%);
 }
 
 .storage-system-tooltip {
@@ -2999,6 +3001,7 @@ h2 {
 
 .storage-system-tooltip.level1 {
   --tip-color: #ff3d59;
+  --warning-color: #ff8da0;
   border-color: rgba(255, 61, 89, 0.52);
   background:
     radial-gradient(circle at 18px 18px, rgba(255, 61, 89, 0.18), transparent 34px),
@@ -3007,6 +3010,7 @@ h2 {
 
 .storage-system-tooltip.level2 {
   --tip-color: #f4a51c;
+  --warning-color: #ffd17a;
   border-color: rgba(244, 165, 28, 0.56);
   background:
     radial-gradient(circle at 18px 18px, rgba(244, 165, 28, 0.18), transparent 34px),
@@ -3015,6 +3019,7 @@ h2 {
 
 .storage-system-tooltip.level3 {
   --tip-color: #13c781;
+  --warning-color: #69e6b2;
   border-color: rgba(19, 199, 129, 0.52);
   background:
     radial-gradient(circle at 18px 18px, rgba(19, 199, 129, 0.16), transparent 34px),
@@ -3023,10 +3028,23 @@ h2 {
 
 .storage-system-tooltip.none {
   --tip-color: #8d96aa;
+  --warning-color: #8d96aa;
   border-color: rgba(141, 150, 170, 0.48);
   background:
     radial-gradient(circle at 18px 18px, rgba(141, 150, 170, 0.14), transparent 34px),
     rgba(16, 18, 28, 0.98);
+}
+
+.storage-system-tooltip.alarm {
+  --alarm-color: #ffd17a;
+}
+
+.storage-system-tooltip.fault {
+  --alarm-color: #ff8da0;
+}
+
+.storage-system-tooltip.none:not(.alarm):not(.fault) {
+  --alarm-color: #8d96aa;
 }
 
 .storage-system-card:hover {
@@ -3052,11 +3070,11 @@ h2 {
 }
 
 .storage-tooltip-section.alarm-section strong {
-  color: #ffd17a;
+  color: var(--alarm-color, #ffd17a);
 }
 
 .storage-tooltip-section.warning-section strong {
-  color: #ff8da0;
+  color: var(--warning-color, var(--tip-color, #ff8da0));
 }
 
 .storage-tooltip-section.muted strong {
@@ -3096,6 +3114,16 @@ h2 {
   border-radius: 50%;
   background: var(--tip-color, #ff4b61);
   box-shadow: 0 0 8px color-mix(in srgb, var(--tip-color, #ff4b61) 58%, transparent);
+}
+
+.storage-tooltip-section.alarm-section li::before {
+  background: var(--alarm-color, #ffd17a);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--alarm-color, #ffd17a) 58%, transparent);
+}
+
+.storage-tooltip-section.warning-section li::before {
+  background: var(--warning-color, var(--tip-color, #ff4b61));
+  box-shadow: 0 0 8px color-mix(in srgb, var(--warning-color, var(--tip-color, #ff4b61)) 58%, transparent);
 }
 
 .storage-system-head,

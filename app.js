@@ -3163,6 +3163,10 @@ function subsystemStatusFromAlarms(station, item, alarms) {
   return item.status;
 }
 
+function subsystemStatusClassFromAlarms(station, item, alarms) {
+  return operationStateClass(subsystemStatusFromAlarms(station, item, alarms));
+}
+
 function subsystemAlarmTooltipHtml(station, subsystemNo) {
   const alarms = subsystemAlarmsForStation(station, subsystemNo);
   const tone = subsystemAlarmTone(alarms);
@@ -3171,6 +3175,7 @@ function subsystemAlarmTooltipHtml(station, subsystemNo) {
   }
   const alarmItems = alarms.filter((alarm) => homeAlarmCategory(alarm) === "alarm");
   const warningItems = alarms.filter((alarm) => homeAlarmCategory(alarm) !== "alarm");
+  const alarmSeverity = alarmItems.some((alarm) => homeDeviceAlarmSeverity(alarm) === "fault") ? "fault" : alarmItems.length ? "alarm" : "none";
   const sectionHtml = (title, items, className) =>
     items.length
       ? `<div class="storage-tooltip-section ${className}"><strong>${title}：${items.length}</strong><ul>${items
@@ -3179,7 +3184,7 @@ function subsystemAlarmTooltipHtml(station, subsystemNo) {
           .join("")}</ul></div>`
       : `<div class="storage-tooltip-section ${className} muted"><strong>${title}：0</strong><p>暂无${title}</p></div>`;
   return `
-    <div class="storage-system-tooltip ${tone}">
+    <div class="storage-system-tooltip ${tone} ${alarmSeverity}">
       ${sectionHtml("告警类", alarmItems, "alarm-section")}
       ${sectionHtml("预警类", warningItems, "warning-section")}
     </div>`;
@@ -3222,7 +3227,7 @@ function renderStationOverview(station) {
     const subsystemAlarms = subsystemAlarmsForStation(station, item.n);
     const alarmTone = subsystemAlarmTone(subsystemAlarms);
     const displayStatus = subsystemStatusFromAlarms(station, item, subsystemAlarms);
-    const displayStatusClass = operationStateClass(displayStatus);
+    const displayStatusClass = subsystemStatusClassFromAlarms(station, item, subsystemAlarms);
     return `
     <div class="storage-system-card ${displayStatusClass} alarm-${alarmTone}" data-system="${item.n}">
       <div class="storage-system-head"><strong>K${station.id.slice(2)}-${item.n}#子系统</strong><span class="system-status-pill ${displayStatusClass}">${displayStatus}</span></div>
