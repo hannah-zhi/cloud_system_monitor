@@ -347,4 +347,6 @@
 - Topology subsystem alarm backgrounds must be visually obvious: alarm uses yellow-toned background, fault uses red-toned background. Tooltip alarm-class text/bullets follow the alarm/fault background tone; warning-class text/bullets follow the warning border tone.
 - If a subsystem status pill displays alarm/fault, the card background must match that status even if other card classes are missing or reordered.
 - Subsystem display names use `项目号-#序号子系统`, for example `K0060-#1子系统`. Apply this consistently in topology cards, subsystem filters, and subsystem chart/table labels.
+- Subsystem status priority is `故障 > 告警 > 离线 > 充电/放电/待机/停机`; an offline subsystem with an alarm/fault still shows alarm/fault styling.
+- Tooltip warning-class text and bullets must follow the highest warning border color; tooltip alarm-class text and bullets must follow alarm/fault background color.
 - Dual-axis chart titles must be offset from the first tick label with enough vertical spacing to avoid visual overlap.

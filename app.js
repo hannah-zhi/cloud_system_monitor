@@ -3161,9 +3161,9 @@ function subsystemAlarmsForStation(station, subsystemNo) {
 }
 
 function subsystemStatusFromAlarms(station, item, alarms) {
-  if (station.comm === "offline") return "离线";
   if (alarms.some((alarm) => homeAlarmCategory(alarm) === "alarm" && homeDeviceAlarmSeverity(alarm) === "fault")) return "故障";
   if (alarms.some((alarm) => homeAlarmCategory(alarm) === "alarm")) return "告警";
+  if (station.comm === "offline") return "离线";
   return item.status;
 }
 

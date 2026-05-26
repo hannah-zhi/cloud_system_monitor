@@ -3026,7 +3026,7 @@ h2 {
     rgba(16, 18, 28, 0.98);
 }
 
-.storage-system-tooltip.none {
+.storage-system-tooltip.none:not(.level1):not(.level2):not(.level3) {
   --tip-color: #8d96aa;
   --warning-color: #8d96aa;
   border-color: rgba(141, 150, 170, 0.48);
@@ -3077,7 +3077,20 @@ h2 {
   color: var(--warning-color, var(--tip-color, #ff8da0));
 }
 
+.storage-tooltip-section.alarm-section li {
+  color: var(--alarm-color, #ffd17a);
+}
+
+.storage-tooltip-section.warning-section li {
+  color: var(--warning-color, var(--tip-color, #ff8da0));
+}
+
 .storage-tooltip-section.muted strong {
+  color: #8d96aa;
+}
+
+.storage-tooltip-section.muted li,
+.storage-tooltip-section.muted p {
   color: #8d96aa;
 }
 
