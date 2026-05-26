@@ -342,3 +342,6 @@
 - Axis titles must be positioned away from tick labels on both charts.
 - Topology subsystem cards must use the same status label vocabulary as station cards: charging, discharging, standby, stopped, offline, alarm, and fault. Fault/alarm states change card background, while border color continues to follow the highest warning level.
 - Topology subsystem hover content must separate alarm-class and warning-class items, with alarm-class content listed first.
+- Topology subsystem card headers place the subsystem name on the left and the current status label on the upper right. Fault/alarm labels must appear there when present.
+- Topology subsystem borders are driven only by the highest warning/prewarning level; device alarm/fault status changes the card background and right-side label but must not override the warning-level border.
+- Dual-axis chart titles must be offset from the first tick label with enough vertical spacing to avoid visual overlap.

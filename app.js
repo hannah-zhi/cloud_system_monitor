@@ -3186,9 +3186,10 @@ function subsystemAlarmTooltipHtml(station, subsystemNo) {
 }
 
 function subsystemAlarmTone(alarms) {
-  if (alarms.some((alarm) => alarm.type === "level1" || alarm.level === "一级")) return "level1";
-  if (alarms.some((alarm) => alarm.type === "level2" || alarm.level === "二级")) return "level2";
-  if (alarms.some((alarm) => alarm.type === "level3" || alarm.level === "三级")) return "level3";
+  const warnings = alarms.filter((alarm) => homeAlarmCategory(alarm) === "warning");
+  if (warnings.some((alarm) => alarm.type === "level1" || alarm.level === "一级")) return "level1";
+  if (warnings.some((alarm) => alarm.type === "level2" || alarm.level === "二级")) return "level2";
+  if (warnings.some((alarm) => alarm.type === "level3" || alarm.level === "三级")) return "level3";
   return "none";
 }
 
@@ -3224,7 +3225,7 @@ function renderStationOverview(station) {
     const displayStatusClass = operationStateClass(displayStatus);
     return `
     <div class="storage-system-card ${displayStatusClass} alarm-${alarmTone}" data-system="${item.n}">
-      <div class="storage-system-head"><span class="system-status-pill ${displayStatusClass}">${displayStatus}</span><strong>K${station.id.slice(2)}-${item.n}#子系统</strong></div>
+      <div class="storage-system-head"><strong>K${station.id.slice(2)}-${item.n}#子系统</strong><span class="system-status-pill ${displayStatusClass}">${displayStatus}</span></div>
       <div class="system-row"><span>系统有功(PCS)功率</span><strong>${formatNumeric(item.localPower)} kW</strong></div>
       <div class="system-row"><span>系统SOC</span><strong>${formatNumeric(item.localSoc)} %</strong></div>
       <div class="mini-bars">${Array.from({ length: 12 }, (_, bar) => `<i style="opacity:${bar < Math.round(item.localSoc / 8.4) ? 0.95 : 0.18}"></i>`).join("")}</div>
@@ -3433,7 +3434,7 @@ function renderOverviewCharts(station) {
 function renderOverviewPowerChart(data) {
   const canvas = setupCanvas(els.overviewPowerCanvas);
   const ctx = canvas.getContext("2d");
-  const pad = { left: 52, right: 48, top: 20, bottom: 44 };
+  const pad = { left: 58, right: 58, top: 34, bottom: 44 };
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawOverviewDualGrid(ctx, canvas, pad, {
     leftTicks: ["15", "10", "5", "0", "-5", "-10", "-15"],
@@ -3464,7 +3465,7 @@ function renderOverviewPowerChart(data) {
 function renderOverviewChargeChart(data) {
   const canvas = setupCanvas(els.overviewChargeCanvas);
   const ctx = canvas.getContext("2d");
-  const pad = { left: 52, right: 48, top: 20, bottom: 44 };
+  const pad = { left: 58, right: 58, top: 34, bottom: 44 };
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawOverviewDualGrid(ctx, canvas, pad, {
     leftTicks: ["90", "70", "50", "30", "10", "0"],
@@ -3544,9 +3545,9 @@ function drawOverviewDualGrid(ctx, canvas, pad, options) {
   });
   ctx.fillStyle = "#8f98aa";
   ctx.textAlign = "left";
-  ctx.fillText(leftUnit, pad.left - 42, pad.top - 6);
+  ctx.fillText(leftUnit, pad.left - 50, pad.top - 18);
   ctx.textAlign = "right";
-  ctx.fillText(rightUnit, canvas.width - 6, pad.top - 6);
+  ctx.fillText(rightUnit, canvas.width - 8, pad.top - 18);
 }
 
 function mapLinear(value, inMin, inMax, outMin, outMax) {

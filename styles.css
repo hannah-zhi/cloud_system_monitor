@@ -3111,12 +3111,14 @@ h2 {
 
 .storage-system-head {
   align-items: center;
+  justify-content: space-between;
   margin-bottom: 8px;
   color: #e8edf7;
 }
 
 .storage-system-head strong {
   min-width: 0;
+  flex: 1 1 auto;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -3127,6 +3129,7 @@ h2 {
 }
 
 .system-status-pill {
+  flex: 0 0 auto;
   min-width: 34px;
   height: 18px;
   display: inline-flex;
