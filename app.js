@@ -3155,8 +3155,19 @@ function subsystemAlarmSummary(station, subsystemNo) {
 }
 
 function subsystemAlarmsForStation(station, subsystemNo) {
-  return [...state.allAlarms, ...state.homeDataAlarms].filter(
-    (alarm) => alarm.stationId === station.id && alarm.location.includes(`#${subsystemNo}子系统`)
+  return detailBaseAlarmsForStation(station).filter((alarm) => alarm.location.includes(`#${subsystemNo}子系统`));
+}
+
+function detailBaseAlarmsForStation(station) {
+  const stationAlarms = [...state.allAlarms, ...state.homeDataAlarms]
+    .filter((alarm) => alarm.stationId === station.id)
+    .filter(homeVisibleAlarm)
+    .sort((a, b) => alarmOrder(a.type) - alarmOrder(b.type) || b.dateISO.localeCompare(a.dateISO));
+  return filterAlarmsByWindow(
+    stationAlarms,
+    state.detailAlarmDays,
+    state.detailAlarmStartDate,
+    state.detailAlarmEndDate
   );
 }
 
@@ -3178,7 +3189,8 @@ function subsystemAlarmTooltipHtml(station, subsystemNo) {
     return `<div class="storage-system-tooltip ${tone}"><strong>预警/告警：0</strong><p>当前子系统暂无预警/告警</p></div>`;
   }
   const alarmItems = alarms.filter((alarm) => homeAlarmCategory(alarm) === "alarm");
-  const warningItems = alarms.filter((alarm) => homeAlarmCategory(alarm) !== "alarm");
+  const warningItems = alarms.filter((alarm) => homeAlarmCategory(alarm) === "warning");
+  const dataItems = alarms.filter((alarm) => homeAlarmCategory(alarm) === "data");
   const alarmSeverity = alarmItems.some((alarm) => homeDeviceAlarmSeverity(alarm) === "fault") ? "fault" : alarmItems.length ? "alarm" : "none";
   const sectionHtml = (title, items, className) =>
     items.length
@@ -3191,6 +3203,7 @@ function subsystemAlarmTooltipHtml(station, subsystemNo) {
     <div class="storage-system-tooltip ${tone} ${alarmSeverity}">
       ${sectionHtml("告警类", alarmItems, "alarm-section")}
       ${sectionHtml("预警类", warningItems, "warning-section")}
+      ${dataItems.length ? sectionHtml("数据类", dataItems, "data-section") : ""}
     </div>`;
 }
 
@@ -4125,16 +4138,7 @@ function handleBoxHover(event) {
 }
 
 function renderDetailAlarms(station) {
-  const stationAlarms = [...state.allAlarms, ...state.homeDataAlarms]
-    .filter((alarm) => alarm.stationId === station.id)
-    .filter(homeVisibleAlarm)
-    .sort((a, b) => alarmOrder(a.type) - alarmOrder(b.type) || b.dateISO.localeCompare(a.dateISO));
-  const rangeAlarms = filterAlarmsByWindow(
-    stationAlarms,
-    state.detailAlarmDays,
-    state.detailAlarmStartDate,
-    state.detailAlarmEndDate
-  );
+  const rangeAlarms = detailBaseAlarmsForStation(station);
   const categoryAlarms = rangeAlarms.filter((alarm) => state.detailAlarmCategory === "all" || homeAlarmCategory(alarm) === state.detailAlarmCategory);
   const alarms = categoryAlarms.filter((alarm) => homeAlarmSubfilterMatch(alarm, state.detailAlarmSubfilter));
   els.detailAlarmSubtitle.textContent = `${station.id}${station.name}`;

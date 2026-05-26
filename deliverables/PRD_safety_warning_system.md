@@ -349,4 +349,5 @@
 - Subsystem display names use `项目号-#序号子系统`, for example `K0060-#1子系统`. Apply this consistently in topology cards, subsystem filters, and subsystem chart/table labels.
 - Subsystem status priority is `故障 > 告警 > 离线 > 充电/放电/待机/停机`; an offline subsystem with an alarm/fault still shows alarm/fault styling.
 - Tooltip warning-class text and bullets must follow the highest warning border color; tooltip alarm-class text and bullets must follow alarm/fault background color.
+- Subsystem tooltip data must match the single-station right-side `预警/告警清单` base dataset: same station, same visible sources, same time window, same sort order, and same classification into warning/alarm/data.
 - Dual-axis chart titles must be offset from the first tick label with enough vertical spacing to avoid visual overlap.

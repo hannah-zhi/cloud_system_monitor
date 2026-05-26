@@ -3077,12 +3077,20 @@ h2 {
   color: var(--warning-color, var(--tip-color, #ff8da0));
 }
 
+.storage-tooltip-section.data-section strong {
+  color: #ffbf86;
+}
+
 .storage-tooltip-section.alarm-section li {
   color: var(--alarm-color, #ffd17a);
 }
 
 .storage-tooltip-section.warning-section li {
   color: var(--warning-color, var(--tip-color, #ff8da0));
+}
+
+.storage-tooltip-section.data-section li {
+  color: #ffbf86;
 }
 
 .storage-tooltip-section.muted strong {
@@ -3137,6 +3145,11 @@ h2 {
 .storage-tooltip-section.warning-section li::before {
   background: var(--warning-color, var(--tip-color, #ff4b61));
   box-shadow: 0 0 8px color-mix(in srgb, var(--warning-color, var(--tip-color, #ff4b61)) 58%, transparent);
+}
+
+.storage-tooltip-section.data-section li::before {
+  background: #ffbf86;
+  box-shadow: 0 0 8px rgba(255, 191, 134, 0.58);
 }
 
 .storage-system-head,
