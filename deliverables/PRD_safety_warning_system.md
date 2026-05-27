@@ -358,8 +358,8 @@
 - The no-alarm/no-warning subsystem tooltip should keep the same section rhythm as populated tooltips: title, centered content area, divider line, then the next title/content area.
 - Empty subsystem tooltip section headings (`告警类` / `预警类`) must stay left-aligned with populated tooltip headings; divider width and spacing should match populated tooltip sections.
 
-## 26. 2026-05-27 Offline Station Alarm Filtering
+## 26. 2026-05-27 Offline Station Device-Alarm Filtering
 
-- Stations whose communication status is `离线` must not surface warning/alarm-class records in central monitoring lists, station-card alarm states, single-station right-side lists, topology subsystem status, subsystem borders, or subsystem hover tooltips.
-- Offline stations may still surface `数据告警` records where applicable, but warning/alarm categories should count as zero for the station and its subsystems.
-- Alarm-management filters and table data should also exclude warning/alarm records for offline stations so filter options and list rows remain consistent with central monitoring.
+- Stations whose communication status is `离线` must not surface device-alarm-class records (`告警/故障`) in central monitoring lists, station-card alarm states, single-station right-side lists, topology subsystem status, or subsystem hover tooltips.
+- Offline stations may still surface `预警` records and `数据告警` records where applicable. Warning/prewarning records continue to drive warning counts, lists, subsystem borders, and tooltip warning sections.
+- Alarm-management filters and table data should also exclude device-alarm-class records for offline stations while retaining their warning/prewarning records.

@@ -969,8 +969,7 @@ function homeVisibleAlarm(alarm) {
 function alarmAllowedByStationComm(alarm) {
   const station = stationById(alarm.stationId);
   if (station?.comm === "offline") {
-    const category = homeAlarmCategory(alarm);
-    return category !== "warning" && category !== "alarm";
+    return homeAlarmCategory(alarm) !== "alarm";
   }
   return true;
 }
