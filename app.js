@@ -1228,6 +1228,10 @@ function subsystemDisplayName(station, n) {
   return `${station.id}-#${n}子系统`;
 }
 
+function subsystemShortName(n) {
+  return `#${n}子系统`;
+}
+
 function commStatusClass(commState) {
   const classMap = {
     ok: "comm-ok",
@@ -5028,7 +5032,7 @@ function renderTable() {
     .map(
       (item, index) => `
       <tr data-row="${index}" data-subsystem="${item.no}">
-        <td>${item.name}</td>
+        <td>${subsystemShortName(item.no)}</td>
         <td class="${scoreClass(item.score)}">${formatSosValue(item.score)}</td>
         <td>${item.date}</td>
         <td>${item.description}</td>

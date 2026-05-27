@@ -405,3 +405,10 @@
 - `SOS安全指数与相关数据趋势` has its own start/end date state. Changing that time window must redraw the chart, update X-axis date labels, keep SOS fixed on the left axis, and auto-scale the right axis to the selected non-SOS parameters.
 - The top-right trend controls should show the date range and parameter selector directly adjacent, without a visible `参数筛选` text label.
 - The right-side current SOS gauge card needs enough vertical padding below `更新日期`, and its title inset should match the warning-list title inset.
+
+## 32. 2026-05-27 Subsystem Labels And Running Card Polish
+
+- In the station `安全诊断` tab, the `SOS 安全指数详情清单` subsystem column should display compact subsystem names such as `#1子系统`, without the station ID prefix.
+- The current SOS gauge card title inset must match the warning-list card title inset exactly.
+- Rack-row `SOC:` and `SOH:` labels should align vertically with the corresponding numeric value rows under each rack.
+- On the regular subsystem detail page, the `子系统运行` card content should stay clear of the bottom border while preserving the established alignment with the adjacent charge/discharge card.

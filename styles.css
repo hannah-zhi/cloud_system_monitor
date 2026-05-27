@@ -2652,12 +2652,12 @@ h2 {
   grid-template-columns: 126px 148px;
   gap: 22px;
   align-items: end;
-  padding-top: 18px;
+  padding-top: 12px;
 }
 
 .subsystem-run-panel .soc-gauge-mini,
 .subsystem-run-panel .run-kpis {
-  transform: translateY(12px);
+  transform: translateY(6px);
 }
 
 .subsystem-charge-panel .charge-stat-body {
@@ -2850,7 +2850,7 @@ h2 {
   justify-self: end;
   display: grid;
   gap: 3px;
-  padding-top: 50px;
+  padding-top: 57px;
   color: #d7e1f1;
   font-size: 8px;
   font-weight: 600;
@@ -4320,7 +4320,7 @@ h2 {
 
 .detail-sos-side-panel {
   margin: 0 0 12px;
-  padding: 14px 14px 18px;
+  padding: 14px 14px 18px 17px;
   min-height: 230px;
   border: 1px solid rgba(53, 61, 83, 0.86);
   border-radius: 4px;
@@ -4337,10 +4337,6 @@ h2 {
     0 20px 46px rgba(0, 0, 0, 0.34),
     inset 0 0 0 1px rgba(18, 152, 255, 0.08),
     inset 4px 0 0 rgba(18, 152, 255, 0.86);
-}
-
-.detail-sos-side-panel .panel-title {
-  padding-left: 11px;
 }
 
 .detail-sos-side-panel[hidden] {
