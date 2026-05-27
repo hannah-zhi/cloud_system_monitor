@@ -121,6 +121,8 @@ const state = {
   selectedStationIds: new Set(),
   selectedStation: null,
   selectedSubsystemNo: null,
+  subsystemPageMode: "overview",
+  subsystemPartFilter: null,
   detailTab: "overview",
   trendRange: 7,
   sortSubsystemMode: "idAsc",
@@ -1088,6 +1090,8 @@ function showPage(page) {
   state.activePage = page;
   state.selectedStation = null;
   state.selectedSubsystemNo = null;
+  state.subsystemPageMode = "overview";
+  state.subsystemPartFilter = null;
   els.detailView.classList.remove("active-view");
   els.listView.classList.toggle("active-view", page === "overview");
   els.riskView.classList.toggle("active-view", page === "risk");
@@ -1362,7 +1366,7 @@ function renderAlarmSourceSummary(container, alarms, sources = alarmSourceLabels
 
 function renderHomeAlarmCategorySummary(container, alarms, options = {}) {
   if (!container) return;
-  const { interactive = false, activeCategory = "all", activeSubfilter = "all", onChange = null, onSubChange = null } = options;
+  const { interactive = false, activeCategory = "all", activeSubfilter = "all", onChange = null, onSubChange = null, warningOnly = false } = options;
   const entries = [
     {
       key: "warning",
@@ -1383,7 +1387,7 @@ function renderHomeAlarmCategorySummary(container, alarms, options = {}) {
       ],
     },
     { key: "data", label: "数据", count: alarms.filter((alarm) => homeAlarmCategory(alarm) === "data").length, subfilters: [] },
-  ];
+  ].filter((entry) => !warningOnly || entry.key === "warning");
   container.innerHTML = entries
     .map((entry) => {
       const active = activeCategory === entry.key ? " active" : "";
@@ -2942,6 +2946,8 @@ function showDetail(id, initialTab = "overview") {
   if (!station) return;
   state.selectedStation = station;
   state.selectedSubsystemNo = null;
+  state.subsystemPageMode = "overview";
+  state.subsystemPartFilter = null;
   state.trendRange = 7;
   state.sortSubsystemMode = "idAsc";
   state.detailTableSort = { key: "score", direction: "asc" };
@@ -2978,13 +2984,17 @@ function showDetail(id, initialTab = "overview") {
   window.history.replaceState({}, "", url);
 }
 
-function showSubsystemDetail(station, subsystemNo) {
+function showSubsystemDetail(station, subsystemNo, mode = "overview") {
   if (!station || !subsystemNo) return;
   state.selectedStation = station;
   state.selectedSubsystemNo = Number(subsystemNo);
+  state.subsystemPageMode = mode === "diagnosis" ? "diagnosis" : "overview";
+  state.subsystemPartFilter = null;
   state.detailTab = "overview";
   state.overviewPowerHighlight = null;
   state.overviewChargeHighlight = null;
+  state.detailAlarmCategory = "all";
+  state.detailAlarmSubfilter = "all";
   els.backBtn.textContent = "‹ 返回场站概览";
   els.detailSectionTabs.hidden = true;
   els.listView.classList.remove("active-view");
@@ -2998,20 +3008,29 @@ function showSubsystemDetail(station, subsystemNo) {
   const url = new URL(window.location.href);
   url.searchParams.set("station", station.id);
   url.searchParams.set("subsystem", String(state.selectedSubsystemNo));
+  if (state.subsystemPageMode === "diagnosis") url.searchParams.set("subsystemView", "diagnosis");
+  else url.searchParams.delete("subsystemView");
   url.searchParams.delete("tab");
   window.history.replaceState({}, "", url);
 }
 
 function handleDetailBack() {
   if (state.selectedSubsystemNo && state.selectedStation) {
+    const returnTab = state.subsystemPageMode === "diagnosis" ? "diagnosis" : "overview";
     state.selectedSubsystemNo = null;
+    state.subsystemPageMode = "overview";
+    state.subsystemPartFilter = null;
     els.backBtn.textContent = "‹ 返回场站列表";
     els.detailSectionTabs.hidden = false;
-    showDetailTab("overview", false);
+    state.detailTab = returnTab;
     renderDetail(state.selectedStation);
+    showDetailTab(returnTab);
     const url = new URL(window.location.href);
     url.searchParams.set("station", state.selectedStation.id);
     url.searchParams.delete("subsystem");
+    url.searchParams.delete("subsystemView");
+    if (returnTab === "diagnosis") url.searchParams.set("tab", "diagnosis");
+    else url.searchParams.delete("tab");
     window.history.replaceState({}, "", url);
     return;
   }
@@ -3023,11 +3042,14 @@ function showList() {
   showPage(state.activePage || "overview");
   state.selectedStation = null;
   state.selectedSubsystemNo = null;
+  state.subsystemPageMode = "overview";
+  state.subsystemPartFilter = null;
   els.detailSectionTabs.hidden = false;
   els.backBtn.textContent = "‹ 返回场站列表";
   const url = new URL(window.location.href);
   url.searchParams.delete("station");
   url.searchParams.delete("subsystem");
+  url.searchParams.delete("subsystemView");
   window.history.replaceState({}, "", url);
 }
 
@@ -3327,6 +3349,66 @@ function subsystemChartStation(station, subsystemNo) {
   };
 }
 
+function topologyFilterAttribute(filter) {
+  if (!filter) return "";
+  return `data-filter-key="${filter.key}" data-filter-label="${filter.label}" data-filter-tokens="${filter.tokens.join("|")}"`;
+}
+
+function topologyPartButtonClass(filter, extraClass = "") {
+  const active = state.subsystemPartFilter?.key === filter.key ? " active" : "";
+  return `subsystem-topology-node topology-filter ${extraClass}${active}`;
+}
+
+function subsystemPcsFilter(pcsNo) {
+  const no = String(pcsNo).padStart(2, "0");
+  return { key: `pcs-${no}`, label: `变流器 #${no}`, tokens: [`PCS${no}`] };
+}
+
+function subsystemRackFilter(rackNo) {
+  return { key: `rack-${rackNo}`, label: `电池簇 ${rackNo}`, tokens: [`Rack${rackNo}`] };
+}
+
+function subsystemUtilityFilter(type) {
+  if (type === "fire") return { key: "fire", label: "消防系统", tokens: ["消防系统", "TCQ01", "BankA"] };
+  return { key: "hvac", label: "环控系统", tokens: ["环控系统", "AC101"] };
+}
+
+function alarmMatchesPartFilter(alarm, filter) {
+  if (!filter) return true;
+  const haystack = `${alarm.location || ""} ${alarm.module || ""} ${alarm.title || ""}`;
+  return filter.tokens.some((token) => haystack.includes(token));
+}
+
+function bindSubsystemTopologyFilters(station) {
+  els.stationOverviewPanel?.querySelectorAll(".topology-filter[data-filter-key]").forEach((button) => {
+    const toggle = () => {
+      const key = button.dataset.filterKey;
+      state.subsystemPartFilter = state.subsystemPartFilter?.key === key
+        ? null
+        : {
+            key,
+            label: button.dataset.filterLabel || "",
+            tokens: String(button.dataset.filterTokens || "").split("|").filter(Boolean),
+          };
+      syncSubsystemTopologyFilterState();
+      renderDetailAlarms(station);
+    };
+    button.addEventListener("click", toggle);
+    button.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        toggle();
+      }
+    });
+  });
+}
+
+function syncSubsystemTopologyFilterState() {
+  els.stationOverviewPanel?.querySelectorAll(".topology-filter[data-filter-key]").forEach((button) => {
+    button.classList.toggle("active", state.subsystemPartFilter?.key === button.dataset.filterKey);
+  });
+}
+
 function renderSubsystemMetricCards(station, subsystemNo) {
   const snapshot = subsystemSnapshot(station, subsystemNo);
   const chargeMultiplierMap = { day: 1, month: 28, year: 330 };
@@ -3370,61 +3452,66 @@ function renderSubsystemPartIcon(type, label) {
   const iconMap = {
     hv: "hv-box.svg",
     pcs: "pcs.svg",
-    cluster: "battery-cluster.svg",
     rack: "battery-rack.svg",
     pack: "battery-pack.svg",
+    hvac: "environment-control.svg",
+    fire: "fire-system.svg",
   };
   return `<img src="assets/topology-icons/${iconMap[type] || iconMap.pack}" alt="${label}" loading="lazy" />`;
 }
 
 function renderSubsystemPartsTopology(station, subsystemNo) {
   const snapshot = subsystemSnapshot(station, subsystemNo);
-  const rackBase = subsystemNo * 100;
-  const racks = Array.from({ length: 9 }, (_, index) => rackBase + index + 1);
+  const leftRacks = Array.from({ length: 9 }, (_, index) => 101 + index);
+  const rightRacks = Array.from({ length: 9 }, (_, index) => 201 + index);
+  const hvacFilter = subsystemUtilityFilter("hvac");
+  const fireFilter = subsystemUtilityFilter("fire");
   return `
     <article class="panel subsystem-parts-panel">
-      <div class="panel-title"><span></span>设备部件拓扑图</div>
+      <div class="panel-title"><span></span>拓扑图</div>
       <div class="subsystem-topology">
-        <div class="subsystem-line subsystem-line-main"></div>
-        <div class="subsystem-line subsystem-line-left"></div>
-        <div class="subsystem-line subsystem-line-right"></div>
-        <div class="subsystem-topology-node hv-node">
+        <svg class="subsystem-wires" viewBox="0 0 1000 390" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M500 72 V122 M250 122 H750 M250 122 V176 M750 122 V176 M250 222 V262 H76 M750 222 V262 H924" />
+          ${leftRacks.map((_, index) => `<path d="M ${76 + index * 44} 262 V292" />`).join("")}
+          ${rightRacks.map((_, index) => `<path d="M ${572 + index * 44} 262 V292" />`).join("")}
+        </svg>
+        <div class="subsystem-aux-list" aria-label="辅助系统">
+          <button class="topology-filter subsystem-aux-item${state.subsystemPartFilter?.key === hvacFilter.key ? " active" : ""}" type="button" ${topologyFilterAttribute(hvacFilter)}>
+            ${renderSubsystemPartIcon("hvac", "环控系统")}<span>环控系统</span>
+          </button>
+          <button class="topology-filter subsystem-aux-item${state.subsystemPartFilter?.key === fireFilter.key ? " active" : ""}" type="button" ${topologyFilterAttribute(fireFilter)}>
+            ${renderSubsystemPartIcon("fire", "消防系统")}<span>消防系统</span>
+          </button>
+        </div>
+        <button class="${topologyPartButtonClass({ key: `hv-${subsystemNo}`, label: `箱变 #${String(subsystemNo).padStart(2, "0")}`, tokens: [`箱变 #${String(subsystemNo).padStart(2, "0")}`] }, "hv-node")}" type="button" ${topologyFilterAttribute({ key: `hv-${subsystemNo}`, label: `箱变 #${String(subsystemNo).padStart(2, "0")}`, tokens: [`箱变 #${String(subsystemNo).padStart(2, "0")}`] })}>
           ${renderSubsystemPartIcon("hv", "箱变")}
           <strong>箱变 #${String(subsystemNo).padStart(2, "0")}</strong>
           <span>Ia: ${formatNumeric(2.1 + subsystemNo * 0.08)} A</span>
           <span>Q: ${formatNumeric(snapshot.ratedPower * 18)} kVar</span>
-        </div>
-        <div class="subsystem-topology-node pcs-node left">
+        </button>
+        <button class="${topologyPartButtonClass(subsystemPcsFilter(1), "pcs-node left")}" type="button" ${topologyFilterAttribute(subsystemPcsFilter(1))}>
           ${renderSubsystemPartIcon("pcs", "变流器")}
           <strong>变流器 #01</strong>
           <span>P: ${formatNumeric(snapshot.power)} kW</span>
           <span>Q: ${formatNumeric(snapshot.ratedPower * 8.2)} kVar</span>
-        </div>
-        <div class="subsystem-topology-node pcs-node right">
+        </button>
+        <button class="${topologyPartButtonClass(subsystemPcsFilter(2), "pcs-node right")}" type="button" ${topologyFilterAttribute(subsystemPcsFilter(2))}>
           ${renderSubsystemPartIcon("pcs", "变流器")}
           <strong>变流器 #02</strong>
           <span>P: ${formatNumeric(snapshot.power * 0.96)} kW</span>
           <span>Q: ${formatNumeric(snapshot.ratedPower * 8.0)} kVar</span>
-        </div>
-        <div class="subsystem-topology-node cluster-node left">
-          ${renderSubsystemPartIcon("cluster", "电池组")}
-          <strong>电池组 #01</strong>
-          <span>V: 1.3 kV</span>
-          <span>SOC: ${formatNumeric(snapshot.soc)} %</span>
-          <span>SOH: ${formatNumeric(snapshot.soh)} %</span>
-        </div>
-        <div class="subsystem-topology-node cluster-node right">
-          ${renderSubsystemPartIcon("cluster", "电池组")}
-          <strong>电池组 #02</strong>
-          <span>V: 1.3 kV</span>
-          <span>SOC: ${formatNumeric(Math.max(0, snapshot.soc - 1.3))} %</span>
-          <span>SOH: ${formatNumeric(snapshot.soh - 0.2)} %</span>
-        </div>
+        </button>
         <div class="rack-row left">
-          ${racks.map((rack) => `<div class="rack-node">${renderSubsystemPartIcon("rack", `Rack ${rack}`)}<strong>${rack}</strong><span>SOC ${formatNumeric(4.6 + (rack % 4) * 0.4)}%</span><span>SOH ${formatNumeric(97 + (rack % 3) * 0.2)}%</span></div>`).join("")}
+          ${leftRacks.map((rack) => {
+            const filter = subsystemRackFilter(rack);
+            return `<button class="topology-filter rack-node${state.subsystemPartFilter?.key === filter.key ? " active" : ""}" type="button" ${topologyFilterAttribute(filter)}>${renderSubsystemPartIcon("rack", `Rack ${rack}`)}<strong>${rack}</strong><em>电池簇</em><span>SOC ${formatNumeric(4.6 + (rack % 4) * 0.4)}%</span><span>SOH ${formatNumeric(97 + (rack % 3) * 0.2)}%</span></button>`;
+          }).join("")}
         </div>
         <div class="rack-row right">
-          ${racks.map((rack) => `<div class="rack-node">${renderSubsystemPartIcon("pack", `Pack ${rack + 100}`)}<strong>${rack + 100}</strong><span>SOC ${formatNumeric(4.8 + (rack % 5) * 0.3)}%</span><span>SOH ${formatNumeric(97.1 + (rack % 4) * 0.18)}%</span></div>`).join("")}
+          ${rightRacks.map((rack) => {
+            const filter = subsystemRackFilter(rack);
+            return `<button class="topology-filter rack-node${state.subsystemPartFilter?.key === filter.key ? " active" : ""}" type="button" ${topologyFilterAttribute(filter)}>${renderSubsystemPartIcon("rack", `Rack ${rack}`)}<strong>${rack}</strong><em>电池簇</em><span>SOC ${formatNumeric(4.8 + (rack % 5) * 0.3)}%</span><span>SOH ${formatNumeric(97.1 + (rack % 4) * 0.18)}%</span></button>`;
+          }).join("")}
         </div>
       </div>
     </article>`;
@@ -3443,6 +3530,10 @@ function renderSubsystemDetail(station, subsystemNo) {
   els.detailSos.textContent = `SOS ${formatSosValue(snapshot.score)}`;
   els.detailSos.style.borderColor = risk.color;
   els.detailSos.style.color = risk.color;
+  if (state.subsystemPageMode === "diagnosis") {
+    renderSubsystemDiagnosisDetail(station, subsystemNo, snapshot);
+    return;
+  }
   els.stationOverviewPanel.innerHTML = `
     ${renderSubsystemMetricCards(station, subsystemNo)}
     ${renderSubsystemPartsTopology(station, subsystemNo)}
@@ -3480,8 +3571,157 @@ function renderSubsystemDetail(station, subsystemNo) {
   els.overviewPowerTooltip = document.getElementById("overviewPowerTooltip");
   els.overviewChargeCanvas = document.getElementById("overviewChargeCanvas");
   els.overviewChargeTooltip = document.getElementById("overviewChargeTooltip");
+  bindSubsystemTopologyFilters(station);
   renderOverviewCharts(subsystemChartStation(station, subsystemNo));
   syncDetailAlarmPanelHeight();
+}
+
+function renderSubsystemDiagnosisDetail(station, subsystemNo, snapshot = subsystemSnapshot(station, subsystemNo)) {
+  els.stationOverviewPanel.innerHTML = `
+    <article class="panel subsystem-basic-panel">
+      <div class="panel-title"><span></span>设备基本信息</div>
+      <div class="subsystem-basic-grid">
+        <div><span>子系统</span><strong>#${subsystemNo}子系统</strong></div>
+        <div><span>当前SOS指数</span><strong class="${scoreClass(snapshot.score)}">${formatSosValue(snapshot.score)}</strong></div>
+        <div><span>更新日期</span><strong>2025-05-07</strong></div>
+      </div>
+    </article>
+    ${renderSubsystemPartsTopology(station, subsystemNo)}
+    <article class="panel subsystem-sos-trend-panel">
+      <div class="panel-title-row">
+        <div class="panel-title"><span></span>SOS安全指数与相关数据趋势</div>
+        <div class="subsystem-chart-tools">
+          <div class="chart-date-range alarm-detail-date"><input type="date" value="2025-05-01" aria-label="开始日期" /><span>→</span><input type="date" value="2025-05-15" aria-label="结束日期" /></div>
+          <select class="risk-sort-select" aria-label="趋势指标">
+            <option>充电能量　放电能量</option>
+            <option>SOS指数</option>
+          </select>
+        </div>
+      </div>
+      <div class="subsystem-diagnosis-chart">
+        <canvas id="subsystemDiagnosisTrendCanvas" width="900" height="300"></canvas>
+        <div id="subsystemDiagnosisTrendTooltip" class="risk-bars-tooltip"></div>
+      </div>
+    </article>
+    <article class="panel subsystem-part-analysis-panel">
+      <div class="panel-title"><span></span>#${subsystemNo}子系统-各部件SOS安全指数分析</div>
+      <div class="part-analysis-grid">
+        ${["电池系统", "电气系统", "环控系统", "消防系统"].map((part, index) => renderPartAnalysisCard(part, snapshot, index)).join("")}
+      </div>
+    </article>`;
+  bindSubsystemTopologyFilters(station);
+  renderSubsystemDiagnosisTrend(snapshot);
+  renderPartAnalysisCharts(snapshot);
+  syncDetailAlarmPanelHeight();
+}
+
+function renderPartAnalysisCard(part, snapshot, index) {
+  const values = [
+    { value: Math.max(35, snapshot.score - 3), risk: "high", action: "立即检修", issue: "温度传感器失效、SOC不一致" },
+    { value: Math.min(95, snapshot.score + 13), risk: "mid", action: "及时检修", issue: "高压线缆绝缘失效" },
+    { value: Math.min(98, snapshot.score + 27), risk: "low", action: "加强监控", issue: "环境系统动液、欠压" },
+    { value: Math.min(99, snapshot.score + 31), risk: "healthy", action: "保持监控", issue: "无" },
+  ];
+  const item = values[index];
+  return `
+    <div class="part-analysis-card risk-${riskMeta[item.risk].className}">
+      <div class="part-analysis-head">
+        <strong>${part}</strong>
+        <span>${riskMeta[item.risk].label}</span>
+      </div>
+      <div class="part-analysis-summary">
+        <div><span>当前指数</span><strong class="${scoreClass(item.value)}">${formatSosValue(item.value)}</strong><em>7天内 ↑ 3%</em></div>
+        <div><span>建议措施</span><strong>${item.action}</strong><em>主要问题：${item.issue}</em></div>
+      </div>
+      <canvas class="part-analysis-canvas" data-part-index="${index}" width="430" height="180"></canvas>
+    </div>`;
+}
+
+function subsystemDiagnosisTrendData(snapshot) {
+  return Array.from({ length: 15 }, (_, index) => {
+    const day = index + 1;
+    const charge = round(28 + Math.sin(index * 0.9) * 18 + (index % 4) * 9 + snapshot.n * 0.8, 2);
+    const discharge = round(32 + Math.cos(index * 0.72) * 20 + (index % 3) * 7 + snapshot.n * 0.6, 2);
+    const sos = round(Math.max(20, Math.min(98, snapshot.score - 16 + index * 1.8 + Math.sin(index * 0.55) * 5)), 2);
+    return {
+      label: `05-${String(day).padStart(2, "0")}`,
+      charge,
+      discharge,
+      sos,
+    };
+  });
+}
+
+function renderSubsystemDiagnosisTrend(snapshot) {
+  const canvas = document.getElementById("subsystemDiagnosisTrendCanvas");
+  if (!canvas) return;
+  const ctx = setupCanvas(canvas).getContext("2d");
+  const data = subsystemDiagnosisTrendData(snapshot);
+  const pad = { left: 54, right: 54, top: 34, bottom: 42 };
+  clear(ctx, canvas.width, canvas.height);
+  drawOverviewDualGrid(ctx, canvas, pad, {
+    leftTicks: ["100", "80", "60", "40", "20", "0"],
+    rightTicks: ["200", "160", "120", "80", "40", "0"],
+    leftUnit: "SOS安全指数",
+    rightUnit: "能量(kWh)",
+  });
+  const xFor = (index) => pad.left + (index / Math.max(1, data.length - 1)) * (canvas.width - pad.left - pad.right);
+  const ySos = (value) => mapLinear(value, 0, 100, canvas.height - pad.bottom, pad.top);
+  const yEnergy = (value) => mapLinear(value, 0, 200, canvas.height - pad.bottom, pad.top);
+  data.forEach((item, index) => {
+    const x = xFor(index);
+    const barWidth = Math.max(5, Math.min(13, (canvas.width - pad.left - pad.right) / data.length / 4));
+    drawOverviewBar(ctx, x - barWidth, yEnergy(item.charge), barWidth, canvas.height - pad.bottom - yEnergy(item.charge), "#1689ff", 1);
+    drawOverviewBar(ctx, x + 2, yEnergy(item.discharge), barWidth, canvas.height - pad.bottom - yEnergy(item.discharge), "#13c781", 1);
+    drawOverviewXAxis(ctx, item.label, x, canvas.height, pad, index, data.length);
+  });
+  const sosPoints = data.map((item, index) => ({ x: xFor(index), y: ySos(item.sos) }));
+  drawOverviewLine(ctx, sosPoints, "#ff526a", 1);
+  sosPoints.forEach((point) => drawOverviewPoint(ctx, point.x, point.y, "#ff526a", false, 1));
+  const legend = [
+    ["充电能量", "#1689ff"],
+    ["放电能量", "#13c781"],
+    ["SOS指数", "#ff526a"],
+  ];
+  ctx.font = "12px Microsoft YaHei";
+  ctx.textAlign = "left";
+  legend.forEach(([label, color], index) => {
+    const x = canvas.width / 2 - 120 + index * 86;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x, 18, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#aeb8c8";
+    ctx.fillText(label, x + 8, 22);
+  });
+}
+
+function renderPartAnalysisCharts(snapshot) {
+  document.querySelectorAll(".part-analysis-canvas").forEach((canvas, cardIndex) => {
+    const ctx = setupCanvas(canvas).getContext("2d");
+    const pad = { left: 34, right: 16, top: 20, bottom: 28 };
+    const base = [snapshot.score - 38, snapshot.score - 31, snapshot.score - 24, snapshot.score - 18][cardIndex] || snapshot.score - 25;
+    const color = ["#ff526a", "#f4a51c", "#13c781", "#1689ff"][cardIndex] || "#1689ff";
+    const data = Array.from({ length: 7 }, (_, index) => ({
+      label: `05-${String(index + 1).padStart(2, "0")}`,
+      value: round(Math.max(10, Math.min(98, base + index * (5.2 + cardIndex * 0.35) + Math.sin(index * 0.6) * 2)), 2),
+    }));
+    clear(ctx, canvas.width, canvas.height);
+    drawGrid(ctx, pad, canvas.width, canvas.height);
+    const points = data.map((item, index) => ({
+      x: pad.left + (index / (data.length - 1)) * (canvas.width - pad.left - pad.right),
+      y: valueY(item.value, pad, canvas.height),
+      ...item,
+    }));
+    drawOverviewLine(ctx, points, color, 1);
+    points.forEach((point, index) => {
+      drawOverviewPoint(ctx, point.x, point.y, color, index === points.length - 1, 1);
+      ctx.fillStyle = "#8f97a8";
+      ctx.font = "10px Microsoft YaHei";
+      ctx.textAlign = "center";
+      ctx.fillText(point.label, point.x, canvas.height - 8);
+    });
+  });
 }
 
 function renderStationOverview(station) {
@@ -3874,6 +4114,17 @@ function drawOverviewLine(ctx, points, color, alpha = 1) {
   ctx.restore();
 }
 
+function drawOverviewBar(ctx, x, y, width, height, color, alpha = 1) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  const gradient = ctx.createLinearGradient(0, y, 0, y + height);
+  gradient.addColorStop(0, color);
+  gradient.addColorStop(1, "rgba(22, 137, 255, 0.12)");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(x, y, width, height);
+  ctx.restore();
+}
+
 function drawOverviewPoint(ctx, x, y, color, isHover, alpha = 1) {
   ctx.save();
   ctx.globalAlpha = alpha;
@@ -4028,6 +4279,7 @@ function createSubsystems(station) {
     const drift = Math.sin((n + station.sos) * 0.55) * 14 - (n % 8 === 0 ? 22 : 0) + (n % 6 === 0 ? 9 : 0);
     const score = round(Math.min(100, Math.max(35, station.sos + drift)), 2);
     return {
+      no: n,
       name: subsystemDisplayName(station, n),
       score,
       risk: getRisk(score),
@@ -4430,24 +4682,37 @@ function handleBoxHover(event) {
 
 function renderDetailAlarms(station) {
   const subsystemNo = state.selectedSubsystemNo;
-  const rangeAlarms = detailBaseAlarmsForStation(station, subsystemNo);
-  const categoryAlarms = rangeAlarms.filter((alarm) => state.detailAlarmCategory === "all" || homeAlarmCategory(alarm) === state.detailAlarmCategory);
-  const alarms = categoryAlarms.filter((alarm) => homeAlarmSubfilterMatch(alarm, state.detailAlarmSubfilter));
-  els.detailAlarmSubtitle.textContent = subsystemNo ? subsystemDisplayName(station, subsystemNo) : `${station.id}${station.name}`;
+  const warningOnly = state.subsystemPageMode === "diagnosis" && Boolean(subsystemNo);
+  const partFilter = subsystemNo ? state.subsystemPartFilter : null;
+  const rangeAlarms = detailBaseAlarmsForStation(station, subsystemNo)
+    .filter((alarm) => !warningOnly || homeAlarmCategory(alarm) === "warning")
+    .filter((alarm) => alarmMatchesPartFilter(alarm, partFilter));
+  const activeCategory = warningOnly ? "warning" : state.detailAlarmCategory;
+  const activeSubfilter = warningOnly && state.detailAlarmCategory === "all" ? "all" : state.detailAlarmSubfilter;
+  const categoryAlarms = rangeAlarms.filter((alarm) => activeCategory === "all" || homeAlarmCategory(alarm) === activeCategory);
+  const alarms = categoryAlarms.filter((alarm) => homeAlarmSubfilterMatch(alarm, activeSubfilter));
+  const filterSuffix = partFilter ? ` · ${partFilter.label}` : "";
+  const panelTitle = els.detailAlarmList.closest(".alarm-panel")?.querySelector(".panel-title");
+  if (panelTitle) panelTitle.innerHTML = `<span></span>${warningOnly ? "预警清单" : "预警/告警清单"}`;
+  els.detailAlarmSubtitle.textContent = subsystemNo ? `${subsystemDisplayName(station, subsystemNo)}${filterSuffix}` : `${station.id}${station.name}`;
+  if (els.detailAlarmTabs) els.detailAlarmTabs.hidden = warningOnly;
   els.detailAlarmCountAll.textContent = rangeAlarms.length;
   els.detailAlarmCountLevel1.textContent = rangeAlarms.filter((alarm) => homeAlarmCategory(alarm) === "warning" && alarm.type === "level1").length;
   els.detailAlarmCountLevel2.textContent = rangeAlarms.filter((alarm) => homeAlarmCategory(alarm) === "warning" && alarm.type === "level2").length;
   els.detailAlarmCountLevel3.textContent = rangeAlarms.filter((alarm) => homeAlarmCategory(alarm) === "data").length;
   renderHomeAlarmCategorySummary(els.detailAlarmList.closest(".alarm-panel")?.querySelector(".alarm-source-summary"), rangeAlarms, {
     interactive: true,
-    activeCategory: state.detailAlarmCategory,
-    activeSubfilter: state.detailAlarmSubfilter,
+    activeCategory,
+    activeSubfilter,
+    warningOnly,
     onChange: (category) => {
+      if (warningOnly && category !== "warning") return;
       state.detailAlarmCategory = category;
       state.detailAlarmSubfilter = "all";
       renderDetailAlarms(station);
     },
     onSubChange: (category, subfilter) => {
+      if (warningOnly && category !== "warning") return;
       const wasActive = state.detailAlarmCategory === category && state.detailAlarmSubfilter === subfilter;
       state.detailAlarmCategory = category;
       state.detailAlarmSubfilter = wasActive ? "all" : subfilter;
@@ -4479,9 +4744,11 @@ function renderDetailAlarms(station) {
         )
         .join("")
     : `<div class="empty detail-alarm-empty">${
-        state.detailAlarmCategory === "all"
-          ? `当前${subsystemNo ? "子系统" : "场站"}暂无预警/告警`
-          : `当前${subsystemNo ? "子系统" : "场站"}无${homeAlarmEmptyLabel(state.detailAlarmCategory)}`
+        partFilter
+          ? `当前${subsystemNo ? "子系统" : "场站"}暂无与${partFilter.label}相关的${warningOnly ? "预警" : "预警/告警"}`
+          : activeCategory === "all"
+            ? `当前${subsystemNo ? "子系统" : "场站"}暂无${warningOnly ? "预警" : "预警/告警"}`
+            : `当前${subsystemNo ? "子系统" : "场站"}无${homeAlarmEmptyLabel(activeCategory)}`
       }</div>`;
   els.detailAlarmList.querySelectorAll(".alarm-item").forEach((item) => {
     item.addEventListener("click", () => {
@@ -4522,7 +4789,7 @@ function renderTable() {
   els.alertTable.innerHTML = sorted
     .map(
       (item, index) => `
-      <tr data-row="${index}">
+      <tr data-row="${index}" data-subsystem="${item.no}">
         <td>${item.name}</td>
         <td class="${scoreClass(item.score)}">${formatSosValue(item.score)}</td>
         <td>${item.date}</td>
@@ -4535,6 +4802,9 @@ function renderTable() {
     row.addEventListener("click", () => {
       els.alertTable.querySelectorAll("tr").forEach((item) => item.classList.remove("selected"));
       row.classList.add("selected");
+      if (state.selectedStation && row.dataset.subsystem) {
+        showSubsystemDetail(state.selectedStation, Number(row.dataset.subsystem), "diagnosis");
+      }
     });
   });
 }
@@ -4669,9 +4939,11 @@ function createAlarmLocation(format, station, index) {
   const subsystem = 1 + (index % subsystemTotal);
   const rack = `${index % 2 === 0 ? 1 : 2}${String(1 + ((index * 5) % 12)).padStart(2, "0")}`;
   const pack = 1 + ((index * 3) % 8);
+  const pcs = `PCS${String(1 + (index % 2)).padStart(2, "0")}`;
   const cells = [0, 1, 2].map((offset) => 1 + ((index * 7 + offset * 9) % 28));
   return format
     .replace(/#\d+子系统/g, `#${subsystem}子系统`)
+    .replace(/LCC\d+/g, pcs)
     .replace(/Rack\d+/g, `Rack${rack}`)
     .replace(/Pack\d+/g, `Pack${pack}`)
     .replace(/Cell\d+(?:,\d+)*/g, (match) => {
@@ -4762,7 +5034,7 @@ function openStationFromUrl() {
   const subsystemNo = Number(params.get("subsystem"));
   if (Number.isFinite(subsystemNo) && subsystemNo > 0) {
     const station = state.stations.find((item) => item.id === stationId);
-    if (station) showSubsystemDetail(station, subsystemNo);
+    if (station) showSubsystemDetail(station, subsystemNo, params.get("subsystemView") === "diagnosis" ? "diagnosis" : "overview");
     return;
   }
   if (params.get("tab") === "diagnosis") showDetailTab("diagnosis");

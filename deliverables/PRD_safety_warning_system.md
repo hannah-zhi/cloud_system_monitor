@@ -370,5 +370,13 @@
 - The right-side `预警/告警清单` remains visible on the subsystem detail page but is scoped to the selected subsystem: same station, same visible sources and time window, and alarm locations containing `#N子系统`.
 - Subsystem right-panel empty states use `当前子系统...` wording instead of station-level wording.
 - The subsystem detail top area contains `子系统运行` and `充放电统计`. `子系统运行` uses the same half-gauge SOC visual, status label, and real-time output pattern as station operation; `充放电统计` keeps `当日 / 当月 / 当年` switching and charge/discharge wave icons.
-- Below the top cards, render a subsystem device-part topology with transformer, PCS/converter, battery-group, Rack, and Pack nodes. These device icons must be stored as independent SVG assets in `assets/topology-icons/` and referenced by the page.
+- Below the top cards, render a subsystem topology with transformer, PCS/converter, battery-cluster, and auxiliary-system nodes. These device icons must be stored as independent SVG assets in `assets/topology-icons/` and referenced by the page.
 - Below the topology, render `子系统有功功率` and `子系统充放电表现` charts using the same dual-axis, independent date-window, clickable legend, and hover-detail rules as the station overview charts.
+
+## 28. 2026-05-27 Subsystem Topology Filtering And SOS Detail
+
+- The single-subsystem page topology panel title is `拓扑图`. The diagram renders one transformer connected to two `变流器` nodes, and each converter connects directly to 8-10 battery-cluster nodes. Do not reintroduce a battery-group layer between converter and battery cluster.
+- Topology node labels must remain visually paired with their SVG icons and not overlap connection lines. The top-right of the topology includes standalone `环控系统` and `消防系统` icon rows using the same SVG asset style as the station overview.
+- Every topology icon is a filter control for the right-side list. Battery-cluster clicks filter locations containing `RackNNN`, converter clicks filter locations containing `PCS01` or `PCS02`, and auxiliary-system clicks filter matching `环控系统` or `消防系统` records. Clicking the active icon clears that part filter.
+- In the station `安全诊断` tab, every row in `SOS 安全指数详情清单` opens a subsystem SOS detail page. This page keeps the same subsystem topology and right-side list behavior, but the right panel is titled `预警清单` and only displays warning-class records, excluding alarm and data categories.
+- The subsystem SOS detail page below the topology contains `SOS安全指数与相关数据趋势` and `#N子系统-各部件SOS安全指数分析` sections. The trend chart combines charge energy, discharge energy, and SOS index; the part-analysis area shows 电池系统、电气系统、环控系统、消防系统 cards with current index, risk tag, recommendation, issue summary, and mini trend chart.

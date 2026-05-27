@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img">
+  <defs>
+    <linearGradient id="fireBody" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#566071"/>
+      <stop offset="1" stop-color="#2a303e"/>
+    </linearGradient>
+  </defs>
+  <rect x="14" y="13" width="36" height="38" rx="5" fill="url(#fireBody)" stroke="#9aa5b8" stroke-width="1.6"/>
+  <path d="M32 22c5 6 9 10 9 16a9 9 0 0 1-18 0c0-5 4-8 7-13 0 5 4 6 5 9 1-4-1-8-3-12Z" fill="#ff526a" opacity=".88"/>
+  <path d="M32 37c2 2 4 4 4 7a4 4 0 0 1-8 0c0-2 2-4 4-7Z" fill="#ffd17a"/>
+  <path d="M23 51h18M25 9h14" stroke="#9aa5b8" stroke-width="2" stroke-linecap="round"/>
+</svg>
