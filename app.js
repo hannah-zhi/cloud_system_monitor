@@ -86,8 +86,10 @@ const state = {
   overviewChargeHitboxes: [],
   overviewChargeHover: null,
   overviewChargeHighlight: null,
-  overviewChartStartDate: "2026-02-03",
-  overviewChartEndDate: "2026-02-13",
+  overviewPowerStartDate: "2026-02-03",
+  overviewPowerEndDate: "2026-02-13",
+  overviewChargeStartDate: "2026-02-03",
+  overviewChargeEndDate: "2026-02-13",
   riskBarSort: "sosAsc",
   alarmTrendHitboxes: [],
   detailBoxHitboxes: [],
@@ -3148,7 +3150,7 @@ function subsystemAlarmSummary(station, subsystemNo) {
   const alarms = [...state.allAlarms, ...state.homeDataAlarms].filter(
     (alarm) => alarm.stationId === station.id && alarm.location.includes(`#${subsystemNo}子系统`)
   );
-  if (!alarms.length) return "当前子系统暂无预警/告警";
+  if (!alarms.length) return "当前子系统暂无告警\n当前子系统暂无预警";
   const grouped = ["一级", "二级", "三级"].map((level) => `${level}${alarms.filter((alarm) => alarm.level === level).length}`).join(" / ");
   const latest = alarms[0];
   return `${grouped}\n最新：${latest.title}\n来源：${latest.source}`;
@@ -3185,20 +3187,22 @@ function subsystemStatusClassFromAlarms(station, item, alarms) {
 function subsystemAlarmTooltipHtml(station, subsystemNo) {
   const alarms = subsystemAlarmsForStation(station, subsystemNo);
   const tone = subsystemAlarmTone(alarms);
-  if (!alarms.length) {
-    return `<div class="storage-system-tooltip ${tone}"><strong>预警/告警：0</strong><p>当前子系统暂无预警/告警</p></div>`;
-  }
   const alarmItems = alarms.filter((alarm) => homeAlarmCategory(alarm) === "alarm");
   const warningItems = alarms.filter((alarm) => homeAlarmCategory(alarm) === "warning");
   const dataItems = alarms.filter((alarm) => homeAlarmCategory(alarm) === "data");
   const alarmSeverity = alarmItems.some((alarm) => homeDeviceAlarmSeverity(alarm) === "fault") ? "fault" : alarmItems.length ? "alarm" : "none";
+  const emptyText = {
+    "告警类": "当前子系统暂无告警",
+    "预警类": "当前子系统暂无预警",
+    "数据类": "当前子系统暂无数据",
+  };
   const sectionHtml = (title, items, className) =>
     items.length
       ? `<div class="storage-tooltip-section ${className}"><strong>${title}：${items.length}</strong><ul>${items
           .slice(0, 8)
           .map((alarm) => `<li>${alarm.title}</li>`)
           .join("")}</ul></div>`
-      : `<div class="storage-tooltip-section ${className} muted"><strong>${title}：0</strong><p>暂无${title}</p></div>`;
+      : `<div class="storage-tooltip-section ${className} muted"><strong>${title}：0</strong><p>${emptyText[title] || `暂无${title}`}</p></div>`;
   return `
     <div class="storage-system-tooltip ${tone} ${alarmSeverity}">
       ${sectionHtml("告警类", alarmItems, "alarm-section")}
@@ -3322,7 +3326,7 @@ function renderStationOverview(station) {
     <article class="panel station-power-panel">
       <div class="panel-title-row">
         <div class="panel-title"><span></span>场站有功功率</div>
-        <div class="chart-date-range alarm-detail-date" data-chart-range="power"><input type="date" value="${state.overviewChartStartDate}" aria-label="开始日期" /><span>→</span><input type="date" value="${state.overviewChartEndDate}" aria-label="结束日期" /></div>
+        <div class="chart-date-range alarm-detail-date" data-chart-range="power"><input type="date" value="${state.overviewPowerStartDate}" aria-label="开始日期" /><span>→</span><input type="date" value="${state.overviewPowerEndDate}" aria-label="结束日期" /></div>
       </div>
       <div class="overview-chart-wrap">
         <canvas id="overviewPowerCanvas" width="900" height="250"></canvas>
@@ -3337,7 +3341,7 @@ function renderStationOverview(station) {
     <article class="panel charge-chart-panel">
       <div class="panel-title-row">
         <div class="panel-title"><span></span>场站充放电表现</div>
-        <div class="chart-date-range alarm-detail-date" data-chart-range="charge"><input type="date" value="${state.overviewChartStartDate}" aria-label="开始日期" /><span>→</span><input type="date" value="${state.overviewChartEndDate}" aria-label="结束日期" /></div>
+        <div class="chart-date-range alarm-detail-date" data-chart-range="charge"><input type="date" value="${state.overviewChargeStartDate}" aria-label="开始日期" /><span>→</span><input type="date" value="${state.overviewChargeEndDate}" aria-label="结束日期" /></div>
       </div>
       <div class="overview-chart-wrap">
         <canvas id="overviewChargeCanvas" width="900" height="250"></canvas>
@@ -3412,8 +3416,8 @@ function renderStorageBundleLines() {
   svg.innerHTML = `<path d="${paths.join(" ")}" />`;
 }
 
-function createOverviewChartData(station) {
-  const range = overviewChartDateRange();
+function createOverviewChartData(station, chartType = "power") {
+  const range = overviewChartDateRange(chartType);
   return range.map((date, index) => {
     const label = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
     const wave = Math.sin(index * 1.37 + Number(station.soc || 0) / 18);
@@ -3427,9 +3431,12 @@ function createOverviewChartData(station) {
   });
 }
 
-function overviewChartDateRange() {
-  const start = parseDateInputValue(state.overviewChartStartDate) || new Date(2026, 1, 3);
-  const end = parseDateInputValue(state.overviewChartEndDate) || new Date(2026, 1, 13);
+function overviewChartDateRange(chartType = "power") {
+  const isCharge = chartType === "charge";
+  const startValue = isCharge ? state.overviewChargeStartDate : state.overviewPowerStartDate;
+  const endValue = isCharge ? state.overviewChargeEndDate : state.overviewPowerEndDate;
+  const start = parseDateInputValue(startValue) || new Date(2026, 1, 3);
+  const end = parseDateInputValue(endValue) || new Date(2026, 1, 13);
   const [from, to] = start <= end ? [start, end] : [end, start];
   const maxDays = 31;
   const days = Math.min(maxDays, Math.max(1, Math.round((to - from) / 86400000) + 1));
@@ -3448,9 +3455,8 @@ function parseDateInputValue(value) {
 
 function renderOverviewCharts(station) {
   if (!els.overviewPowerCanvas || !els.overviewChargeCanvas) return;
-  const data = createOverviewChartData(station);
-  renderOverviewPowerChart(data);
-  renderOverviewChargeChart(data);
+  renderOverviewPowerChart(createOverviewChartData(station, "power"));
+  renderOverviewChargeChart(createOverviewChartData(station, "charge"));
 }
 
 function renderOverviewPowerChart(data) {
@@ -3632,10 +3638,10 @@ function handleOverviewDateClick(event) {
     const key = legendButton.dataset.series;
     if (legend.dataset.chartLegend === "power") {
       state.overviewPowerHighlight = state.overviewPowerHighlight === key ? null : key;
-      if (state.selectedStation) renderOverviewPowerChart(createOverviewChartData(state.selectedStation));
+      if (state.selectedStation) renderOverviewPowerChart(createOverviewChartData(state.selectedStation, "power"));
     } else {
       state.overviewChargeHighlight = state.overviewChargeHighlight === key ? null : key;
-      if (state.selectedStation) renderOverviewChargeChart(createOverviewChartData(state.selectedStation));
+      if (state.selectedStation) renderOverviewChargeChart(createOverviewChartData(state.selectedStation, "charge"));
     }
     const activeKey = legend.dataset.chartLegend === "power" ? state.overviewPowerHighlight : state.overviewChargeHighlight;
     legend.querySelectorAll("button").forEach((button) => button.classList.toggle("active", button.dataset.series === activeKey));
@@ -3658,9 +3664,12 @@ function handleOverviewDateChange(event) {
   const input = event.target.closest(".chart-date-range input[type='date']");
   if (!input) return;
   const range = input.closest(".chart-date-range");
+  const chartType = range?.dataset.chartRange === "charge" ? "charge" : "power";
   const inputs = [...range.querySelectorAll("input[type='date']")];
-  const oldStart = parseDateInputValue(state.overviewChartStartDate) || new Date(2026, 1, 3);
-  const oldEnd = parseDateInputValue(state.overviewChartEndDate) || new Date(2026, 1, 13);
+  const oldStartValue = chartType === "charge" ? state.overviewChargeStartDate : state.overviewPowerStartDate;
+  const oldEndValue = chartType === "charge" ? state.overviewChargeEndDate : state.overviewPowerEndDate;
+  const oldStart = parseDateInputValue(oldStartValue) || new Date(2026, 1, 3);
+  const oldEnd = parseDateInputValue(oldEndValue) || new Date(2026, 1, 13);
   const changedIndex = inputs.indexOf(input);
   let nextStart = parseDateInputValue(inputs[0]?.value) || oldStart;
   let nextEnd = parseDateInputValue(inputs[1]?.value) || oldEnd;
@@ -3668,17 +3677,26 @@ function handleOverviewDateChange(event) {
     if (changedIndex === 0) nextEnd = new Date(nextStart);
     else nextStart = new Date(nextEnd);
   }
-  state.overviewChartStartDate = formatDateInput(nextStart);
-  state.overviewChartEndDate = formatDateInput(nextEnd);
+  if (chartType === "charge") {
+    state.overviewChargeStartDate = formatDateInput(nextStart);
+    state.overviewChargeEndDate = formatDateInput(nextEnd);
+  } else {
+    state.overviewPowerStartDate = formatDateInput(nextStart);
+    state.overviewPowerEndDate = formatDateInput(nextEnd);
+  }
   syncOverviewDateInputs();
-  if (state.selectedStation) renderOverviewCharts(state.selectedStation);
+  if (state.selectedStation) {
+    const data = createOverviewChartData(state.selectedStation, chartType);
+    chartType === "charge" ? renderOverviewChargeChart(data) : renderOverviewPowerChart(data);
+  }
 }
 
 function syncOverviewDateInputs() {
   els.stationOverviewPanel?.querySelectorAll(".chart-date-range").forEach((range) => {
     const inputs = range.querySelectorAll("input[type='date']");
-    if (inputs[0]) inputs[0].value = state.overviewChartStartDate;
-    if (inputs[1]) inputs[1].value = state.overviewChartEndDate;
+    const isCharge = range.dataset.chartRange === "charge";
+    if (inputs[0]) inputs[0].value = isCharge ? state.overviewChargeStartDate : state.overviewPowerStartDate;
+    if (inputs[1]) inputs[1].value = isCharge ? state.overviewChargeEndDate : state.overviewPowerEndDate;
   });
 }
 
@@ -3693,11 +3711,11 @@ function handleOverviewCanvasHover(event, type) {
   if (!hit || hit.distance > 34) return;
   if (type === "power") {
     state.overviewPowerHover = hit;
-    renderOverviewPowerChart(createOverviewChartData(state.selectedStation));
+    renderOverviewPowerChart(createOverviewChartData(state.selectedStation, "power"));
     showOverviewTooltip(els.overviewPowerTooltip, event, `<strong>${hit.item.label}</strong><span style="color:#1689ff">有功功率 ${formatNumeric(hit.item.active)} MW</span><span style="color:#20d3c5">无功功率 ${formatNumeric(hit.item.reactive)} MVar</span><span style="color:#ffd437">荷电状态 ${formatNumeric(hit.item.soc)}</span>`);
   } else {
     state.overviewChargeHover = hit;
-    renderOverviewChargeChart(createOverviewChartData(state.selectedStation));
+    renderOverviewChargeChart(createOverviewChartData(state.selectedStation, "charge"));
     showOverviewTooltip(els.overviewChargeTooltip, event, `<strong>${hit.item.label}</strong><span style="color:#20d3c5">充电量 ${formatNumeric(hit.item.charge)} MWh</span><span style="color:#1689ff">放电量 ${formatNumeric(hit.item.discharge)} MWh</span><span style="color:#b95cff">循环次数 ${formatNumeric(hit.item.cycles)} 次</span>`);
   }
 }

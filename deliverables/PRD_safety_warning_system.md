@@ -352,3 +352,5 @@
 - Subsystem tooltip data must match the single-station right-side `预警/告警清单` base dataset: same station, same visible sources, same time window, same sort order, and same classification into warning/alarm/data.
 - Single-station overview chart date ranges must allow independent start/end selection. Changing one date must not preserve a fixed 10-day window; only correct invalid ranges where start is later than end.
 - Dual-axis chart titles must be offset from the first tick label with enough vertical spacing to avoid visual overlap.
+- Topology subsystem hover tooltips must always render separated `告警类` and `预警类` sections. Section titles and bullet dots use the corresponding alarm/warning color, item names stay white, and empty sections show `当前子系统暂无告警` or `当前子系统暂无预警`.
+- The `场站有功功率` and `场站充放电表现` chart date windows are independent; changing one chart's start/end dates must not update the other chart's date inputs or data window.

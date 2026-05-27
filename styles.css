@@ -3081,16 +3081,10 @@ h2 {
   color: #ffbf86;
 }
 
-.storage-tooltip-section.alarm-section li {
-  color: var(--alarm-color, #ffd17a);
-}
-
-.storage-tooltip-section.warning-section li {
-  color: var(--warning-color, var(--tip-color, #ff8da0));
-}
-
+.storage-tooltip-section.alarm-section li,
+.storage-tooltip-section.warning-section li,
 .storage-tooltip-section.data-section li {
-  color: #ffbf86;
+  color: #f4f7ff;
 }
 
 .storage-tooltip-section.muted strong {
