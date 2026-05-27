@@ -3050,16 +3050,16 @@ h2 {
 .storage-system-tooltip.empty {
   max-height: none;
   overflow: hidden;
-  padding: 10px 12px 12px;
+  padding: 10px 12px;
 }
 
 .storage-system-tooltip.empty .storage-tooltip-section + .storage-tooltip-section {
-  margin-top: 8px;
-  padding-top: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
 }
 
 .storage-system-tooltip.empty p {
-  margin: 12px 0 4px;
+  margin: 24px 0;
 }
 
 .storage-system-card:hover {

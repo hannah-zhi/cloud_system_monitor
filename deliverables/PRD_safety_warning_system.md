@@ -355,3 +355,4 @@
 - Topology subsystem hover tooltips must always render separated `告警类` and `预警类` sections. Section titles and bullet dots use the corresponding alarm/warning color, item names stay white, and empty sections show `当前子系统暂无告警` or `当前子系统暂无预警`.
 - The `场站有功功率` and `场站充放电表现` chart date windows are independent; changing one chart's start/end dates must not update the other chart's date inputs or data window.
 - When a topology subsystem has neither alarms nor warnings, its hover tooltip should use a compact no-scroll empty-state layout; do not show an inactive scrollbar.
+- The no-alarm/no-warning subsystem tooltip should keep the same section rhythm as populated tooltips: title, centered content area, divider line, then the next title/content area.
