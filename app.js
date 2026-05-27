@@ -956,13 +956,27 @@ function summarize(stations) {
 }
 
 function highestAlarmTypeForStation(station) {
-  const stationAlarms = state.allAlarms.filter((alarm) => alarm.stationId === station.id);
+  const stationAlarms = state.allAlarms.filter((alarm) => alarm.stationId === station.id && homeVisibleAlarm(alarm) && homeAlarmCategory(alarm) === "warning");
   if (!stationAlarms.length) return "none";
   return stationAlarms.sort((a, b) => alarmOrder(a.type) - alarmOrder(b.type))[0].type;
 }
 
 function homeVisibleAlarm(alarm) {
-  return alarm.source !== "站端预警";
+  if (alarm.source === "站端预警") return false;
+  return alarmAllowedByStationComm(alarm);
+}
+
+function alarmAllowedByStationComm(alarm) {
+  const station = stationById(alarm.stationId);
+  if (station?.comm === "offline") {
+    const category = homeAlarmCategory(alarm);
+    return category !== "warning" && category !== "alarm";
+  }
+  return true;
+}
+
+function stationById(stationId) {
+  return state.stations.find((station) => station.id === stationId);
 }
 
 function homeAlarmCategory(alarm) {
@@ -1967,7 +1981,7 @@ function handleRiskTrendHover(event) {
 }
 
 function renderAlarmDetailFilters() {
-  const alarms = state.allAlarms || [];
+  const alarms = (state.allAlarms || []).filter(alarmAllowedByStationComm);
   const statusOptions = uniqueSorted([
     "待处理",
     "排查中",
@@ -2188,6 +2202,7 @@ function filterAlarmDetailItems() {
   const end = els.alarmDetailEnd.value ? new Date(`${els.alarmDetailEnd.value}T23:59:59`) : null;
   const { level, module, name, station, location, status, source } = state.alarmDetailSelections;
   return state.allAlarms.filter((alarm) => {
+    if (!alarmAllowedByStationComm(alarm)) return false;
     const date = new Date(`${alarm.dateISO}T12:00:00`);
     const stationLabel = `${alarm.stationId}${alarm.stationName}`;
     return (
