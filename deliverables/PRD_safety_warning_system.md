@@ -380,3 +380,12 @@
 - Every topology icon is a filter control for the right-side list. Battery-cluster clicks filter locations containing `RackNNN`, converter clicks filter locations containing `PCS01` or `PCS02`, and auxiliary-system clicks filter matching `环控系统` or `消防系统` records. Clicking the active icon clears that part filter.
 - In the station `安全诊断` tab, every row in `SOS 安全指数详情清单` opens a subsystem SOS detail page. This page keeps the same subsystem topology and right-side list behavior, but the right panel is titled `预警清单` and only displays warning-class records, excluding alarm and data categories.
 - The subsystem SOS detail page below the topology contains `SOS安全指数与相关数据趋势` and `#N子系统-各部件SOS安全指数分析` sections. The trend chart combines charge energy, discharge energy, and SOS index; the part-analysis area shows 电池系统、电气系统、环控系统、消防系统 cards with current index, risk tag, recommendation, issue summary, and mini trend chart.
+
+## 29. 2026-05-27 Subsystem SOS Detail Polish
+
+- Subsystem topology connection lines should terminate at the device icons. Text labels and metrics sit beside icons, not on top of icons or connection lines. Battery-cluster nodes show only the rack number under the icon; SOC and SOH are left-aligned beside the icon, and the visible `电池簇` label is not shown in the diagram.
+- In the station `安全诊断` bar chart `各子系统 SOS 安全指数`, X-axis labels use compact subsystem numbers such as `#1`, `#2`; do not include the station ID in axis labels, and keep label thinning based on available slot width to avoid overlap.
+- The subsystem SOS detail page no longer shows the `设备基本信息` table on the left. The current subsystem SOS index is shown as a gauge card above the right-side `预警清单`, with `更新日期` below the gauge.
+- On the subsystem SOS detail right panel, hide the source summary box and use top tabs `全部 / 一级 / 二级 / 三级` for warning-level filtering.
+- `SOS安全指数与相关数据趋势` uses a bottom-centered multi-select legend. `充电能量` and `放电能量` are separate selectable series, additional sample series may be offered, and at most five series are selected at once. Hovering the chart shows values for the selected series.
+- `各部件SOS安全指数分析` omits the subsystem number in the title. Risk tags share the same pill typography; healthy uses the blue risk color. `当前指数` uses the corresponding risk color, and each mini trend supports hover details.

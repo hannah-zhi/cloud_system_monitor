@@ -2676,12 +2676,14 @@ h2 {
   position: absolute;
   z-index: 1;
   display: grid;
+  grid-template-columns: 42px max-content;
+  align-items: center;
   gap: 3px;
-  min-width: 126px;
+  min-width: 0;
   border: 0;
   border-radius: 4px;
-  padding: 4px 6px;
-  background: rgba(25, 27, 38, 0.84);
+  padding: 2px 4px;
+  background: transparent;
   color: #aeb8c8;
   font-size: 11px;
   font-family: inherit;
@@ -2689,11 +2691,28 @@ h2 {
   cursor: pointer;
 }
 
+.topology-node-icon {
+  grid-column: 1;
+  grid-row: 1;
+  display: grid;
+  place-items: center;
+}
+
 .subsystem-topology-node img {
   width: 42px;
   height: 42px;
   display: block;
   filter: drop-shadow(0 0 12px rgba(19, 199, 129, 0.22));
+}
+
+.topology-node-text {
+  grid-column: 2;
+  display: grid;
+  gap: 3px;
+  min-width: 94px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  background: rgba(25, 27, 38, 0.86);
 }
 
 .subsystem-topology-node strong,
@@ -2705,28 +2724,20 @@ h2 {
 }
 
 .hv-node {
-  left: calc(50% - 64px);
-  top: 12px;
-  justify-items: center;
-  text-align: center;
+  left: calc(50% - 21px);
+  top: 34px;
 }
 
 .pcs-node {
-  top: 156px;
-  grid-template-columns: 42px 1fr;
-  align-items: center;
-}
-
-.pcs-node img {
-  grid-row: span 3;
+  top: 136px;
 }
 
 .pcs-node.left {
-  left: 18%;
+  left: calc(25% - 21px);
 }
 
 .pcs-node.right {
-  right: 18%;
+  left: calc(75% - 21px);
 }
 
 .rack-row {
@@ -2749,12 +2760,15 @@ h2 {
 
 .rack-node {
   display: grid;
+  grid-template-columns: 48px;
+  grid-template-rows: 40px 13px 20px;
   justify-items: center;
-  gap: 2px;
+  align-items: start;
+  gap: 1px;
   border: 0;
   border-radius: 4px;
-  padding: 3px 2px;
-  background: rgba(22, 25, 35, 0.82);
+  padding: 2px 0;
+  background: transparent;
   color: #aab4c8;
   font-size: 9px;
   line-height: 1.1;
@@ -2763,6 +2777,8 @@ h2 {
 }
 
 .rack-node img {
+  grid-column: 1;
+  grid-row: 1;
   width: 32px;
   height: 40px;
   display: block;
@@ -2770,14 +2786,22 @@ h2 {
 }
 
 .rack-node strong {
+  grid-column: 1;
+  grid-row: 2;
   font-size: 10px;
 }
 
-.rack-node em {
-  color: #d9e4f4;
-  font-size: 8px;
-  font-style: normal;
+.rack-metrics {
+  grid-column: 1;
+  grid-row: 3;
+  align-self: start;
+  display: grid;
+  gap: 2px;
+  justify-items: start;
+  color: #d7e1f1;
+  font-size: 7px;
   line-height: 1;
+  white-space: nowrap;
 }
 
 .topology-filter.active {
@@ -2863,6 +2887,10 @@ h2 {
   min-height: 320px;
 }
 
+.subsystem-part-analysis-panel {
+  position: relative;
+}
+
 .subsystem-chart-tools {
   display: flex;
   align-items: center;
@@ -2873,12 +2901,22 @@ h2 {
   height: 300px;
   position: relative;
   margin-top: 8px;
-  border-bottom: 1px solid rgba(138, 146, 164, 0.7);
 }
 
 .subsystem-diagnosis-chart canvas {
   width: 100%;
   height: 100%;
+}
+
+.diagnosis-trend-legend {
+  justify-content: center;
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(138, 146, 164, 0.7);
+}
+
+.diagnosis-trend-legend button span::before {
+  background: var(--legend-color);
 }
 
 .part-analysis-grid {
@@ -2933,6 +2971,11 @@ h2 {
 .part-analysis-card.risk-low .part-analysis-head span {
   color: #71e2b6;
   background: rgba(19, 199, 129, 0.14);
+}
+
+.part-analysis-card.risk-healthy .part-analysis-head span {
+  color: #8fcfff;
+  background: rgba(18, 152, 255, 0.14);
 }
 
 .part-analysis-summary {
@@ -4206,12 +4249,97 @@ h2 {
   margin-right: 0;
 }
 
+.detail-sos-side-panel {
+  margin: 0 0 12px;
+  padding: 10px 10px 12px;
+  border: 1px solid rgba(53, 61, 83, 0.86);
+  border-radius: 4px;
+  background:
+    radial-gradient(circle at 50% 36%, rgba(18, 152, 255, 0.1), transparent 48%),
+    linear-gradient(180deg, rgba(30, 34, 47, 0.92), rgba(14, 17, 26, 0.94));
+}
+
+.detail-sos-side-panel[hidden] {
+  display: none;
+}
+
+.detail-side-gauge {
+  position: relative;
+  height: 172px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.detail-side-gauge canvas {
+  position: absolute;
+  left: 50%;
+  top: 4px;
+  width: 292px;
+  height: 174px;
+  transform: translateX(-50%);
+}
+
+.detail-side-gauge strong {
+  position: relative;
+  z-index: 1;
+  margin-top: 72px;
+  color: #f5f8ff;
+  font-size: 34px;
+  line-height: 1;
+}
+
+.detail-side-date {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  color: #8f98aa;
+  font-size: 12px;
+}
+
+.detail-side-date strong {
+  color: #e9eff9;
+}
+
 .detail-alarm-time-tools .alarm-quick-buttons button {
   font-size: 11px;
 }
 
 .detail-alarm-time-tools .alarm-date-range {
   gap: 6px;
+}
+
+.detail-alarm-panel .detail-alarm-tabs.warning-only {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  margin: 8px 8px 10px 0;
+  background: rgba(52, 56, 72, 0.72);
+}
+
+.detail-alarm-tabs.warning-only button {
+  height: 28px;
+  background: #292c38;
+}
+
+.detail-alarm-tabs.warning-only button.active {
+  background: linear-gradient(180deg, #3b4050, #2c303d);
+}
+
+.detail-alarm-tabs.warning-only button[data-type="level1"] span {
+  color: var(--red);
+}
+
+.detail-alarm-tabs.warning-only button[data-type="level2"] span {
+  color: var(--yellow);
+}
+
+.detail-alarm-tabs.warning-only button[data-type="level3"] span {
+  color: var(--green);
+}
+
+.alarm-source-summary[hidden] {
+  display: none;
 }
 
 .alarm-summary {
