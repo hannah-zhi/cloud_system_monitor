@@ -3047,6 +3047,21 @@ h2 {
   --alarm-color: #8d96aa;
 }
 
+.storage-system-tooltip.empty {
+  max-height: none;
+  overflow: hidden;
+  padding: 10px 12px 12px;
+}
+
+.storage-system-tooltip.empty .storage-tooltip-section + .storage-tooltip-section {
+  margin-top: 8px;
+  padding-top: 8px;
+}
+
+.storage-system-tooltip.empty p {
+  margin: 12px 0 4px;
+}
+
 .storage-system-card:hover {
   z-index: 6000;
 }

@@ -3191,6 +3191,7 @@ function subsystemAlarmTooltipHtml(station, subsystemNo) {
   const warningItems = alarms.filter((alarm) => homeAlarmCategory(alarm) === "warning");
   const dataItems = alarms.filter((alarm) => homeAlarmCategory(alarm) === "data");
   const alarmSeverity = alarmItems.some((alarm) => homeDeviceAlarmSeverity(alarm) === "fault") ? "fault" : alarmItems.length ? "alarm" : "none";
+  const isEmpty = !alarmItems.length && !warningItems.length && !dataItems.length;
   const emptyText = {
     "告警类": "当前子系统暂无告警",
     "预警类": "当前子系统暂无预警",
@@ -3204,7 +3205,7 @@ function subsystemAlarmTooltipHtml(station, subsystemNo) {
           .join("")}</ul></div>`
       : `<div class="storage-tooltip-section ${className} muted"><strong>${title}：0</strong><p>${emptyText[title] || `暂无${title}`}</p></div>`;
   return `
-    <div class="storage-system-tooltip ${tone} ${alarmSeverity}">
+    <div class="storage-system-tooltip ${tone} ${alarmSeverity} ${isEmpty ? "empty" : ""}">
       ${sectionHtml("告警类", alarmItems, "alarm-section")}
       ${sectionHtml("预警类", warningItems, "warning-section")}
       ${dataItems.length ? sectionHtml("数据类", dataItems, "data-section") : ""}
