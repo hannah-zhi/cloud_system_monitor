@@ -90,6 +90,8 @@ const state = {
   subsystemDiagnosisTrendHover: null,
   subsystemDiagnosisTrendSeries: new Set(["charge", "discharge"]),
   subsystemDiagnosisTrendHighlight: null,
+  subsystemDiagnosisStartDate: "2025-05-01",
+  subsystemDiagnosisEndDate: "2025-05-15",
   partAnalysisHitboxes: [],
   partAnalysisHover: null,
   overviewPowerStartDate: "2026-02-03",
@@ -3492,10 +3494,10 @@ function renderSubsystemPartsTopology(station, subsystemNo) {
     <article class="panel subsystem-parts-panel">
       <div class="panel-title"><span></span>拓扑图</div>
       <div class="subsystem-topology">
-        <svg class="subsystem-wires" viewBox="0 0 1000 390" preserveAspectRatio="none" aria-hidden="true">
-          <path d="M500 72 V126 M250 126 H750 M250 126 V158 M750 126 V158 M250 200 V258 H100 M750 200 V258 H900" />
-          ${leftRacks.map((_, index) => `<path d="M ${100 + index * 44} 258 V302" />`).join("")}
-          ${rightRacks.map((_, index) => `<path d="M ${548 + index * 44} 258 V302" />`).join("")}
+        <svg class="subsystem-wires" viewBox="0 0 1000 386" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M500 84 V126 M250 126 H750 M250 126 V145 M750 126 V145 M250 187 V252 H97 M250 252 H440 M750 187 V252 H597 M750 252 H940" />
+          ${leftRacks.map((_, index) => `<path d="M ${97 + index * 43} 252 V294" />`).join("")}
+          ${rightRacks.map((_, index) => `<path d="M ${597 + index * 43} 252 V294" />`).join("")}
         </svg>
         <div class="subsystem-aux-list" aria-label="辅助系统">
           <button class="topology-filter subsystem-aux-item${state.subsystemPartFilter?.key === hvacFilter.key ? " active" : ""}" type="button" ${topologyFilterAttribute(hvacFilter)}>
@@ -3518,14 +3520,14 @@ function renderSubsystemPartsTopology(station, subsystemNo) {
           <span class="topology-node-text"><strong>变流器 #02</strong><span>P: ${formatNumeric(snapshot.power * 0.96)} kW</span><span>Q: ${formatNumeric(snapshot.ratedPower * 8.0)} kVar</span></span>
         </button>
         <div class="rack-row left">
-          <div class="rack-group-metrics" aria-hidden="true"><span>SOC 5%</span><span>SOH 97%</span></div>
+          <div class="rack-group-metrics" aria-hidden="true"><span>SOC:</span><span>SOH:</span></div>
           ${leftRacks.map((rack) => {
             const filter = subsystemRackFilter(rack);
             return `<button class="topology-filter rack-node${state.subsystemPartFilter?.key === filter.key ? " active" : ""}" type="button" ${topologyFilterAttribute(filter)}>${renderSubsystemPartIcon("rack", `Rack ${rack}`)}<strong>${rack}</strong><span class="rack-values"><span>${formatNumeric(4.6 + (rack % 4) * 0.4)}%</span><span>${formatNumeric(97 + (rack % 3) * 0.2)}%</span></span></button>`;
           }).join("")}
         </div>
         <div class="rack-row right">
-          <div class="rack-group-metrics" aria-hidden="true"><span>SOC 5%</span><span>SOH 97%</span></div>
+          <div class="rack-group-metrics" aria-hidden="true"><span>SOC:</span><span>SOH:</span></div>
           ${rightRacks.map((rack) => {
             const filter = subsystemRackFilter(rack);
             return `<button class="topology-filter rack-node${state.subsystemPartFilter?.key === filter.key ? " active" : ""}" type="button" ${topologyFilterAttribute(filter)}>${renderSubsystemPartIcon("rack", `Rack ${rack}`)}<strong>${rack}</strong><span class="rack-values"><span>${formatNumeric(4.8 + (rack % 5) * 0.3)}%</span><span>${formatNumeric(97.1 + (rack % 4) * 0.18)}%</span></span></button>`;
@@ -3601,9 +3603,8 @@ function renderSubsystemDiagnosisDetail(station, subsystemNo, snapshot = subsyst
       <div class="panel-title-row">
         <div class="panel-title"><span></span>SOS安全指数与相关数据趋势</div>
         <div class="subsystem-chart-tools">
-          <div class="chart-date-range alarm-detail-date"><input type="date" value="2025-05-01" aria-label="开始日期" /><span>→</span><input type="date" value="2025-05-15" aria-label="结束日期" /></div>
-          <label class="diagnosis-series-select">参数筛选
-            <select id="diagnosisSeriesSelect" multiple size="1" aria-label="选择趋势参数">
+          <div class="chart-date-range alarm-detail-date" data-chart-range="diagnosis"><input type="date" value="${state.subsystemDiagnosisStartDate}" aria-label="开始日期" /><span>→</span><input type="date" value="${state.subsystemDiagnosisEndDate}" aria-label="结束日期" /></div>
+          <label class="diagnosis-series-select"><select id="diagnosisSeriesSelect" multiple size="1" aria-label="选择趋势参数">
               ${subsystemDiagnosisSeriesOptions().map((series) => `<option value="${series.key}" ${state.subsystemDiagnosisTrendSeries.has(series.key) ? "selected" : ""}>${series.label}</option>`).join("")}
             </select>
           </label>
@@ -3675,8 +3676,8 @@ function renderSubsystemDiagnosisLegend() {
 }
 
 function subsystemDiagnosisTrendData(snapshot) {
-  return Array.from({ length: 15 }, (_, index) => {
-    const day = index + 1;
+  return subsystemDiagnosisDateRange().map((date, index) => {
+    const day = date.getDate();
     const charge = round(28 + Math.sin(index * 0.9) * 18 + (index % 4) * 9 + snapshot.n * 0.8, 2);
     const discharge = round(32 + Math.cos(index * 0.72) * 20 + (index % 3) * 7 + snapshot.n * 0.6, 2);
     const sos = round(Math.max(20, Math.min(98, snapshot.score - 16 + index * 1.8 + Math.sin(index * 0.55) * 5)), 2);
@@ -3685,7 +3686,7 @@ function subsystemDiagnosisTrendData(snapshot) {
     const maxTemp = round(avgTemp + 7 + Math.cos(index * 0.7) * 2, 2);
     const cycles = round(0.12 + index * 0.018 + (snapshot.n % 4) * 0.015, 2);
     return {
-      label: `05-${String(day).padStart(2, "0")}`,
+      label: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`,
       charge,
       discharge,
       sos,
@@ -3694,6 +3695,42 @@ function subsystemDiagnosisTrendData(snapshot) {
       maxTemp,
       cycles,
     };
+  });
+}
+
+function subsystemDiagnosisDateRange() {
+  const start = parseDateInputValue(state.subsystemDiagnosisStartDate) || new Date(2025, 4, 1);
+  const end = parseDateInputValue(state.subsystemDiagnosisEndDate) || new Date(2025, 4, 15);
+  const [from, to] = start <= end ? [start, end] : [end, start];
+  const maxDays = 31;
+  const days = Math.min(maxDays, Math.max(1, Math.round((to - from) / 86400000) + 1));
+  return Array.from({ length: days }, (_, index) => {
+    const date = new Date(from);
+    date.setDate(from.getDate() + index);
+    return date;
+  });
+}
+
+function axisRangeForValues(values, fallbackMax = 100) {
+  const finite = values.filter((value) => Number.isFinite(value));
+  if (!finite.length) return { min: 0, max: fallbackMax };
+  let min = Math.min(...finite);
+  let max = Math.max(...finite);
+  if (min === max) {
+    const spread = Math.max(1, Math.abs(max) * 0.12);
+    min -= spread;
+    max += spread;
+  }
+  const padding = (max - min) * 0.16;
+  min = Math.max(0, min - padding);
+  max += padding;
+  return { min, max };
+}
+
+function axisTicks(range, count = 6) {
+  return Array.from({ length: count }, (_, index) => {
+    const value = range.max - ((range.max - range.min) * index) / Math.max(1, count - 1);
+    return Number(value || 0).toFixed(range.max - range.min > 20 ? 0 : 2);
   });
 }
 
@@ -3707,19 +3744,19 @@ function renderSubsystemDiagnosisTrend(snapshot) {
     ...subsystemDiagnosisSeriesOptions(),
   ];
   const selectedOptions = options.filter((series) => series.key === "sos" || state.subsystemDiagnosisTrendSeries.has(series.key));
-  const pad = { left: 54, right: 54, top: 34, bottom: 42 };
+  const rightSeries = selectedOptions.filter((series) => series.key !== "sos");
+  const rightRange = axisRangeForValues(rightSeries.flatMap((series) => data.map((item) => item[series.key])), 100);
+  const pad = { left: 54, right: 58, top: 34, bottom: 54 };
   clear(ctx, canvas.width, canvas.height);
   drawOverviewDualGrid(ctx, canvas, pad, {
     leftTicks: ["100", "80", "60", "40", "20", "0"],
-    rightTicks: ["200", "160", "120", "80", "40", "0"],
+    rightTicks: axisTicks(rightRange),
     leftUnit: "SOS安全指数",
-    rightUnit: "能量(kWh)",
+    rightUnit: rightSeries.length ? "参数值" : "",
   });
   const xFor = (index) => pad.left + (index / Math.max(1, data.length - 1)) * (canvas.width - pad.left - pad.right);
   const yIndex = (value) => mapLinear(value, 0, 100, canvas.height - pad.bottom, pad.top);
-  const yEnergy = (value) => mapLinear(value, 0, 200, canvas.height - pad.bottom, pad.top);
-  const yTemp = (value) => mapLinear(value, 0, 60, canvas.height - pad.bottom, pad.top);
-  const yCycles = (value) => mapLinear(value, 0, 0.9, canvas.height - pad.bottom, pad.top);
+  const yParam = (value) => mapLinear(value, rightRange.min, rightRange.max, canvas.height - pad.bottom, pad.top);
   state.subsystemDiagnosisTrendHitboxes = [];
   data.forEach((item, index) => {
     const x = xFor(index);
@@ -3727,16 +3764,16 @@ function renderSubsystemDiagnosisTrend(snapshot) {
     if (isHover) drawOverviewHoverGuide(ctx, x, pad, canvas.height);
     const barWidth = Math.max(5, Math.min(13, (canvas.width - pad.left - pad.right) / data.length / 4));
     if (state.subsystemDiagnosisTrendSeries.has("charge")) {
-      drawOverviewBar(ctx, x - barWidth - 2, yEnergy(item.charge), barWidth, canvas.height - pad.bottom - yEnergy(item.charge), "#20d3c5", seriesAlpha(state.subsystemDiagnosisTrendHighlight, "charge"));
+      drawOverviewBar(ctx, x - barWidth - 2, yParam(item.charge), barWidth, canvas.height - pad.bottom - yParam(item.charge), "#20d3c5", seriesAlpha(state.subsystemDiagnosisTrendHighlight, "charge"));
     }
     if (state.subsystemDiagnosisTrendSeries.has("discharge")) {
-      drawOverviewBar(ctx, x + 2, yEnergy(item.discharge), barWidth, canvas.height - pad.bottom - yEnergy(item.discharge), "#1689ff", seriesAlpha(state.subsystemDiagnosisTrendHighlight, "discharge"));
+      drawOverviewBar(ctx, x + 2, yParam(item.discharge), barWidth, canvas.height - pad.bottom - yParam(item.discharge), "#1689ff", seriesAlpha(state.subsystemDiagnosisTrendHighlight, "discharge"));
     }
     drawOverviewXAxis(ctx, item.label, x, canvas.height, pad, index, data.length);
     state.subsystemDiagnosisTrendHitboxes.push({ index, x, item });
   });
   selectedOptions.filter((series) => series.type === "line").forEach((series) => {
-    const mapper = series.key === "cycles" ? yCycles : series.key.includes("Temp") ? yTemp : yIndex;
+    const mapper = series.key === "sos" ? yIndex : yParam;
     const points = data.map((item, index) => ({ x: xFor(index), y: mapper(item[series.key]) }));
     const alpha = seriesAlpha(state.subsystemDiagnosisTrendHighlight, series.key);
     drawOverviewLine(ctx, points, series.color, alpha);
@@ -4271,6 +4308,23 @@ function handleOverviewDateChange(event) {
   const input = event.target.closest(".chart-date-range input[type='date']");
   if (!input) return;
   const range = input.closest(".chart-date-range");
+  if (range?.dataset.chartRange === "diagnosis") {
+    const inputs = [...range.querySelectorAll("input[type='date']")];
+    const oldStart = parseDateInputValue(state.subsystemDiagnosisStartDate) || new Date(2025, 4, 1);
+    const oldEnd = parseDateInputValue(state.subsystemDiagnosisEndDate) || new Date(2025, 4, 15);
+    const changedIndex = inputs.indexOf(input);
+    let nextStart = parseDateInputValue(inputs[0]?.value) || oldStart;
+    let nextEnd = parseDateInputValue(inputs[1]?.value) || oldEnd;
+    if (nextStart > nextEnd) {
+      if (changedIndex === 0) nextEnd = new Date(nextStart);
+      else nextStart = new Date(nextEnd);
+    }
+    state.subsystemDiagnosisStartDate = formatDateInput(nextStart);
+    state.subsystemDiagnosisEndDate = formatDateInput(nextEnd);
+    syncOverviewDateInputs();
+    if (state.selectedStation && state.selectedSubsystemNo) renderSubsystemDiagnosisTrend(subsystemSnapshot(state.selectedStation, state.selectedSubsystemNo));
+    return;
+  }
   const chartType = range?.dataset.chartRange === "charge" ? "charge" : "power";
   const inputs = [...range.querySelectorAll("input[type='date']")];
   const oldStartValue = chartType === "charge" ? state.overviewChargeStartDate : state.overviewPowerStartDate;
@@ -4306,9 +4360,15 @@ function overviewChartStation() {
 function syncOverviewDateInputs() {
   els.stationOverviewPanel?.querySelectorAll(".chart-date-range").forEach((range) => {
     const inputs = range.querySelectorAll("input[type='date']");
-    const isCharge = range.dataset.chartRange === "charge";
-    if (inputs[0]) inputs[0].value = isCharge ? state.overviewChargeStartDate : state.overviewPowerStartDate;
-    if (inputs[1]) inputs[1].value = isCharge ? state.overviewChargeEndDate : state.overviewPowerEndDate;
+    const rangeType = range.dataset.chartRange;
+    const isCharge = rangeType === "charge";
+    if (rangeType === "diagnosis") {
+      if (inputs[0]) inputs[0].value = state.subsystemDiagnosisStartDate;
+      if (inputs[1]) inputs[1].value = state.subsystemDiagnosisEndDate;
+    } else {
+      if (inputs[0]) inputs[0].value = isCharge ? state.overviewChargeStartDate : state.overviewPowerStartDate;
+      if (inputs[1]) inputs[1].value = isCharge ? state.overviewChargeEndDate : state.overviewPowerEndDate;
+    }
   });
 }
 

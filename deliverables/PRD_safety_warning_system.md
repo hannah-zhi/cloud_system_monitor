@@ -397,3 +397,11 @@
 - In `SOS安全指数与相关数据趋势`, SOS is always rendered on the left axis and always appears in the legend. Other parameters are selected from the top-right multi-select control before they render. Legend clicks only highlight/dim visible series and must not add or remove series.
 - The current SOS gauge and the `预警清单` on the subsystem SOS detail page are separate right-side cards, not content inside one shared bordered card.
 - On the regular subsystem detail page, the `子系统运行` gauge and text block should sit slightly lower so its bottom visually aligns with the charge/discharge wave icons in the adjacent `充放电统计` card.
+
+## 31. 2026-05-27 Subsystem Trend Axis And Card Spacing Refinement
+
+- Subsystem topology wires should connect to the exact top or bottom center of each icon after accounting for node padding and rack-row grid offsets.
+- Rack rows use a shared left-side `SOC:` / `SOH:` label block, while every rack only shows the two numeric values beneath its rack number.
+- `SOS安全指数与相关数据趋势` has its own start/end date state. Changing that time window must redraw the chart, update X-axis date labels, keep SOS fixed on the left axis, and auto-scale the right axis to the selected non-SOS parameters.
+- The top-right trend controls should show the date range and parameter selector directly adjacent, without a visible `参数筛选` text label.
+- The right-side current SOS gauge card needs enough vertical padding below `更新日期`, and its title inset should match the warning-list title inset.
