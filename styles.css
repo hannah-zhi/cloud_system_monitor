@@ -3051,15 +3051,28 @@ h2 {
   max-height: none;
   overflow: hidden;
   padding: 10px 12px;
+  text-align: left;
 }
 
 .storage-system-tooltip.empty .storage-tooltip-section + .storage-tooltip-section {
-  margin-top: 10px;
+  margin-top: 0;
   padding-top: 10px;
 }
 
+.storage-system-tooltip.empty strong {
+  display: block;
+  width: 100%;
+  text-align: left;
+}
+
+.storage-system-tooltip.empty .storage-tooltip-section {
+  display: block;
+  width: 100%;
+}
+
 .storage-system-tooltip.empty p {
-  margin: 24px 0;
+  margin: 24px 0 14px;
+  text-align: center;
 }
 
 .storage-system-card:hover {
