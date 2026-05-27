@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" role="img">
+  <defs>
+    <linearGradient id="clusterBody" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#596176"/>
+      <stop offset="1" stop-color="#303646"/>
+    </linearGradient>
+  </defs>
+  <rect x="10" y="18" width="52" height="38" rx="4" fill="url(#clusterBody)" stroke="#8e98ae" stroke-width="1.6"/>
+  <path d="M20 14h10v4H20zM42 14h10v4H42z" fill="#9ba5b8"/>
+  <path d="M20 37h12M40 37h12M26 31v12M46 31v12" stroke="#dce5f5" stroke-width="2" stroke-linecap="round"/>
+  <path d="M10 50h52" stroke="#151923" stroke-width="2" opacity=".35"/>
+</svg>

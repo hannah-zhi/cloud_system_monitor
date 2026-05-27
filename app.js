@@ -120,6 +120,7 @@ const state = {
   cardsCollapsed: false,
   selectedStationIds: new Set(),
   selectedStation: null,
+  selectedSubsystemNo: null,
   detailTab: "overview",
   trendRange: 7,
   sortSubsystemMode: "idAsc",
@@ -503,7 +504,7 @@ function bindEvents() {
       state.overviewChargeHover = null;
       els.overviewPowerTooltip?.classList.remove("show");
       els.overviewChargeTooltip?.classList.remove("show");
-      if (state.selectedStation) renderOverviewCharts(state.selectedStation);
+      if (state.selectedStation) renderOverviewCharts(overviewChartStation());
     }
   });
   els.stationOverviewPanel?.addEventListener("click", handleOverviewDateClick);
@@ -513,7 +514,7 @@ function bindEvents() {
     state.riskBarHoverId = null;
     renderRiskBars(state.stations);
   });
-  els.backBtn.addEventListener("click", showList);
+  els.backBtn.addEventListener("click", handleDetailBack);
   els.detailSectionTabs?.addEventListener("click", (event) => {
     const button = event.target.closest("button[data-detail-tab]");
     if (!button) return;
@@ -1086,6 +1087,7 @@ function sortOverviewStations(stations) {
 function showPage(page) {
   state.activePage = page;
   state.selectedStation = null;
+  state.selectedSubsystemNo = null;
   els.detailView.classList.remove("active-view");
   els.listView.classList.toggle("active-view", page === "overview");
   els.riskView.classList.toggle("active-view", page === "risk");
@@ -2939,6 +2941,7 @@ function showDetail(id, initialTab = "overview") {
   const station = state.stations.find((item) => item.id === id);
   if (!station) return;
   state.selectedStation = station;
+  state.selectedSubsystemNo = null;
   state.trendRange = 7;
   state.sortSubsystemMode = "idAsc";
   state.detailTableSort = { key: "score", direction: "asc" };
@@ -2959,6 +2962,8 @@ function showDetail(id, initialTab = "overview") {
   els.detailAlarmTimeButtons.querySelectorAll("button").forEach((button) => button.classList.toggle("active", button.dataset.days === "all"));
   els.detailAlarmStartDate.value = "";
   els.detailAlarmEndDate.value = "";
+  els.backBtn.textContent = "‹ 返回场站列表";
+  els.detailSectionTabs.hidden = false;
   els.listView.classList.remove("active-view");
   els.riskView.classList.remove("active-view");
   els.alarmDetailView.classList.remove("active-view");
@@ -2969,15 +2974,60 @@ function showDetail(id, initialTab = "overview") {
   window.scrollTo({ top: 0, behavior: "smooth" });
   const url = new URL(window.location.href);
   url.searchParams.set("station", station.id);
+  url.searchParams.delete("subsystem");
   window.history.replaceState({}, "", url);
+}
+
+function showSubsystemDetail(station, subsystemNo) {
+  if (!station || !subsystemNo) return;
+  state.selectedStation = station;
+  state.selectedSubsystemNo = Number(subsystemNo);
+  state.detailTab = "overview";
+  state.overviewPowerHighlight = null;
+  state.overviewChargeHighlight = null;
+  els.backBtn.textContent = "‹ 返回场站概览";
+  els.detailSectionTabs.hidden = true;
+  els.listView.classList.remove("active-view");
+  els.riskView.classList.remove("active-view");
+  els.alarmDetailView.classList.remove("active-view");
+  els.detailView.classList.add("active-view");
+  showDetailTab("overview", false);
+  renderSubsystemDetail(station, state.selectedSubsystemNo);
+  renderDetailAlarms(station);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  const url = new URL(window.location.href);
+  url.searchParams.set("station", station.id);
+  url.searchParams.set("subsystem", String(state.selectedSubsystemNo));
+  url.searchParams.delete("tab");
+  window.history.replaceState({}, "", url);
+}
+
+function handleDetailBack() {
+  if (state.selectedSubsystemNo && state.selectedStation) {
+    state.selectedSubsystemNo = null;
+    els.backBtn.textContent = "‹ 返回场站列表";
+    els.detailSectionTabs.hidden = false;
+    showDetailTab("overview", false);
+    renderDetail(state.selectedStation);
+    const url = new URL(window.location.href);
+    url.searchParams.set("station", state.selectedStation.id);
+    url.searchParams.delete("subsystem");
+    window.history.replaceState({}, "", url);
+    return;
+  }
+  showList();
 }
 
 function showList() {
   els.detailView.classList.remove("active-view");
   showPage(state.activePage || "overview");
   state.selectedStation = null;
+  state.selectedSubsystemNo = null;
+  els.detailSectionTabs.hidden = false;
+  els.backBtn.textContent = "‹ 返回场站列表";
   const url = new URL(window.location.href);
   url.searchParams.delete("station");
+  url.searchParams.delete("subsystem");
   window.history.replaceState({}, "", url);
 }
 
@@ -3171,13 +3221,15 @@ function subsystemAlarmSummary(station, subsystemNo) {
 }
 
 function subsystemAlarmsForStation(station, subsystemNo) {
-  return detailBaseAlarmsForStation(station).filter((alarm) => alarm.location.includes(`#${subsystemNo}子系统`));
+  return detailBaseAlarmsForStation(station, subsystemNo);
 }
 
-function detailBaseAlarmsForStation(station) {
+function detailBaseAlarmsForStation(station, subsystemNo = null) {
+  const subsystemToken = subsystemNo ? `#${subsystemNo}子系统` : "";
   const stationAlarms = [...state.allAlarms, ...state.homeDataAlarms]
     .filter((alarm) => alarm.stationId === station.id)
     .filter(homeVisibleAlarm)
+    .filter((alarm) => !subsystemToken || alarm.location.includes(subsystemToken))
     .sort((a, b) => alarmOrder(a.type) - alarmOrder(b.type) || b.dateISO.localeCompare(a.dateISO));
   return filterAlarmsByWindow(
     stationAlarms,
@@ -3234,6 +3286,204 @@ function subsystemAlarmTone(alarms) {
   return "none";
 }
 
+function subsystemSnapshot(station, subsystemNo) {
+  const n = Number(subsystemNo) || 1;
+  const total = Math.max(1, Math.round(Number(station.subsystemCount || 1)));
+  const status = subsystemRunState(station, n, total);
+  const localSoc = n % 7 === 0 ? 95 : n % 5 === 0 ? 47.9 : Math.max(5, Math.min(98, Number(station.soc || 0) + Math.sin(n * 0.92) * 8 - 4));
+  const localSoh = round(96.8 + ((n * 0.23 + stationIndexSeed(station) * 0.01) % 2.6), 2);
+  const localPower = subsystemPowerByState(station, status, n);
+  const unitEnergy = Number(station.ratedEnergy || 0) / Math.max(1, total);
+  const availableEnergy = round(unitEnergy * (localSoc / 100), 2);
+  const score = state.detailSubsystems.find((item) => item.name === subsystemDisplayName(station, n))?.score
+    ?? createSubsystems(station)[n - 1]?.score
+    ?? station.sos;
+  return {
+    n,
+    name: subsystemDisplayName(station, n),
+    status,
+    statusClass: operationStateClass(status),
+    soc: round(localSoc, 2),
+    soh: localSoh,
+    power: localPower,
+    ratedPower: round(Number(station.rated || 0) / Math.max(1, total), 2),
+    ratedEnergy: round(unitEnergy, 2),
+    availableEnergy,
+    score,
+    risk: getRisk(score),
+  };
+}
+
+function subsystemChartStation(station, subsystemNo) {
+  const snapshot = subsystemSnapshot(station, subsystemNo);
+  return {
+    ...station,
+    active: snapshot.power,
+    soc: snapshot.soc,
+    rated: snapshot.ratedPower,
+    ratedEnergy: snapshot.ratedEnergy,
+    sos: snapshot.score,
+    risk: snapshot.risk,
+  };
+}
+
+function renderSubsystemMetricCards(station, subsystemNo) {
+  const snapshot = subsystemSnapshot(station, subsystemNo);
+  const chargeMultiplierMap = { day: 1, month: 28, year: 330 };
+  const chargeMultiplier = chargeMultiplierMap[state.chargeStatWindow] || chargeMultiplierMap.day;
+  const charge = Math.max(0, snapshot.ratedEnergy * (0.22 + snapshot.soc / 420) * chargeMultiplier);
+  const discharge = Math.max(0, snapshot.ratedEnergy * (0.18 + Math.max(0, 100 - snapshot.soc) / 460) * chargeMultiplier);
+  return `
+    <div class="subsystem-overview-top">
+      <article class="panel station-run-panel subsystem-run-panel">
+        <div class="panel-title"><span></span>子系统运行</div>
+        <div class="run-overview">
+          <div class="soc-gauge-mini">
+            ${renderMiniSocGauge(snapshot.soc)}
+            <div class="soc-gauge-readout"><span>子系统SOC</span><strong>${formatNumeric(snapshot.soc)}<em>%</em></strong></div>
+          </div>
+          <div class="run-kpis">
+            <div><span>子系统运行状态</span><strong class="${snapshot.statusClass}">${snapshot.status}</strong></div>
+            <div><span>子系统实时出力</span><strong>${formatNumeric(snapshot.power)} <em>kW</em></strong></div>
+          </div>
+        </div>
+      </article>
+      <article class="panel storage-summary-panel subsystem-charge-panel">
+        <div class="panel-title-row">
+          <div class="panel-title"><span></span>充放电统计</div>
+          <div class="charge-stat-tabs" aria-label="子系统充放电统计时间窗口">
+            <button class="${state.chargeStatWindow === "day" ? "active" : ""}" data-charge-window="day" type="button">当日</button>
+            <button class="${state.chargeStatWindow === "month" ? "active" : ""}" data-charge-window="month" type="button">当月</button>
+            <button class="${state.chargeStatWindow === "year" ? "active" : ""}" data-charge-window="year" type="button">当年</button>
+          </div>
+        </div>
+        <div class="charge-stat-body">
+          <div class="charge-stat-item">${renderEnergyWave(charge, "充电能量", "charge-wave")}</div>
+          <div class="charge-stat-divider"></div>
+          <div class="charge-stat-item">${renderEnergyWave(discharge, "放电能量", "discharge-wave")}</div>
+        </div>
+      </article>
+    </div>`;
+}
+
+function renderSubsystemPartIcon(type, label) {
+  const iconMap = {
+    hv: "hv-box.svg",
+    pcs: "pcs.svg",
+    cluster: "battery-cluster.svg",
+    rack: "battery-rack.svg",
+    pack: "battery-pack.svg",
+  };
+  return `<img src="assets/topology-icons/${iconMap[type] || iconMap.pack}" alt="${label}" loading="lazy" />`;
+}
+
+function renderSubsystemPartsTopology(station, subsystemNo) {
+  const snapshot = subsystemSnapshot(station, subsystemNo);
+  const rackBase = subsystemNo * 100;
+  const racks = Array.from({ length: 9 }, (_, index) => rackBase + index + 1);
+  return `
+    <article class="panel subsystem-parts-panel">
+      <div class="panel-title"><span></span>设备部件拓扑图</div>
+      <div class="subsystem-topology">
+        <div class="subsystem-line subsystem-line-main"></div>
+        <div class="subsystem-line subsystem-line-left"></div>
+        <div class="subsystem-line subsystem-line-right"></div>
+        <div class="subsystem-topology-node hv-node">
+          ${renderSubsystemPartIcon("hv", "箱变")}
+          <strong>箱变 #${String(subsystemNo).padStart(2, "0")}</strong>
+          <span>Ia: ${formatNumeric(2.1 + subsystemNo * 0.08)} A</span>
+          <span>Q: ${formatNumeric(snapshot.ratedPower * 18)} kVar</span>
+        </div>
+        <div class="subsystem-topology-node pcs-node left">
+          ${renderSubsystemPartIcon("pcs", "变流器")}
+          <strong>变流器 #01</strong>
+          <span>P: ${formatNumeric(snapshot.power)} kW</span>
+          <span>Q: ${formatNumeric(snapshot.ratedPower * 8.2)} kVar</span>
+        </div>
+        <div class="subsystem-topology-node pcs-node right">
+          ${renderSubsystemPartIcon("pcs", "变流器")}
+          <strong>变流器 #02</strong>
+          <span>P: ${formatNumeric(snapshot.power * 0.96)} kW</span>
+          <span>Q: ${formatNumeric(snapshot.ratedPower * 8.0)} kVar</span>
+        </div>
+        <div class="subsystem-topology-node cluster-node left">
+          ${renderSubsystemPartIcon("cluster", "电池组")}
+          <strong>电池组 #01</strong>
+          <span>V: 1.3 kV</span>
+          <span>SOC: ${formatNumeric(snapshot.soc)} %</span>
+          <span>SOH: ${formatNumeric(snapshot.soh)} %</span>
+        </div>
+        <div class="subsystem-topology-node cluster-node right">
+          ${renderSubsystemPartIcon("cluster", "电池组")}
+          <strong>电池组 #02</strong>
+          <span>V: 1.3 kV</span>
+          <span>SOC: ${formatNumeric(Math.max(0, snapshot.soc - 1.3))} %</span>
+          <span>SOH: ${formatNumeric(snapshot.soh - 0.2)} %</span>
+        </div>
+        <div class="rack-row left">
+          ${racks.map((rack) => `<div class="rack-node">${renderSubsystemPartIcon("rack", `Rack ${rack}`)}<strong>${rack}</strong><span>SOC ${formatNumeric(4.6 + (rack % 4) * 0.4)}%</span><span>SOH ${formatNumeric(97 + (rack % 3) * 0.2)}%</span></div>`).join("")}
+        </div>
+        <div class="rack-row right">
+          ${racks.map((rack) => `<div class="rack-node">${renderSubsystemPartIcon("pack", `Pack ${rack + 100}`)}<strong>${rack + 100}</strong><span>SOC ${formatNumeric(4.8 + (rack % 5) * 0.3)}%</span><span>SOH ${formatNumeric(97.1 + (rack % 4) * 0.18)}%</span></div>`).join("")}
+        </div>
+      </div>
+    </article>`;
+}
+
+function renderSubsystemDetail(station, subsystemNo) {
+  const snapshot = subsystemSnapshot(station, subsystemNo);
+  const risk = riskMeta[snapshot.risk];
+  els.detailTitle.textContent = snapshot.name;
+  els.detailComm.textContent = commMeta[station.comm].label;
+  els.detailComm.style.borderColor = commMeta[station.comm].color;
+  els.detailComm.style.color = commMeta[station.comm].color;
+  els.detailRisk.textContent = risk.label;
+  els.detailRisk.style.borderColor = risk.color;
+  els.detailRisk.style.color = risk.color;
+  els.detailSos.textContent = `SOS ${formatSosValue(snapshot.score)}`;
+  els.detailSos.style.borderColor = risk.color;
+  els.detailSos.style.color = risk.color;
+  els.stationOverviewPanel.innerHTML = `
+    ${renderSubsystemMetricCards(station, subsystemNo)}
+    ${renderSubsystemPartsTopology(station, subsystemNo)}
+    <article class="panel station-power-panel subsystem-chart-panel">
+      <div class="panel-title-row">
+        <div class="panel-title"><span></span>子系统有功功率</div>
+        <div class="chart-date-range alarm-detail-date" data-chart-range="power"><input type="date" value="${state.overviewPowerStartDate}" aria-label="开始日期" /><span>→</span><input type="date" value="${state.overviewPowerEndDate}" aria-label="结束日期" /></div>
+      </div>
+      <div class="overview-chart-wrap">
+        <canvas id="overviewPowerCanvas" width="900" height="250"></canvas>
+        <div id="overviewPowerTooltip" class="risk-bars-tooltip"></div>
+      </div>
+      <div class="chart-legend interactive-chart-legend" data-chart-legend="power">
+        <button class="${state.overviewPowerHighlight === "active" ? "active" : ""}" data-series="active" type="button"><span class="blue-line">有功功率</span></button>
+        <button class="${state.overviewPowerHighlight === "reactive" ? "active" : ""}" data-series="reactive" type="button"><span class="cyan-line">无功功率</span></button>
+        <button class="${state.overviewPowerHighlight === "soc" ? "active" : ""}" data-series="soc" type="button"><span class="yellow-line">荷电状态</span></button>
+      </div>
+    </article>
+    <article class="panel charge-chart-panel subsystem-chart-panel">
+      <div class="panel-title-row">
+        <div class="panel-title"><span></span>子系统充放电表现</div>
+        <div class="chart-date-range alarm-detail-date" data-chart-range="charge"><input type="date" value="${state.overviewChargeStartDate}" aria-label="开始日期" /><span>→</span><input type="date" value="${state.overviewChargeEndDate}" aria-label="结束日期" /></div>
+      </div>
+      <div class="overview-chart-wrap">
+        <canvas id="overviewChargeCanvas" width="900" height="250"></canvas>
+        <div id="overviewChargeTooltip" class="risk-bars-tooltip"></div>
+      </div>
+      <div class="chart-legend interactive-chart-legend" data-chart-legend="charge">
+        <button class="${state.overviewChargeHighlight === "charge" ? "active" : ""}" data-series="charge" type="button"><span class="teal-bar">充电量</span></button>
+        <button class="${state.overviewChargeHighlight === "discharge" ? "active" : ""}" data-series="discharge" type="button"><span class="blue-bar">放电量</span></button>
+        <button class="${state.overviewChargeHighlight === "cycles" ? "active" : ""}" data-series="cycles" type="button"><span class="purple-line">循环次数</span></button>
+      </div>
+    </article>`;
+  els.overviewPowerCanvas = document.getElementById("overviewPowerCanvas");
+  els.overviewPowerTooltip = document.getElementById("overviewPowerTooltip");
+  els.overviewChargeCanvas = document.getElementById("overviewChargeCanvas");
+  els.overviewChargeTooltip = document.getElementById("overviewChargeTooltip");
+  renderOverviewCharts(subsystemChartStation(station, subsystemNo));
+  syncDetailAlarmPanelHeight();
+}
+
 function renderStationOverview(station) {
   if (!els.stationOverviewPanel) return;
   const systemCount = Math.max(1, Math.round(Number(station.subsystemCount || 12)));
@@ -3265,7 +3515,7 @@ function renderStationOverview(station) {
     const displayStatus = subsystemStatusFromAlarms(station, item, subsystemAlarms);
     const displayStatusClass = subsystemStatusClassFromAlarms(station, item, subsystemAlarms);
     return `
-    <div class="storage-system-card ${displayStatusClass} alarm-${alarmTone}" data-system="${item.n}">
+    <div class="storage-system-card ${displayStatusClass} alarm-${alarmTone}" data-system="${item.n}" role="button" tabindex="0" aria-label="查看${subsystemDisplayName(station, item.n)}">
       <div class="storage-system-head"><strong>${subsystemDisplayName(station, item.n)}</strong><span class="system-status-pill ${displayStatusClass}">${displayStatus}</span></div>
       <div class="system-row"><span>系统有功(PCS)功率</span><strong>${formatNumeric(item.localPower)} kW</strong></div>
       <div class="system-row"><span>系统SOC</span><strong>${formatNumeric(item.localSoc)} %</strong></div>
@@ -3373,8 +3623,22 @@ function renderStationOverview(station) {
   els.overviewChargeCanvas = document.getElementById("overviewChargeCanvas");
   els.overviewChargeTooltip = document.getElementById("overviewChargeTooltip");
   requestAnimationFrame(renderStorageBundleLines);
+  bindSubsystemCardNavigation(station);
   renderOverviewCharts(station);
   syncDetailAlarmPanelHeight();
+}
+
+function bindSubsystemCardNavigation(station) {
+  els.stationOverviewPanel?.querySelectorAll(".storage-system-card[data-system]").forEach((card) => {
+    const open = () => showSubsystemDetail(station, Number(card.dataset.system));
+    card.addEventListener("click", open);
+    card.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        open();
+      }
+    });
+  });
 }
 
 function syncDetailAlarmPanelHeight() {
@@ -3653,10 +3917,10 @@ function handleOverviewDateClick(event) {
     const key = legendButton.dataset.series;
     if (legend.dataset.chartLegend === "power") {
       state.overviewPowerHighlight = state.overviewPowerHighlight === key ? null : key;
-      if (state.selectedStation) renderOverviewPowerChart(createOverviewChartData(state.selectedStation, "power"));
+      if (state.selectedStation) renderOverviewPowerChart(createOverviewChartData(overviewChartStation(), "power"));
     } else {
       state.overviewChargeHighlight = state.overviewChargeHighlight === key ? null : key;
-      if (state.selectedStation) renderOverviewChargeChart(createOverviewChartData(state.selectedStation, "charge"));
+      if (state.selectedStation) renderOverviewChargeChart(createOverviewChartData(overviewChartStation(), "charge"));
     }
     const activeKey = legend.dataset.chartLegend === "power" ? state.overviewPowerHighlight : state.overviewChargeHighlight;
     legend.querySelectorAll("button").forEach((button) => button.classList.toggle("active", button.dataset.series === activeKey));
@@ -3665,7 +3929,8 @@ function handleOverviewDateClick(event) {
   const chargeButton = event.target.closest("[data-charge-window]");
   if (chargeButton) {
     state.chargeStatWindow = chargeButton.dataset.chargeWindow;
-    if (state.selectedStation) renderStationOverview(state.selectedStation);
+    if (state.selectedStation && state.selectedSubsystemNo) renderSubsystemDetail(state.selectedStation, state.selectedSubsystemNo);
+    else if (state.selectedStation) renderStationOverview(state.selectedStation);
     return;
   }
   const range = event.target.closest(".chart-date-range");
@@ -3701,9 +3966,14 @@ function handleOverviewDateChange(event) {
   }
   syncOverviewDateInputs();
   if (state.selectedStation) {
-    const data = createOverviewChartData(state.selectedStation, chartType);
+    const data = createOverviewChartData(overviewChartStation(), chartType);
     chartType === "charge" ? renderOverviewChargeChart(data) : renderOverviewPowerChart(data);
   }
+}
+
+function overviewChartStation() {
+  if (state.selectedStation && state.selectedSubsystemNo) return subsystemChartStation(state.selectedStation, state.selectedSubsystemNo);
+  return state.selectedStation;
 }
 
 function syncOverviewDateInputs() {
@@ -3726,11 +3996,11 @@ function handleOverviewCanvasHover(event, type) {
   if (!hit || hit.distance > 34) return;
   if (type === "power") {
     state.overviewPowerHover = hit;
-    renderOverviewPowerChart(createOverviewChartData(state.selectedStation, "power"));
+    renderOverviewPowerChart(createOverviewChartData(overviewChartStation(), "power"));
     showOverviewTooltip(els.overviewPowerTooltip, event, `<strong>${hit.item.label}</strong><span style="color:#1689ff">有功功率 ${formatNumeric(hit.item.active)} MW</span><span style="color:#20d3c5">无功功率 ${formatNumeric(hit.item.reactive)} MVar</span><span style="color:#ffd437">荷电状态 ${formatNumeric(hit.item.soc)}</span>`);
   } else {
     state.overviewChargeHover = hit;
-    renderOverviewChargeChart(createOverviewChartData(state.selectedStation, "charge"));
+    renderOverviewChargeChart(createOverviewChartData(overviewChartStation(), "charge"));
     showOverviewTooltip(els.overviewChargeTooltip, event, `<strong>${hit.item.label}</strong><span style="color:#20d3c5">充电量 ${formatNumeric(hit.item.charge)} MWh</span><span style="color:#1689ff">放电量 ${formatNumeric(hit.item.discharge)} MWh</span><span style="color:#b95cff">循环次数 ${formatNumeric(hit.item.cycles)} 次</span>`);
   }
 }
@@ -4159,10 +4429,11 @@ function handleBoxHover(event) {
 }
 
 function renderDetailAlarms(station) {
-  const rangeAlarms = detailBaseAlarmsForStation(station);
+  const subsystemNo = state.selectedSubsystemNo;
+  const rangeAlarms = detailBaseAlarmsForStation(station, subsystemNo);
   const categoryAlarms = rangeAlarms.filter((alarm) => state.detailAlarmCategory === "all" || homeAlarmCategory(alarm) === state.detailAlarmCategory);
   const alarms = categoryAlarms.filter((alarm) => homeAlarmSubfilterMatch(alarm, state.detailAlarmSubfilter));
-  els.detailAlarmSubtitle.textContent = `${station.id}${station.name}`;
+  els.detailAlarmSubtitle.textContent = subsystemNo ? subsystemDisplayName(station, subsystemNo) : `${station.id}${station.name}`;
   els.detailAlarmCountAll.textContent = rangeAlarms.length;
   els.detailAlarmCountLevel1.textContent = rangeAlarms.filter((alarm) => homeAlarmCategory(alarm) === "warning" && alarm.type === "level1").length;
   els.detailAlarmCountLevel2.textContent = rangeAlarms.filter((alarm) => homeAlarmCategory(alarm) === "warning" && alarm.type === "level2").length;
@@ -4208,7 +4479,9 @@ function renderDetailAlarms(station) {
         )
         .join("")
     : `<div class="empty detail-alarm-empty">${
-        state.detailAlarmCategory === "all" ? "当前场站暂无预警/告警" : `当前场站无${homeAlarmEmptyLabel(state.detailAlarmCategory)}`
+        state.detailAlarmCategory === "all"
+          ? `当前${subsystemNo ? "子系统" : "场站"}暂无预警/告警`
+          : `当前${subsystemNo ? "子系统" : "场站"}无${homeAlarmEmptyLabel(state.detailAlarmCategory)}`
       }</div>`;
   els.detailAlarmList.querySelectorAll(".alarm-item").forEach((item) => {
     item.addEventListener("click", () => {
@@ -4486,6 +4759,12 @@ function openStationFromUrl() {
   const stationId = params.get("station");
   if (!stationId) return;
   showDetail(stationId);
+  const subsystemNo = Number(params.get("subsystem"));
+  if (Number.isFinite(subsystemNo) && subsystemNo > 0) {
+    const station = state.stations.find((item) => item.id === stationId);
+    if (station) showSubsystemDetail(station, subsystemNo);
+    return;
+  }
   if (params.get("tab") === "diagnosis") showDetailTab("diagnosis");
 }
 

@@ -363,3 +363,12 @@
 - Stations whose communication status is `离线` must not surface device-alarm-class records (`告警/故障`) in central monitoring lists, station-card alarm states, single-station right-side lists, topology subsystem status, or subsystem hover tooltips.
 - Offline stations may still surface `预警` records and `数据告警` records where applicable. Warning/prewarning records continue to drive warning counts, lists, subsystem borders, and tooltip warning sections.
 - Alarm-management filters and table data should also exclude device-alarm-class records for offline stations while retaining their warning/prewarning records.
+
+## 27. 2026-05-27 Subsystem Detail Page
+
+- In single-station `场站概览`, every topology subsystem card opens a subsystem detail page. The detail shell is reused, the back button changes to `返回场站概览`, and returning restores the original station overview.
+- The right-side `预警/告警清单` remains visible on the subsystem detail page but is scoped to the selected subsystem: same station, same visible sources and time window, and alarm locations containing `#N子系统`.
+- Subsystem right-panel empty states use `当前子系统...` wording instead of station-level wording.
+- The subsystem detail top area contains `子系统运行` and `充放电统计`. `子系统运行` uses the same half-gauge SOC visual, status label, and real-time output pattern as station operation; `充放电统计` keeps `当日 / 当月 / 当年` switching and charge/discharge wave icons.
+- Below the top cards, render a subsystem device-part topology with transformer, PCS/converter, battery-group, Rack, and Pack nodes. These device icons must be stored as independent SVG assets in `assets/topology-icons/` and referenced by the page.
+- Below the topology, render `子系统有功功率` and `子系统充放电表现` charts using the same dual-axis, independent date-window, clickable legend, and hover-detail rules as the station overview charts.

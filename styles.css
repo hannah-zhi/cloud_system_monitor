@@ -909,6 +909,10 @@ h2 {
   border-bottom: 1px solid rgba(59, 65, 86, 0.78);
 }
 
+.detail-section-tabs[hidden] {
+  display: none;
+}
+
 .detail-section-tabs button {
   min-width: 108px;
   height: 38px;
@@ -2601,6 +2605,194 @@ h2 {
   flex: 0 0 auto;
   white-space: nowrap;
   font-size: 13px;
+}
+
+.subsystem-overview-top {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.9fr) minmax(420px, 1.1fr);
+  gap: 12px;
+  min-width: 0;
+}
+
+.subsystem-run-panel,
+.subsystem-charge-panel {
+  min-height: 166px;
+}
+
+.subsystem-run-panel .run-overview {
+  grid-template-columns: 126px 148px;
+  gap: 22px;
+}
+
+.subsystem-charge-panel .charge-stat-body {
+  min-height: 116px;
+}
+
+.storage-system-card {
+  cursor: pointer;
+}
+
+.storage-system-card:focus-visible {
+  outline: 2px solid rgba(22, 137, 255, 0.82);
+  outline-offset: 3px;
+}
+
+.subsystem-parts-panel {
+  min-height: 430px;
+  overflow: hidden;
+}
+
+.subsystem-topology {
+  position: relative;
+  min-height: 382px;
+  margin-top: 8px;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(138, 146, 164, 0.7);
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 42px 42px;
+}
+
+.subsystem-line {
+  position: absolute;
+  z-index: 0;
+  background: rgba(145, 153, 176, 0.74);
+  box-shadow: 0 0 8px rgba(145, 153, 176, 0.12);
+}
+
+.subsystem-line-main {
+  left: 50%;
+  top: 78px;
+  width: 2px;
+  height: 104px;
+}
+
+.subsystem-line-left,
+.subsystem-line-right {
+  top: 176px;
+  width: 32%;
+  height: 2px;
+}
+
+.subsystem-line-left {
+  left: 18%;
+}
+
+.subsystem-line-right {
+  right: 18%;
+}
+
+.subsystem-topology-node {
+  position: absolute;
+  z-index: 1;
+  display: grid;
+  gap: 3px;
+  min-width: 132px;
+  color: #aeb8c8;
+  font-size: 11px;
+}
+
+.subsystem-topology-node img {
+  width: 42px;
+  height: 42px;
+  display: block;
+  filter: drop-shadow(0 0 12px rgba(19, 199, 129, 0.22));
+}
+
+.subsystem-topology-node strong,
+.rack-node strong {
+  color: #e8eef9;
+  font-size: 12px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.hv-node {
+  left: calc(50% - 66px);
+  top: 8px;
+  justify-items: center;
+  text-align: center;
+}
+
+.pcs-node {
+  top: 154px;
+  grid-template-columns: 42px 1fr;
+  align-items: center;
+}
+
+.pcs-node img {
+  grid-row: span 3;
+}
+
+.pcs-node.left {
+  left: 12%;
+}
+
+.pcs-node.right {
+  right: 12%;
+}
+
+.cluster-node {
+  top: 226px;
+  grid-template-columns: 48px 1fr;
+  align-items: center;
+}
+
+.cluster-node img {
+  width: 48px;
+  height: 48px;
+  grid-row: span 4;
+}
+
+.cluster-node.left {
+  left: 18%;
+}
+
+.cluster-node.right {
+  right: 18%;
+}
+
+.rack-row {
+  position: absolute;
+  z-index: 1;
+  bottom: 12px;
+  display: grid;
+  width: 42%;
+  grid-template-columns: repeat(9, minmax(26px, 1fr));
+  gap: 5px;
+}
+
+.rack-row.left {
+  left: 4%;
+}
+
+.rack-row.right {
+  right: 4%;
+}
+
+.rack-node {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  color: #aab4c8;
+  font-size: 9px;
+  line-height: 1.1;
+}
+
+.rack-node img {
+  width: 32px;
+  height: 40px;
+  display: block;
+  filter: drop-shadow(0 0 10px rgba(19, 199, 129, 0.2));
+}
+
+.rack-node strong {
+  font-size: 10px;
+}
+
+.subsystem-chart-panel {
+  min-height: 334px;
 }
 
 .topology-panel {
@@ -6251,6 +6443,22 @@ th {
     height: auto;
     min-height: 420px;
   }
+
+  .subsystem-topology {
+    min-height: 360px;
+  }
+
+  .subsystem-topology-node {
+    min-width: 112px;
+  }
+
+  .pcs-node.left {
+    left: 8%;
+  }
+
+  .pcs-node.right {
+    right: 8%;
+  }
 }
 
 @media (max-width: 980px) {
@@ -6263,8 +6471,17 @@ th {
   }
 
   .detail-overview-layout,
-  .station-overview-top {
+  .station-overview-top,
+  .subsystem-overview-top {
     grid-template-columns: 1fr;
+  }
+
+  .subsystem-topology {
+    min-width: 760px;
+  }
+
+  .subsystem-parts-panel {
+    overflow-x: auto;
   }
 
   .alarm-panel {
