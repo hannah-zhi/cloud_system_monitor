@@ -88,7 +88,8 @@ const state = {
   overviewChargeHighlight: null,
   subsystemDiagnosisTrendHitboxes: [],
   subsystemDiagnosisTrendHover: null,
-  subsystemDiagnosisTrendSeries: new Set(["charge", "discharge", "sos"]),
+  subsystemDiagnosisTrendSeries: new Set(["charge", "discharge"]),
+  subsystemDiagnosisTrendHighlight: null,
   partAnalysisHitboxes: [],
   partAnalysisHover: null,
   overviewPowerStartDate: "2026-02-03",
@@ -3009,6 +3010,7 @@ function showSubsystemDetail(station, subsystemNo, mode = "overview") {
   state.subsystemPageMode = mode === "diagnosis" ? "diagnosis" : "overview";
   state.subsystemPartFilter = null;
   state.subsystemDiagnosisTrendHover = null;
+  state.subsystemDiagnosisTrendHighlight = null;
   state.partAnalysisHover = null;
   state.detailTab = "overview";
   state.overviewPowerHighlight = null;
@@ -3491,9 +3493,9 @@ function renderSubsystemPartsTopology(station, subsystemNo) {
       <div class="panel-title"><span></span>拓扑图</div>
       <div class="subsystem-topology">
         <svg class="subsystem-wires" viewBox="0 0 1000 390" preserveAspectRatio="none" aria-hidden="true">
-          <path d="M500 76 V128 M250 128 H750 M250 128 V158 M750 128 V158 M250 202 V258 H76 M750 202 V258 H924" />
-          ${leftRacks.map((_, index) => `<path d="M ${76 + index * 44} 258 V302" />`).join("")}
-          ${rightRacks.map((_, index) => `<path d="M ${572 + index * 44} 258 V302" />`).join("")}
+          <path d="M500 72 V126 M250 126 H750 M250 126 V158 M750 126 V158 M250 200 V258 H100 M750 200 V258 H900" />
+          ${leftRacks.map((_, index) => `<path d="M ${100 + index * 44} 258 V302" />`).join("")}
+          ${rightRacks.map((_, index) => `<path d="M ${548 + index * 44} 258 V302" />`).join("")}
         </svg>
         <div class="subsystem-aux-list" aria-label="辅助系统">
           <button class="topology-filter subsystem-aux-item${state.subsystemPartFilter?.key === hvacFilter.key ? " active" : ""}" type="button" ${topologyFilterAttribute(hvacFilter)}>
@@ -3516,15 +3518,17 @@ function renderSubsystemPartsTopology(station, subsystemNo) {
           <span class="topology-node-text"><strong>变流器 #02</strong><span>P: ${formatNumeric(snapshot.power * 0.96)} kW</span><span>Q: ${formatNumeric(snapshot.ratedPower * 8.0)} kVar</span></span>
         </button>
         <div class="rack-row left">
+          <div class="rack-group-metrics" aria-hidden="true"><span>SOC 5%</span><span>SOH 97%</span></div>
           ${leftRacks.map((rack) => {
             const filter = subsystemRackFilter(rack);
-            return `<button class="topology-filter rack-node${state.subsystemPartFilter?.key === filter.key ? " active" : ""}" type="button" ${topologyFilterAttribute(filter)}>${renderSubsystemPartIcon("rack", `Rack ${rack}`)}<strong>${rack}</strong><span class="rack-metrics"><span>SOC ${formatNumeric(4.6 + (rack % 4) * 0.4)}%</span><span>SOH ${formatNumeric(97 + (rack % 3) * 0.2)}%</span></span></button>`;
+            return `<button class="topology-filter rack-node${state.subsystemPartFilter?.key === filter.key ? " active" : ""}" type="button" ${topologyFilterAttribute(filter)}>${renderSubsystemPartIcon("rack", `Rack ${rack}`)}<strong>${rack}</strong><span class="rack-values"><span>${formatNumeric(4.6 + (rack % 4) * 0.4)}%</span><span>${formatNumeric(97 + (rack % 3) * 0.2)}%</span></span></button>`;
           }).join("")}
         </div>
         <div class="rack-row right">
+          <div class="rack-group-metrics" aria-hidden="true"><span>SOC 5%</span><span>SOH 97%</span></div>
           ${rightRacks.map((rack) => {
             const filter = subsystemRackFilter(rack);
-            return `<button class="topology-filter rack-node${state.subsystemPartFilter?.key === filter.key ? " active" : ""}" type="button" ${topologyFilterAttribute(filter)}>${renderSubsystemPartIcon("rack", `Rack ${rack}`)}<strong>${rack}</strong><span class="rack-metrics"><span>SOC ${formatNumeric(4.8 + (rack % 5) * 0.3)}%</span><span>SOH ${formatNumeric(97.1 + (rack % 4) * 0.18)}%</span></span></button>`;
+            return `<button class="topology-filter rack-node${state.subsystemPartFilter?.key === filter.key ? " active" : ""}" type="button" ${topologyFilterAttribute(filter)}>${renderSubsystemPartIcon("rack", `Rack ${rack}`)}<strong>${rack}</strong><span class="rack-values"><span>${formatNumeric(4.8 + (rack % 5) * 0.3)}%</span><span>${formatNumeric(97.1 + (rack % 4) * 0.18)}%</span></span></button>`;
           }).join("")}
         </div>
       </div>
@@ -3598,6 +3602,11 @@ function renderSubsystemDiagnosisDetail(station, subsystemNo, snapshot = subsyst
         <div class="panel-title"><span></span>SOS安全指数与相关数据趋势</div>
         <div class="subsystem-chart-tools">
           <div class="chart-date-range alarm-detail-date"><input type="date" value="2025-05-01" aria-label="开始日期" /><span>→</span><input type="date" value="2025-05-15" aria-label="结束日期" /></div>
+          <label class="diagnosis-series-select">参数筛选
+            <select id="diagnosisSeriesSelect" multiple size="1" aria-label="选择趋势参数">
+              ${subsystemDiagnosisSeriesOptions().map((series) => `<option value="${series.key}" ${state.subsystemDiagnosisTrendSeries.has(series.key) ? "selected" : ""}>${series.label}</option>`).join("")}
+            </select>
+          </label>
         </div>
       </div>
       <div class="subsystem-diagnosis-chart">
@@ -3647,7 +3656,6 @@ function subsystemDiagnosisSeriesOptions() {
   return [
     { key: "charge", label: "充电能量", color: "#20d3c5", type: "bar", unit: "kWh" },
     { key: "discharge", label: "放电能量", color: "#1689ff", type: "bar", unit: "kWh" },
-    { key: "sos", label: "SOS指数", color: "#ff526a", type: "line", unit: "" },
     { key: "soh", label: "SOH", color: "#ffd437", type: "line", unit: "%" },
     { key: "avgTemp", label: "平均温度", color: "#b95cff", type: "line", unit: "℃" },
     { key: "maxTemp", label: "最高温度", color: "#ff8a3d", type: "line", unit: "℃" },
@@ -3656,9 +3664,13 @@ function subsystemDiagnosisSeriesOptions() {
 }
 
 function renderSubsystemDiagnosisLegend() {
-  const selected = state.subsystemDiagnosisTrendSeries;
-  return subsystemDiagnosisSeriesOptions()
-    .map((series) => `<button class="${selected.has(series.key) ? "active" : ""}" data-series="${series.key}" type="button"><span style="--legend-color:${series.color}">${series.label}</span></button>`)
+  const visibleSeries = [
+    { key: "sos", label: "SOS指数", color: "#ff526a", type: "line", unit: "" },
+    ...subsystemDiagnosisSeriesOptions().filter((series) => state.subsystemDiagnosisTrendSeries.has(series.key)),
+  ];
+  const highlight = state.subsystemDiagnosisTrendHighlight;
+  return visibleSeries
+    .map((series) => `<button class="${!highlight || highlight === series.key ? "active" : ""}" data-series="${series.key}" type="button"><span style="--legend-color:${series.color}">${series.label}</span></button>`)
     .join("");
 }
 
@@ -3690,8 +3702,11 @@ function renderSubsystemDiagnosisTrend(snapshot) {
   if (!canvas) return;
   const ctx = setupCanvas(canvas).getContext("2d");
   const data = subsystemDiagnosisTrendData(snapshot);
-  const options = subsystemDiagnosisSeriesOptions();
-  const selectedOptions = options.filter((series) => state.subsystemDiagnosisTrendSeries.has(series.key));
+  const options = [
+    { key: "sos", label: "SOS指数", color: "#ff526a", type: "line", unit: "" },
+    ...subsystemDiagnosisSeriesOptions(),
+  ];
+  const selectedOptions = options.filter((series) => series.key === "sos" || state.subsystemDiagnosisTrendSeries.has(series.key));
   const pad = { left: 54, right: 54, top: 34, bottom: 42 };
   clear(ctx, canvas.width, canvas.height);
   drawOverviewDualGrid(ctx, canvas, pad, {
@@ -3712,10 +3727,10 @@ function renderSubsystemDiagnosisTrend(snapshot) {
     if (isHover) drawOverviewHoverGuide(ctx, x, pad, canvas.height);
     const barWidth = Math.max(5, Math.min(13, (canvas.width - pad.left - pad.right) / data.length / 4));
     if (state.subsystemDiagnosisTrendSeries.has("charge")) {
-      drawOverviewBar(ctx, x - barWidth - 2, yEnergy(item.charge), barWidth, canvas.height - pad.bottom - yEnergy(item.charge), "#20d3c5", 1);
+      drawOverviewBar(ctx, x - barWidth - 2, yEnergy(item.charge), barWidth, canvas.height - pad.bottom - yEnergy(item.charge), "#20d3c5", seriesAlpha(state.subsystemDiagnosisTrendHighlight, "charge"));
     }
     if (state.subsystemDiagnosisTrendSeries.has("discharge")) {
-      drawOverviewBar(ctx, x + 2, yEnergy(item.discharge), barWidth, canvas.height - pad.bottom - yEnergy(item.discharge), "#1689ff", 1);
+      drawOverviewBar(ctx, x + 2, yEnergy(item.discharge), barWidth, canvas.height - pad.bottom - yEnergy(item.discharge), "#1689ff", seriesAlpha(state.subsystemDiagnosisTrendHighlight, "discharge"));
     }
     drawOverviewXAxis(ctx, item.label, x, canvas.height, pad, index, data.length);
     state.subsystemDiagnosisTrendHitboxes.push({ index, x, item });
@@ -3723,8 +3738,9 @@ function renderSubsystemDiagnosisTrend(snapshot) {
   selectedOptions.filter((series) => series.type === "line").forEach((series) => {
     const mapper = series.key === "cycles" ? yCycles : series.key.includes("Temp") ? yTemp : yIndex;
     const points = data.map((item, index) => ({ x: xFor(index), y: mapper(item[series.key]) }));
-    drawOverviewLine(ctx, points, series.color, 1);
-    points.forEach((point, index) => drawOverviewPoint(ctx, point.x, point.y, series.color, state.subsystemDiagnosisTrendHover?.index === index, 1));
+    const alpha = seriesAlpha(state.subsystemDiagnosisTrendHighlight, series.key);
+    drawOverviewLine(ctx, points, series.color, alpha);
+    points.forEach((point, index) => drawOverviewPoint(ctx, point.x, point.y, series.color, state.subsystemDiagnosisTrendHover?.index === index || state.subsystemDiagnosisTrendHighlight === series.key, alpha));
   });
 }
 
@@ -4207,13 +4223,8 @@ function handleOverviewDateClick(event) {
     const legend = legendButton.closest("[data-chart-legend]");
     const key = legendButton.dataset.series;
     if (legend.dataset.chartLegend === "diagnosis") {
-      const selected = state.subsystemDiagnosisTrendSeries;
-      if (selected.has(key)) {
-        if (selected.size > 1) selected.delete(key);
-      } else if (selected.size < 5) {
-        selected.add(key);
-      }
-      legend.querySelectorAll("button").forEach((button) => button.classList.toggle("active", selected.has(button.dataset.series)));
+      state.subsystemDiagnosisTrendHighlight = state.subsystemDiagnosisTrendHighlight === key ? null : key;
+      legend.querySelectorAll("button").forEach((button) => button.classList.toggle("active", !state.subsystemDiagnosisTrendHighlight || button.dataset.series === state.subsystemDiagnosisTrendHighlight));
       if (state.selectedStation && state.selectedSubsystemNo) renderSubsystemDiagnosisTrend(subsystemSnapshot(state.selectedStation, state.selectedSubsystemNo));
     } else if (legend.dataset.chartLegend === "power") {
       state.overviewPowerHighlight = state.overviewPowerHighlight === key ? null : key;
@@ -4240,7 +4251,23 @@ function handleOverviewDateClick(event) {
   input?.focus();
 }
 
+function handleDiagnosisSeriesSelectChange(select) {
+  const selected = Array.from(select.selectedOptions).map((option) => option.value).slice(0, 5);
+  state.subsystemDiagnosisTrendSeries = new Set(selected);
+  if (state.subsystemDiagnosisTrendHighlight && state.subsystemDiagnosisTrendHighlight !== "sos" && !state.subsystemDiagnosisTrendSeries.has(state.subsystemDiagnosisTrendHighlight)) {
+    state.subsystemDiagnosisTrendHighlight = null;
+  }
+  const legend = els.stationOverviewPanel?.querySelector(".diagnosis-trend-legend");
+  if (legend) legend.innerHTML = renderSubsystemDiagnosisLegend();
+  if (state.selectedStation && state.selectedSubsystemNo) renderSubsystemDiagnosisTrend(subsystemSnapshot(state.selectedStation, state.selectedSubsystemNo));
+}
+
 function handleOverviewDateChange(event) {
+  const seriesSelect = event.target.closest("#diagnosisSeriesSelect");
+  if (seriesSelect) {
+    handleDiagnosisSeriesSelectChange(seriesSelect);
+    return;
+  }
   const input = event.target.closest(".chart-date-range input[type='date']");
   if (!input) return;
   const range = input.closest(".chart-date-range");
@@ -4325,7 +4352,10 @@ function handleSubsystemDiagnosisTrendHover(event) {
   }
   state.subsystemDiagnosisTrendHover = { index: hit.index };
   if (state.selectedStation && state.selectedSubsystemNo) renderSubsystemDiagnosisTrend(subsystemSnapshot(state.selectedStation, state.selectedSubsystemNo));
-  const selected = subsystemDiagnosisSeriesOptions().filter((series) => state.subsystemDiagnosisTrendSeries.has(series.key));
+  const selected = [
+    { key: "sos", label: "SOS指数", color: "#ff526a", type: "line", unit: "" },
+    ...subsystemDiagnosisSeriesOptions().filter((series) => state.subsystemDiagnosisTrendSeries.has(series.key)),
+  ];
   tooltip.innerHTML = `<strong>${hit.item.label}</strong>${selected
     .map((series) => `<span style="color:${series.color}">${series.label} ${formatNumeric(hit.item[series.key])}${series.unit ? ` ${series.unit}` : ""}</span>`)
     .join("")}`;
@@ -4798,6 +4828,7 @@ function renderDetailAlarms(station) {
   const filterSuffix = partFilter ? ` · ${partFilter.label}` : "";
   const panelTitle = els.detailAlarmList.closest(".alarm-panel")?.querySelector(".alarm-head .panel-title");
   if (panelTitle) panelTitle.innerHTML = `<span></span>${warningOnly ? "预警清单" : "预警/告警清单"}`;
+  els.detailAlarmList.closest(".detail-alarm-panel")?.classList.toggle("diagnosis-aside-split", warningOnly);
   els.detailAlarmSubtitle.textContent = subsystemNo ? `${subsystemDisplayName(station, subsystemNo)}${filterSuffix}` : `${station.id}${station.name}`;
   const sideSosPanel = document.getElementById("detailSosSidePanel");
   if (sideSosPanel) {

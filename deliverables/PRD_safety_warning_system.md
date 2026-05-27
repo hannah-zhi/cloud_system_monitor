@@ -389,3 +389,11 @@
 - On the subsystem SOS detail right panel, hide the source summary box and use top tabs `全部 / 一级 / 二级 / 三级` for warning-level filtering.
 - `SOS安全指数与相关数据趋势` uses a bottom-centered multi-select legend. `充电能量` and `放电能量` are separate selectable series, additional sample series may be offered, and at most five series are selected at once. Hovering the chart shows values for the selected series.
 - `各部件SOS安全指数分析` omits the subsystem number in the title. Risk tags share the same pill typography; healthy uses the blue risk color. `当前指数` uses the corresponding risk color, and each mini trend supports hover details.
+
+## 30. 2026-05-27 Subsystem Topology And Trend Refinement
+
+- Subsystem topology wires must visually meet the device icons. The transformer, PCS, and rack wire coordinates should be maintained together with icon positions so lines do not stop short or drift beside icons.
+- Battery-cluster SOC/SOH labels are shared per PCS branch. Put one `SOC / SOH` label block at the far left of each rack row, and show only numeric values under individual racks.
+- In `SOS安全指数与相关数据趋势`, SOS is always rendered on the left axis and always appears in the legend. Other parameters are selected from the top-right multi-select control before they render. Legend clicks only highlight/dim visible series and must not add or remove series.
+- The current SOS gauge and the `预警清单` on the subsystem SOS detail page are separate right-side cards, not content inside one shared bordered card.
+- On the regular subsystem detail page, the `子系统运行` gauge and text block should sit slightly lower so its bottom visually aligns with the charge/discharge wave icons in the adjacent `充放电统计` card.

@@ -7,7 +7,7 @@
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
     <title>集中监测 - 远景数智运营系统</title>
-    <link rel="stylesheet" href="styles.css?v=20260527-subsystem-sos-detail-polish" />
+    <link rel="stylesheet" href="styles.css?v=20260527-subsystem-topology-trend-refine" />
   </head>
   <body>
     <div class="shell">
@@ -357,37 +357,39 @@
               <div id="stationOverviewPanel" class="station-overview-panel"></div>
               <aside class="alarm-panel detail-alarm-panel" aria-label="单站预警/告警清单">
                 <div id="detailSosSidePanel" class="detail-sos-side-panel" hidden></div>
-                <div class="alarm-head">
-                  <div>
-                    <div class="panel-title"><span></span>预警/告警清单</div>
-                    <p id="detailAlarmSubtitle">按风险严重度滚动刷新</p>
+                <div class="detail-alarm-content-card">
+                  <div class="alarm-head">
+                    <div>
+                      <div class="panel-title"><span></span>预警/告警清单</div>
+                      <p id="detailAlarmSubtitle">按风险严重度滚动刷新</p>
+                    </div>
                   </div>
-                </div>
-                <div class="alarm-tabs detail-alarm-tabs" id="detailAlarmTabs">
-                  <button class="active" data-type="all" type="button">全部 <span id="detailAlarmCountAll">0</span></button>
-                  <button data-type="level1" type="button">一级 <span id="detailAlarmCountLevel1">0</span></button>
-                  <button data-type="level2" type="button">二级 <span id="detailAlarmCountLevel2">0</span></button>
-                  <button data-type="data" type="button">数据 <span id="detailAlarmCountLevel3">0</span></button>
-                </div>
-                <div class="alarm-time-tools detail-alarm-time-tools">
-                  <div class="alarm-quick-buttons" id="detailAlarmTimeButtons" aria-label="单站预警时间快捷筛选">
-                    <button class="active" data-days="all" type="button">全部</button>
-                    <button data-days="30" type="button">最近30天</button>
-                    <button data-days="7" type="button">最近7天</button>
-                    <button data-days="3" type="button">最近3天</button>
+                  <div class="alarm-tabs detail-alarm-tabs" id="detailAlarmTabs">
+                    <button class="active" data-type="all" type="button">全部 <span id="detailAlarmCountAll">0</span></button>
+                    <button data-type="level1" type="button">一级 <span id="detailAlarmCountLevel1">0</span></button>
+                    <button data-type="level2" type="button">二级 <span id="detailAlarmCountLevel2">0</span></button>
+                    <button data-type="data" type="button">数据 <span id="detailAlarmCountLevel3">0</span></button>
                   </div>
-                  <div class="alarm-date-range" aria-label="单站预警时间段">
-                    <input id="detailAlarmStartDate" type="date" aria-label="开始日期" />
-                    <span>至</span>
-                    <input id="detailAlarmEndDate" type="date" aria-label="结束日期" />
+                  <div class="alarm-time-tools detail-alarm-time-tools">
+                    <div class="alarm-quick-buttons" id="detailAlarmTimeButtons" aria-label="单站预警时间快捷筛选">
+                      <button class="active" data-days="all" type="button">全部</button>
+                      <button data-days="30" type="button">最近30天</button>
+                      <button data-days="7" type="button">最近7天</button>
+                      <button data-days="3" type="button">最近3天</button>
+                    </div>
+                    <div class="alarm-date-range" aria-label="单站预警时间段">
+                      <input id="detailAlarmStartDate" type="date" aria-label="开始日期" />
+                      <span>至</span>
+                      <input id="detailAlarmEndDate" type="date" aria-label="结束日期" />
+                    </div>
                   </div>
+                  <div class="alarm-summary alarm-source-summary">
+                    <div><strong id="detailAlarmCloudCount">--</strong><span>预警</span></div>
+                    <div><strong id="detailAlarmStationCount">--</strong><span>告警</span></div>
+                    <div><strong>--</strong><span>数据</span></div>
+                  </div>
+                  <div id="detailAlarmList" class="alarm-list detail-alarm-list"></div>
                 </div>
-                <div class="alarm-summary alarm-source-summary">
-                  <div><strong id="detailAlarmCloudCount">--</strong><span>预警</span></div>
-                  <div><strong id="detailAlarmStationCount">--</strong><span>告警</span></div>
-                  <div><strong>--</strong><span>数据</span></div>
-                </div>
-                <div id="detailAlarmList" class="alarm-list detail-alarm-list"></div>
               </aside>
             </div>
           </div>
@@ -501,6 +503,6 @@
 
     <script src="site-data.js?v=20260415-siteconfig3"></script>
     <script src="risk-data.js?v=20260415-risk-list1"></script>
-    <script src="app.js?v=20260527-subsystem-sos-detail-polish"></script>
+    <script src="app.js?v=20260527-subsystem-topology-trend-refine"></script>
   </body>
 </html>
