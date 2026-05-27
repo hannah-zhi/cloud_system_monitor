@@ -3466,7 +3466,7 @@ h2 {
 .storage-system-tooltip {
   position: absolute;
   left: 12px;
-  top: calc(100% + 10px);
+  top: calc(100% + 2px);
   z-index: 5000;
   width: 220px;
   max-height: 170px;
@@ -3565,8 +3565,10 @@ h2 {
   z-index: 6000;
 }
 
-.storage-system-card:hover .storage-system-tooltip {
+.storage-system-card:hover .storage-system-tooltip,
+.storage-system-tooltip:hover {
   opacity: 1;
+  pointer-events: auto;
   transform: translateY(0);
 }
 

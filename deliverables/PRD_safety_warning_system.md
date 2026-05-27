@@ -412,3 +412,8 @@
 - The current SOS gauge card title inset must match the warning-list card title inset exactly.
 - Rack-row `SOC:` and `SOH:` labels should align vertically with the corresponding numeric value rows under each rack.
 - On the regular subsystem detail page, the `子系统运行` card content should stay clear of the bottom border while preserving the established alignment with the adjacent charge/discharge card.
+
+## 33. 2026-05-27 Station Overview Tooltip Scroll Fix
+
+- In the single-station `场站概览` topology, subsystem alarm/warning hover tooltips must remain open when the pointer moves from the subsystem card into the tooltip itself.
+- Scrollable subsystem hover tooltips should accept pointer events so users can scroll long alarm/warning lists without the tooltip disappearing.
