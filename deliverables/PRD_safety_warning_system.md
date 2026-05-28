@@ -423,3 +423,12 @@
 - Sample data should include some online stations whose station alarm state is `告警`, not only `故障` or `无告警`.
 - Offline stations must not receive visible device-alarm-class records; station alarm distribution should never classify offline stations as `告警` or `故障`.
 - The single-station and single-subsystem right-side `预警/告警清单` should not show the top `全部 / 一级 / 二级 / 数据` tab row. Keep the remaining time and category/source controls below it.
+
+## 35. 2026-05-28 Alarm Management Type And Pie Split
+
+- The `预警管理` page should exclude `站端预警` records from the list, filters, cards, and charts; keep only cloud warning records and device alarm records.
+- In the `预警/告警列表`, rename the `来源` column/filter to `类型`. Display cloud warning records as `预警` and device alarm records as `告警`.
+- In alarm-management list and detail rows, warning levels remain `一级 / 二级 / 三级`; device alarm levels display as `故障 / 告警`.
+- Replace the old combined `预警/告警等级占比` chart with `告警等级占比`, and replace the old source-distribution chart with `预警等级占比`. Do not render a `预警/告警来源分布` pie on this page.
+- The status filter and status column should not expose `关闭-站端已处理`.
+- Alarm detail cards should show the normalized `预警 / 告警` type tag and should not show the linked warning/alarm jump button.

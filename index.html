@@ -7,7 +7,7 @@
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
     <title>集中监测 - 远景数智运营系统</title>
-    <link rel="stylesheet" href="styles.css?v=20260528-device-alarm-detail-filter-polish" />
+    <link rel="stylesheet" href="styles.css?v=20260528-alarm-management-type-polish" />
   </head>
   <body>
     <div class="shell">
@@ -220,14 +220,14 @@
         <section id="alarmDetailView" class="view alarm-detail-view" aria-label="预警详情">
           <div class="risk-alarm-grid alarm-overview-grid">
             <article class="panel">
-              <div class="panel-title"><span></span>预警/告警等级占比</div>
+              <div class="panel-title"><span></span>告警等级占比</div>
               <div class="donut-wrap">
                 <canvas id="riskAlarmPieCanvas" width="300" height="300" data-square-canvas="true"></canvas>
                 <div id="riskAlarmPieLegend" class="legend"></div>
               </div>
             </article>
             <article class="panel">
-              <div class="panel-title"><span></span>预警/告警来源分布</div>
+              <div class="panel-title"><span></span>预警等级占比</div>
               <div class="donut-wrap">
                 <canvas id="riskAlarmSourcePieCanvas" width="300" height="300" data-square-canvas="true"></canvas>
                 <div id="riskAlarmSourcePieLegend" class="legend"></div>
@@ -280,7 +280,7 @@
                     <th>事件时间</th>
                     <th>预警/告警时间</th>
                     <th>状态</th>
-                    <th>来源</th>
+                    <th>类型</th>
                   </tr>
                 </thead>
                 <tbody id="alarmDetailTable"></tbody>
@@ -503,6 +503,6 @@
 
     <script src="site-data.js?v=20260415-siteconfig3"></script>
     <script src="risk-data.js?v=20260415-risk-list1"></script>
-    <script src="app.js?v=20260528-device-alarm-detail-filter-polish"></script>
+    <script src="app.js?v=20260528-alarm-management-type-polish"></script>
   </body>
 </html>

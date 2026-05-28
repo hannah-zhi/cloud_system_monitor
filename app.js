@@ -772,7 +772,7 @@ function createAlarms(stations) {
       alarm.stationId !== "K-0005" &&
       !alarm.linkGroupId &&
       Number(alarm.id.split("-").pop()) % 11 === 0;
-    if (stationHandledGroupIds.has(alarm.linkGroupId) || shouldMarkStandalone) {
+    if ((alarm.source === alarmSourceLabels[1] && stationHandledGroupIds.has(alarm.linkGroupId)) || shouldMarkStandalone) {
       const closedAt = alarm.closedAt || formatFullDateTime(new Date(alarmTimestamp(alarm) + 46 * 60 * 1000));
       Object.assign(alarm, {
         status: "关闭-站端已处理",
@@ -1054,6 +1054,15 @@ function homeAlarmDisplayLabel(alarm) {
   if (category === "data") return "数据";
   if (category === "warning") return "预警";
   return homeDeviceAlarmSeverity(alarm) === "fault" ? "故障" : "告警";
+}
+
+function alarmManagementTypeLabel(alarm) {
+  return homeAlarmCategory(alarm) === "alarm" ? "告警" : "预警";
+}
+
+function alarmManagementLevelLabel(alarm) {
+  if (homeAlarmCategory(alarm) === "alarm") return homeDeviceAlarmSeverity(alarm) === "fault" ? "故障" : "告警";
+  return alarm.level;
 }
 
 function homeAlarmRightLabel(alarm) {
@@ -1729,13 +1738,13 @@ function renderRiskPie(stations) {
 function renderRiskAlarmPie(alarms) {
   const canvas = setupCanvas(els.riskAlarmPieCanvas);
   const ctx = canvas.getContext("2d");
+  const alarmItems = alarms.filter((alarm) => homeAlarmCategory(alarm) === "alarm");
   const entries = [
-    ["level1", alarms.filter((alarm) => alarm.type === "level1").length],
-    ["level2", alarms.filter((alarm) => alarm.type === "level2").length],
-    ["level3", alarms.filter((alarm) => alarm.type === "level3").length],
+    ["fault", alarmItems.filter((alarm) => homeDeviceAlarmSeverity(alarm) === "fault").length],
+    ["alarm", alarmItems.filter((alarm) => homeDeviceAlarmSeverity(alarm) === "alarm").length],
   ];
-  const colors = { level1: "#ff3d59", level2: "#f4a51c", level3: "#13c781" };
-  const labels = { level1: "一级", level2: "二级", level3: "三级" };
+  const colors = { fault: "#ff3d59", alarm: "#b95cff" };
+  const labels = { fault: "故障", alarm: "告警" };
   drawDonutChart(ctx, canvas, entries, (key) => colors[key], alarmOverviewDonutOptions);
   els.riskAlarmPieLegend.innerHTML = entries
     .map(
@@ -1761,14 +1770,20 @@ function sourceColor(source) {
 function renderRiskAlarmSourcePie(alarms) {
   const canvas = setupCanvas(els.riskAlarmSourcePieCanvas);
   const ctx = canvas.getContext("2d");
-  const counts = countAlarmSources(alarms);
-  const entries = alarmSourceLabels.map((source) => [source, counts[source] || 0]);
-  drawDonutChart(ctx, canvas, entries, sourceColor, alarmOverviewDonutOptions);
+  const warningItems = alarms.filter((alarm) => homeAlarmCategory(alarm) === "warning");
+  const entries = [
+    ["level1", warningItems.filter((alarm) => alarm.type === "level1").length],
+    ["level2", warningItems.filter((alarm) => alarm.type === "level2").length],
+    ["level3", warningItems.filter((alarm) => alarm.type === "level3").length],
+  ];
+  const colors = { level1: "#ff3d59", level2: "#f4a51c", level3: "#13c781" };
+  const labels = { level1: "一级", level2: "二级", level3: "三级" };
+  drawDonutChart(ctx, canvas, entries, (key) => colors[key], alarmOverviewDonutOptions);
   els.riskAlarmSourcePieLegend.innerHTML = entries
     .map(
-      ([source, count]) => `
-      <div class="legend-item" style="--legend-color:${sourceColor(source)}">
-        <span>${source}</span><strong>${count}</strong>
+      ([key, count]) => `
+      <div class="legend-item" style="--legend-color:${colors[key]}">
+        <span>${labels[key]}</span><strong>${count}</strong>
       </div>`
     )
     .join("");
@@ -2046,7 +2061,7 @@ function handleRiskTrendHover(event) {
 }
 
 function renderAlarmDetailFilters() {
-  const alarms = (state.allAlarms || []).filter(alarmAllowedByStationComm);
+  const alarms = alarmManagementItems();
   const statusOptions = uniqueSorted([
     "待处理",
     "排查中",
@@ -2057,17 +2072,21 @@ function renderAlarmDetailFilters() {
     "关闭-准确",
     "关闭-类型不准确",
     ...alarms.map((alarm) => alarm.status),
-  ]);
+  ]).filter((status) => status !== "关闭-站端已处理");
   const optionMap = {
-    level: { el: els.alarmDetailLevel, label: "全部等级", searchable: false, options: ["一级", "二级", "三级"] },
+    level: { el: els.alarmDetailLevel, label: "全部等级", searchable: false, options: ["一级", "二级", "三级", "故障", "告警"] },
     status: { el: els.alarmDetailStatus, label: "全部状态", searchable: false, options: statusOptions },
     module: { el: els.alarmDetailModule, label: "全部模块", searchable: false, options: ["电池系统", "电气系统", "环控系统", "消防系统"] },
     name: { el: els.alarmDetailName, label: "全部预警/告警名称", searchable: true, options: uniqueSorted(alarms.map((alarm) => alarm.title)) },
     station: { el: els.alarmDetailStation, label: "全部场站", searchable: true, options: uniqueSorted(alarms.map((alarm) => `${alarm.stationId}${alarm.stationName}`)) },
     location: { el: els.alarmDetailLocation, label: "全部位置", searchable: true, options: uniqueSorted(alarms.map((alarm) => alarm.location)) },
-    source: { el: els.alarmDetailSource, label: "全部来源", searchable: false, options: alarmSourceLabels },
+    source: { el: els.alarmDetailSource, label: "全部类型", searchable: false, options: ["预警", "告警"] },
   };
   Object.entries(optionMap).forEach(([key, config]) => renderAlarmMultiSelect(key, config));
+}
+
+function alarmManagementItems() {
+  return (state.allAlarms || []).filter((alarm) => homeVisibleAlarm(alarm) && homeAlarmCategory(alarm) !== "data");
 }
 
 function uniqueSorted(values) {
@@ -2143,7 +2162,7 @@ function renderAlarmDetailPage() {
     ? groups
       .map((group, index) => {
         const alarm = group.latest;
-        const sources = uniqueSorted(group.alarms.map((item) => item.source)).join("/");
+        const typeLabel = alarmManagementTypeLabel(alarm);
         const alarmCode = alarmCodeForGroup(group);
         return `
       <tr data-alarm-id="${group.id}" class="${state.detailAlarmSelectedIds.has(group.id) ? "selected" : ""}">
@@ -2155,7 +2174,7 @@ function renderAlarmDetailPage() {
                 ? `<label class="alarm-row-check"><input type="checkbox" data-check-id="${group.id}" ${state.detailAlarmSelectedIds.has(group.id) ? "checked" : ""} /><i></i></label>`
                 : ""
             }
-            <span class="alarm-level-table alarm-${alarm.type}">${alarm.level}</span>
+            <span class="alarm-level-table alarm-${alarm.type}">${alarmManagementLevelLabel(alarm)}</span>
           </div>
         </td>
         <td>${alarm.title}</td>
@@ -2165,7 +2184,7 @@ function renderAlarmDetailPage() {
         <td>${alarm.eventTime}</td>
         <td>${alarm.warningTime}</td>
         <td><div class="alarm-status-cell">${group.srCompleted ? '<span class="alarm-mail-badge" title="SR已返回">✉</span>' : ""}<span class="alarm-status-pill ${statusClass(alarm.status)}">${alarm.status}</span></div></td>
-        <td><span class="alarm-source alarm-source-${alarmSourceClass(sources)}">${sources}</span></td>
+        <td><span class="alarm-source alarm-source-${homeAlarmPillClass(alarm)}">${typeLabel}</span></td>
       </tr>`;
       })
       .join("")
@@ -2266,18 +2285,17 @@ function filterAlarmDetailItems() {
   const start = els.alarmDetailStart.value ? new Date(`${els.alarmDetailStart.value}T00:00:00`) : null;
   const end = els.alarmDetailEnd.value ? new Date(`${els.alarmDetailEnd.value}T23:59:59`) : null;
   const { level, module, name, station, location, status, source } = state.alarmDetailSelections;
-  return state.allAlarms.filter((alarm) => {
-    if (!alarmAllowedByStationComm(alarm)) return false;
+  return alarmManagementItems().filter((alarm) => {
     const date = new Date(`${alarm.dateISO}T12:00:00`);
     const stationLabel = `${alarm.stationId}${alarm.stationName}`;
     return (
       (!module.size || module.has(alarm.module)) &&
-      (!level.size || level.has(alarm.level)) &&
+      (!level.size || level.has(alarmManagementLevelLabel(alarm))) &&
       (!name.size || name.has(alarm.title)) &&
       (!station.size || station.has(stationLabel)) &&
       (!location.size || location.has(alarm.location)) &&
       (!status.size || status.has(alarm.status)) &&
-      (!source.size || source.has(alarm.source)) &&
+      (!source.size || source.has(alarmManagementTypeLabel(alarm))) &&
       (!start || date >= start) &&
       (!end || date <= end)
     );
@@ -2574,18 +2592,12 @@ function renderAlarmInspector(alarmOrGroup) {
     els.alarmInspectorBody.textContent = "点击任意预警查看完整内容";
     return;
   }
-  const linked = alarm.linkedAlarmId ? state.allAlarms.find((item) => item.id === alarm.linkedAlarmId) : null;
   const alarmTimeLabel = alarmTimeLabelForSource(alarm.source);
   els.alarmInspectorBody.innerHTML = `
     <div class="alarm-detail-hero alarm-hero-${alarm.type}">
-      <span class="alarm-source-corner alarm-source-corner-${alarmSourceClass(alarm.source)}"><span>${alarm.source}</span></span>
+      <span class="alarm-source-corner alarm-source-corner-${homeAlarmPillClass(alarm)}"><span>${alarmManagementTypeLabel(alarm)}</span></span>
       <strong>${alarm.title}</strong>
       <p>${alarm.level === "一级" ? "立即复核云端诊断结果并安排现场排查。" : alarm.level === "二级" ? "持续观察趋势，纳入当班巡检计划。" : "记录风险变化，按计划跟踪闭环。"}</p>
-      ${
-        linked
-          ? `<button class="alarm-linked-jump alarm-linked-jump-${alarmSourceClass(linked.source)}" type="button" data-linked-id="${linked.id}">${isCloudAlarmSource(alarm.source) ? "查看关联站端预警" : "查看关联云端预警"}</button>`
-          : ""
-      }
     </div>
     <div class="alarm-group-context">
       <div><span>模块</span><strong>${alarm.module}</strong></div>
@@ -2612,7 +2624,7 @@ function renderAlarmInspector(alarmOrGroup) {
               (item, index) => `
             <tr class="${item.id === alarm.id ? "active" : ""}" data-alarm-id="${item.id}">
               <td>${index + 1}</td>
-              <td><span class="alarm-level-table alarm-${item.type}">${item.level}</span></td>
+              <td><span class="alarm-level-table alarm-${item.type}">${alarmManagementLevelLabel(item)}</span></td>
               <td>${item.eventTime}</td>
               <td>${item.warningTime}</td>
               <td>${item.closedAt || ""}</td>
