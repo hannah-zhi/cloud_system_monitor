@@ -433,3 +433,4 @@
 - The status filter and status column should not expose `关闭-站端已处理`.
 - Alarm detail cards should show the normalized `预警 / 告警` type tag and should not show the linked warning/alarm jump button.
 - In `告警等级占比`, render `故障` as red and `告警` as yellow to match the warning/alarm severity palette.
+- Square donut canvases must preserve their unscaled CSS dimensions when the page is visually checked at 67% zoom, so donut radius, thickness, and legend spacing do not change or clip.

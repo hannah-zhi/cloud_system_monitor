@@ -5109,7 +5109,9 @@ function updateDetailTableSortHeaders() {
 function setupCanvas(canvas) {
   const rect = canvas.getBoundingClientRect();
   if (canvas.dataset.squareCanvas === "true") {
-    const side = Math.max(120, Math.round(Math.min(rect.width || 180, rect.height || rect.width || 180)));
+    const cssWidth = canvas.offsetWidth || rect.width || 180;
+    const cssHeight = canvas.offsetHeight || rect.height || cssWidth;
+    const side = Math.max(120, Math.round(Math.min(cssWidth, cssHeight)));
     canvas.width = side;
     canvas.height = side;
     return canvas;
