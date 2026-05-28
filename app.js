@@ -1743,7 +1743,7 @@ function renderRiskAlarmPie(alarms) {
     ["fault", alarmItems.filter((alarm) => homeDeviceAlarmSeverity(alarm) === "fault").length],
     ["alarm", alarmItems.filter((alarm) => homeDeviceAlarmSeverity(alarm) === "alarm").length],
   ];
-  const colors = { fault: "#ff3d59", alarm: "#b95cff" };
+  const colors = { fault: "#ff3d59", alarm: "#f4a51c" };
   const labels = { fault: "故障", alarm: "告警" };
   drawDonutChart(ctx, canvas, entries, (key) => colors[key], alarmOverviewDonutOptions);
   els.riskAlarmPieLegend.innerHTML = entries

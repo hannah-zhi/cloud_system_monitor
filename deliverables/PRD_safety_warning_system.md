@@ -432,3 +432,4 @@
 - Replace the old combined `预警/告警等级占比` chart with `告警等级占比`, and replace the old source-distribution chart with `预警等级占比`. Do not render a `预警/告警来源分布` pie on this page.
 - The status filter and status column should not expose `关闭-站端已处理`.
 - Alarm detail cards should show the normalized `预警 / 告警` type tag and should not show the linked warning/alarm jump button.
+- In `告警等级占比`, render `故障` as red and `告警` as yellow to match the warning/alarm severity palette.
