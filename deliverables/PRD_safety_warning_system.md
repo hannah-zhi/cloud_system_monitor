@@ -434,3 +434,6 @@
 - Alarm detail cards should show the normalized `预警 / 告警` type tag and should not show the linked warning/alarm jump button.
 - In `告警等级占比`, render `故障` as red and `告警` as yellow to match the warning/alarm severity palette.
 - Square donut canvases must preserve their unscaled CSS dimensions when the page is visually checked at 67% zoom, so donut radius, thickness, and legend spacing do not change or clip.
+- In alarm management, device-alarm level tags use distinct styling from warning levels: `故障` is red, `告警` is yellow.
+- Empty donut charts must show center total `0`, not `1`.
+- Alarm detail card corner ribbons use normalized type colors: `预警` is blue and `告警` is purple.

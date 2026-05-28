@@ -5830,6 +5830,20 @@ h2 {
   background: rgba(19, 199, 129, 0.1);
 }
 
+.alarm-level-table.alarm-device-fault {
+  color: #ff4b61;
+  border: 1px solid rgba(255, 61, 89, 0.62);
+  background: linear-gradient(180deg, rgba(255, 61, 89, 0.18), rgba(255, 61, 89, 0.08));
+  box-shadow: inset 0 0 0 1px rgba(255, 61, 89, 0.08);
+}
+
+.alarm-level-table.alarm-device-alarm {
+  color: #ffd17a;
+  border: 1px solid rgba(244, 165, 28, 0.58);
+  background: linear-gradient(180deg, rgba(244, 165, 28, 0.17), rgba(244, 165, 28, 0.07));
+  box-shadow: inset 0 0 0 1px rgba(244, 165, 28, 0.08);
+}
+
 .alarm-mail-cell {
   text-align: center;
 }
@@ -6024,6 +6038,34 @@ h2 {
 
 .alarm-source-corner-cloud > span {
   text-shadow: 0 0 8px rgba(18, 152, 255, 0.42);
+}
+
+.alarm-source-corner-warning {
+  color: #63c8ff;
+}
+
+.alarm-source-corner-warning::before {
+  background: linear-gradient(135deg, rgba(18, 152, 255, 0.22), rgba(18, 152, 255, 0.05));
+  border-top: 1px solid rgba(18, 152, 255, 0.34);
+  border-left: 1px solid rgba(18, 152, 255, 0.34);
+}
+
+.alarm-source-corner-warning > span {
+  text-shadow: 0 0 8px rgba(18, 152, 255, 0.46);
+}
+
+.alarm-source-corner-alarm {
+  color: #d9adff;
+}
+
+.alarm-source-corner-alarm::before {
+  background: linear-gradient(135deg, rgba(185, 92, 255, 0.24), rgba(185, 92, 255, 0.06));
+  border-top: 1px solid rgba(185, 92, 255, 0.38);
+  border-left: 1px solid rgba(185, 92, 255, 0.38);
+}
+
+.alarm-source-corner-alarm > span {
+  text-shadow: 0 0 8px rgba(185, 92, 255, 0.48);
 }
 
 .alarm-source-corner-station {

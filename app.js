@@ -1065,6 +1065,11 @@ function alarmManagementLevelLabel(alarm) {
   return alarm.level;
 }
 
+function alarmManagementLevelClass(alarm) {
+  if (homeAlarmCategory(alarm) === "alarm") return `alarm-device-${homeDeviceAlarmSeverity(alarm)}`;
+  return `alarm-${alarm.type}`;
+}
+
 function homeAlarmRightLabel(alarm) {
   const category = homeAlarmCategory(alarm);
   if (category === "data") return "数据";
@@ -2174,7 +2179,7 @@ function renderAlarmDetailPage() {
                 ? `<label class="alarm-row-check"><input type="checkbox" data-check-id="${group.id}" ${state.detailAlarmSelectedIds.has(group.id) ? "checked" : ""} /><i></i></label>`
                 : ""
             }
-            <span class="alarm-level-table alarm-${alarm.type}">${alarmManagementLevelLabel(alarm)}</span>
+            <span class="alarm-level-table ${alarmManagementLevelClass(alarm)}">${alarmManagementLevelLabel(alarm)}</span>
           </div>
         </td>
         <td>${alarm.title}</td>
@@ -2624,7 +2629,7 @@ function renderAlarmInspector(alarmOrGroup) {
               (item, index) => `
             <tr class="${item.id === alarm.id ? "active" : ""}" data-alarm-id="${item.id}">
               <td>${index + 1}</td>
-              <td><span class="alarm-level-table alarm-${item.type}">${alarmManagementLevelLabel(item)}</span></td>
+              <td><span class="alarm-level-table ${alarmManagementLevelClass(item)}">${alarmManagementLevelLabel(item)}</span></td>
               <td>${item.eventTime}</td>
               <td>${item.warningTime}</td>
               <td>${item.closedAt || ""}</td>
@@ -4671,11 +4676,13 @@ function drawDonutChart(ctx, canvas, entries, colorForKey, options = {}) {
   const lineWidth = options.lineWidth ?? 42;
   const font = options.font ?? "24px Microsoft YaHei";
   const centerYOffset = options.centerYOffset ?? 8;
-  const total = entries.reduce((sum, [, count]) => sum + count, 0) || 1;
+  const total = entries.reduce((sum, [, count]) => sum + count, 0);
+  const denominator = total || 1;
   clear(ctx, canvas.width, canvas.height);
   let start = -Math.PI / 2;
   entries.forEach(([key, count]) => {
-    const angle = (count / total) * Math.PI * 2;
+    const angle = (count / denominator) * Math.PI * 2;
+    if (angle <= 0) return;
     ctx.beginPath();
     ctx.strokeStyle = colorForKey(key);
     ctx.lineWidth = lineWidth;
