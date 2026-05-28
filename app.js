@@ -72,6 +72,8 @@ const state = {
   selectedAlarmGroup: null,
   activeModalAlarmId: null,
   alarmProcessMode: null,
+  alarmProcessBatch: false,
+  alarmProcessBatchGroups: [],
   detailAlarmSelectedIds: new Set(),
   detailAlarmSelectionMode: false,
   detailAlarmContextId: null,
@@ -2169,16 +2171,15 @@ function renderAlarmDetailPage() {
         const alarm = group.latest;
         const typeLabel = alarmManagementTypeLabel(alarm);
         const alarmCode = alarmCodeForGroup(group);
+        const checkCell = state.detailAlarmSelectionMode
+          ? `<label class="alarm-row-check"><input type="checkbox" data-check-id="${group.id}" ${state.detailAlarmSelectedIds.has(group.id) ? "checked" : ""} /><i></i></label>`
+          : "";
         return `
       <tr data-alarm-id="${group.id}" class="${state.detailAlarmSelectedIds.has(group.id) ? "selected" : ""}">
+        <td class="alarm-select-cell">${checkCell}</td>
         <td class="alarm-index-cell"><div class="alarm-index-inner"><span class="alarm-row-index">${alarmCode}</span></div></td>
         <td class="alarm-level-cell">
-          <div class="alarm-level-cell-inner ${state.detailAlarmSelectionMode ? "selection-mode" : ""}">
-            ${
-              state.detailAlarmSelectionMode
-                ? `<label class="alarm-row-check"><input type="checkbox" data-check-id="${group.id}" ${state.detailAlarmSelectedIds.has(group.id) ? "checked" : ""} /><i></i></label>`
-                : ""
-            }
+          <div class="alarm-level-cell-inner">
             <span class="alarm-level-table ${alarmManagementLevelClass(alarm)}">${alarmManagementLevelLabel(alarm)}</span>
           </div>
         </td>
@@ -2193,7 +2194,7 @@ function renderAlarmDetailPage() {
       </tr>`;
       })
       .join("")
-    : `<tr><td colspan="10">暂无匹配预警</td></tr>`;
+    : `<tr><td colspan="11">暂无匹配预警</td></tr>`;
   els.alarmDetailTable.querySelectorAll('input[data-check-id]').forEach((input) => {
     input.addEventListener('click', (event) => event.stopPropagation());
     input.addEventListener('change', () => {
@@ -2265,6 +2266,49 @@ function cancelAlarmSelectionMode(event) {
   renderAlarmDetailPage();
 }
 
+function selectedAlarmDetailGroups() {
+  const groups = groupAlarmsForTable(filterAlarmDetailItems());
+  return groups.filter((group) => state.detailAlarmSelectedIds.has(group.id));
+}
+
+function processAlarmGroups() {
+  if (state.alarmProcessBatch) return state.alarmProcessBatchGroups.filter(Boolean);
+  return state.selectedAlarmGroup ? [state.selectedAlarmGroup] : [];
+}
+
+function clearAlarmProcessBatch() {
+  state.alarmProcessBatch = false;
+  state.alarmProcessBatchGroups = [];
+}
+
+function clearAlarmBatchSelection() {
+  state.detailAlarmSelectionMode = false;
+  state.detailAlarmSelectedIds.clear();
+  hideAlarmRowContextMenu();
+  updateAlarmBatchBar();
+  renderAlarmDetailPage();
+}
+
+function alarmBatchStatusValues(groups) {
+  return [...new Set(groups.map((group) => group.latest?.status || ""))];
+}
+
+function showAlarmBatchStatusMismatch(groups) {
+  if (!els.alarmProcessModal || !els.alarmProcessPanel) return;
+  const statuses = alarmBatchStatusValues(groups).filter(Boolean).join("、");
+  els.alarmProcessModal.classList.add("show");
+  els.alarmProcessModal.setAttribute("aria-hidden", "false");
+  els.alarmProcessPanel.classList.add("show");
+  els.alarmProcessPanel.innerHTML = `
+    <div class="process-head"><strong>无法批量处理</strong><span>仅支持对当前状态相同的预警/告警进行批量处理</span></div>
+    <div class="sr-return-card">
+      <span>当前选中条目的状态不一致：${statuses || "无状态"}。请重新选择状态相同的条目后再批量处理。</span>
+      <button type="button" data-process-action="dismiss-batch-warning">知道了</button>
+    </div>
+  `;
+  els.alarmProcessPanel.querySelector("[data-process-action='dismiss-batch-warning']")?.addEventListener("click", closeAlarmProcessModal);
+}
+
 function showAlarmRowContextMenu(clientX, clientY) {
   if (!els.alarmRowContextMenu) return;
   els.alarmRowContextMenu.classList.add("show");
@@ -2284,6 +2328,19 @@ function hideAlarmRowContextMenu() {
 function handleBatchAlarmProcess(event) {
   event.stopPropagation();
   hideAlarmRowContextMenu();
+  const groups = selectedAlarmDetailGroups();
+  if (!groups.length) return;
+  if (alarmBatchStatusValues(groups).length > 1) {
+    showAlarmBatchStatusMismatch(groups);
+    return;
+  }
+  state.alarmProcessBatch = true;
+  state.alarmProcessBatchGroups = groups;
+  state.selectedAlarmGroup = groups[0];
+  state.selectedAlarm = groups[0].latest;
+  state.activeModalAlarmId = groups[0].latest.id;
+  state.alarmProcessMode = "choose";
+  renderAlarmProcessPanel();
 }
 
 function filterAlarmDetailItems() {
@@ -2458,14 +2515,15 @@ function renderSrAlarmContext(alarm) {
   `;
 }
 
-function renderSrIssueForm(group) {
+function renderSrIssueForm(group, options = {}) {
   const alarm = group.latest;
+  const hideContext = Boolean(options.hideContext);
   const srNo = alarm.srNo || `S${263 + (alarm.id.length % 70)}`;
   const srSendTime = alarm.srIssued ? alarm.srSendDate || beijingDateTimeLocal() : beijingDateTimeLocal();
   const srDueTime = alarm.srDueDate || addDaysToDateTimeLocal(srSendTime, 14);
   return `
     <div class="process-head"><strong>下发 SR</strong></div>
-    ${renderSrAlarmContext(alarm)}
+    ${hideContext ? "" : renderSrAlarmContext(alarm)}
     <div class="sr-form-grid">
       <label class="sr-full-field"><span>SR编号</span><input id="srNoInput" value="${srNo}" /></label>
       <label class="sr-guide-field"><span>操作指导</span><textarea id="srGuideInput"></textarea></label>
@@ -2718,6 +2776,7 @@ function closeAlarmProcessModal() {
   els.alarmProcessModal.classList.remove("show");
   els.alarmProcessModal.setAttribute("aria-hidden", "true");
   state.alarmProcessMode = null;
+  clearAlarmProcessBatch();
   if (els.alarmProcessPanel) {
     els.alarmProcessPanel.classList.remove("show");
     els.alarmProcessPanel.innerHTML = "";
@@ -2726,7 +2785,8 @@ function closeAlarmProcessModal() {
 
 function renderAlarmProcessPanel() {
   if (!els.alarmProcessPanel) return;
-  const group = state.selectedAlarmGroup;
+  const groups = processAlarmGroups();
+  const group = groups[0];
   if (!group || !state.alarmProcessMode) {
     els.alarmProcessModal?.classList.remove("show");
     els.alarmProcessModal?.setAttribute("aria-hidden", "true");
@@ -2780,8 +2840,8 @@ function renderAlarmProcessPanel() {
     els.alarmProcessPanel.innerHTML = `
       <div class="process-head"><strong>SR 已下发</strong><span>列表状态已变更为“排查中”</span></div>
       <div class="sr-return-card">
-        <span>等待 SR 完成返回。演示态可点击下方按钮模拟返回，返回后列表状态列前会出现信封标记。</span>
-        <button type="button" data-process-action="complete-sr">模拟 SR 完成返回</button>
+        <span>${state.alarmProcessBatch ? "已对本次选中的全部条目下发 SR。" : "等待 SR 完成返回。演示态可点击下方按钮模拟返回，返回后列表状态列前会出现信封标记。"}</span>
+        ${state.alarmProcessBatch ? "" : `<button type="button" data-process-action="complete-sr">模拟 SR 完成返回</button>`}
       </div>
     `;
   } else if (state.alarmProcessMode === "srClose") {
@@ -2797,7 +2857,7 @@ function renderAlarmProcessPanel() {
     `;
   }
   if (state.alarmProcessMode === "sr") {
-    els.alarmProcessPanel.innerHTML = renderSrIssueForm(group);
+    els.alarmProcessPanel.innerHTML = renderSrIssueForm(group, { hideContext: state.alarmProcessBatch });
   } else if (state.alarmProcessMode === "srClose") {
     els.alarmProcessPanel.innerHTML = renderSrReturnConfirmation(group);
   } else if (state.alarmProcessMode === "srResult") {
@@ -2819,7 +2879,8 @@ function bindAlarmProcessPanel() {
 }
 
 function handleAlarmProcessAction(action) {
-  const group = state.selectedAlarmGroup;
+  const groups = processAlarmGroups();
+  const group = groups[0];
   if (!group) return;
   if (action === "close-now") {
     state.alarmProcessMode = "close";
@@ -2838,18 +2899,25 @@ function handleAlarmProcessAction(action) {
       showAlarmProcessError(reason === "其他" ? "请补充其他原因" : "请选择关闭原因");
       return;
     }
-    updateAlarmGroup(group, {
+    groups.forEach((item) => updateAlarmGroup(item, {
       status: `关闭-${reason}`,
       closeReason: reason,
       closeRemark: remark,
-    });
+    }));
+    if (state.alarmProcessBatch) {
+      clearAlarmBatchSelection();
+      clearAlarmProcessBatch();
+      state.alarmProcessMode = null;
+      renderAlarmProcessPanel();
+      return;
+    }
     state.alarmProcessMode = null;
     renderAlarmInspector(state.selectedAlarmGroup);
     renderAlarmProcessPanel();
     return;
   }
   if (action === "submit-sr") {
-    updateAlarmGroup(group, {
+    const srPatch = {
       status: "排查中",
       srIssued: true,
       srCompleted: false,
@@ -2858,8 +2926,14 @@ function handleAlarmProcessAction(action) {
       srSendDate: beijingDateTimeLocal(),
       srDueDate: els.alarmProcessPanel.querySelector("#srDueDateInput")?.value || "",
       srAttachmentCount: els.alarmProcessPanel.querySelector("#srAttachmentInput")?.files.length || 0,
-    });
+    };
+    groups.forEach((item) => updateAlarmGroup(item, srPatch));
     state.alarmProcessMode = "srSubmitted";
+    if (state.alarmProcessBatch) {
+      clearAlarmBatchSelection();
+      renderAlarmProcessPanel();
+      return;
+    }
     renderAlarmInspector(state.selectedAlarmGroup);
     renderAlarmProcessPanel();
     return;

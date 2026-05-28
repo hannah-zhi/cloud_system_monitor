@@ -437,3 +437,12 @@
 - In alarm management, device-alarm level tags use distinct styling from warning levels: `故障` is red, `告警` is yellow.
 - Empty donut charts must show center total `0`, not `1`.
 - Alarm detail card corner ribbons use normalized type colors: `预警` is blue and `告警` is purple.
+
+## 36. 2026-05-28 Alarm Management Batch Processing
+
+- In the alarm-management `预警/告警列表`, right-click selection mode supports selecting multiple grouped warning/alarm rows and using `批量处理`.
+- The selection checkbox sits in its own blank column before the `编号` column, so row numbers remain visually aligned.
+- Batch processing is allowed only when all selected rows share the same current `状态`. If selected rows have mixed statuses, show a modal explaining that batch processing is unavailable.
+- Batch processing opens the same process-choice modal as a single row, with `关闭预警` and `下发 SR` actions.
+- The batch close-warning flow reuses the single-row close modal fields and validation. Confirming applies the selected close status, reason, remark, and close time to every selected group.
+- The batch SR flow reuses the single-row SR form content but omits the top alarm-context box that shows station, location, module, and name. Confirming applies the SR-issued status and shared SR form values to every selected group.
