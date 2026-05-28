@@ -668,7 +668,7 @@ function createAlarms(stations) {
         type,
         level: template.level,
         location: createAlarmLocation(template.locationFormat, station, index),
-        source: alarmSourceForIndex(index),
+        source: alarmSourceForIndex(index, station),
         dateISO: formatDateInput(date),
         eventTime: formatFullDateTime(eventDate),
         warningTime: formatFullDateTime(date),
@@ -784,13 +784,48 @@ function createAlarms(stations) {
     }
   });
 
+  addDeviceAlarmSamples(alarms, stations, templates);
   return alarms.sort((a, b) => alarmOrder(a.type) - alarmOrder(b.type));
 }
 
-function alarmSourceForIndex(index) {
-  if (index % 11 === 0) return alarmSourceLabels[2];
+function alarmSourceForIndex(index, station) {
+  if (index % 11 === 0 && station?.comm !== "offline") return alarmSourceLabels[2];
   if (index % 4 === 0) return alarmSourceLabels[1];
   return alarmSourceLabels[0];
+}
+
+function addDeviceAlarmSamples(alarms, stations, templates) {
+  const targets = stations
+    .filter((station) => station.comm !== "offline")
+    .filter((station, index) => index % 9 === 0)
+    .slice(0, 8);
+  targets.forEach((station, index) => {
+    const template = pickRiskTemplate(templates, index + 35);
+    const warningDate = new Date(2026, 3, 15 - (index % 12), 10 + (index % 5), 17 + index);
+    const eventDate = new Date(warningDate.getTime() - (18 + index * 3) * 60 * 1000);
+    alarms.push({
+      id: `${station.id}-device-alarm-${index * 2 + 1}`,
+      stationId: station.id,
+      stationName: station.name,
+      title: template.name,
+      module: template.module,
+      type: "level2",
+      level: "二级",
+      location: createAlarmLocation(template.locationFormat, station, index),
+      source: alarmSourceLabels[2],
+      dateISO: formatDateInput(warningDate),
+      eventTime: formatFullDateTime(eventDate),
+      warningTime: formatFullDateTime(warningDate),
+      time: `${String(warningDate.getMonth() + 1).padStart(2, "0")}-${String(warningDate.getDate()).padStart(2, "0")} ${String(warningDate.getHours()).padStart(2, "0")}:${String(warningDate.getMinutes()).padStart(2, "0")}`,
+      status: "待处理",
+      srIssued: false,
+      srCompleted: false,
+      srNo: "",
+      workOrderNo: "",
+      closeReason: "",
+      closeRemark: "",
+    });
+  });
 }
 
 function createDataAlarms(stations) {
@@ -4886,7 +4921,7 @@ function renderDetailAlarms(station) {
     .filter((alarm) => !warningOnly || homeAlarmCategory(alarm) === "warning")
     .filter((alarm) => alarmMatchesPartFilter(alarm, partFilter));
   const activeCategory = warningOnly ? "warning" : state.detailAlarmCategory;
-  const activeSubfilter = warningOnly ? state.detailAlarmSubfilter : state.detailAlarmSubfilter;
+  const activeSubfilter = warningOnly ? "all" : state.detailAlarmSubfilter;
   const categoryAlarms = rangeAlarms.filter((alarm) => activeCategory === "all" || homeAlarmCategory(alarm) === activeCategory);
   const alarms = categoryAlarms.filter((alarm) => homeAlarmSubfilterMatch(alarm, activeSubfilter));
   const filterSuffix = partFilter ? ` · ${partFilter.label}` : "";
@@ -4909,23 +4944,8 @@ function renderDetailAlarms(station) {
     }
   }
   if (els.detailAlarmTabs) {
-    const tabConfig = warningOnly
-      ? [
-          ["all", "全部"],
-          ["level1", "一级"],
-          ["level2", "二级"],
-          ["level3", "三级"],
-        ]
-      : [
-          ["all", "全部"],
-          ["level1", "一级"],
-          ["level2", "二级"],
-          ["data", "数据"],
-        ];
-    els.detailAlarmTabs.innerHTML = tabConfig
-      .map(([key, label]) => `<button class="${(warningOnly ? activeSubfilter : state.detailAlarmType) === key ? "active" : ""}" data-type="${key}" type="button">${label} <span id="${key === "all" ? "detailAlarmCountAll" : key === "level1" ? "detailAlarmCountLevel1" : key === "level2" ? "detailAlarmCountLevel2" : "detailAlarmCountLevel3"}">0</span></button>`)
-      .join("");
-    els.detailAlarmTabs.hidden = false;
+    els.detailAlarmTabs.innerHTML = "";
+    els.detailAlarmTabs.hidden = true;
     els.detailAlarmTabs.classList.toggle("warning-only", warningOnly);
   }
   const setDetailCount = (id, value) => {

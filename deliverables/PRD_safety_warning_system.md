@@ -417,3 +417,9 @@
 
 - In the single-station `场站概览` topology, subsystem alarm/warning hover tooltips must remain open when the pointer moves from the subsystem card into the tooltip itself.
 - Scrollable subsystem hover tooltips should accept pointer events so users can scroll long alarm/warning lists without the tooltip disappearing.
+
+## 34. 2026-05-28 Device Alarm Samples And Detail List Tabs
+
+- Sample data should include some online stations whose station alarm state is `告警`, not only `故障` or `无告警`.
+- Offline stations must not receive visible device-alarm-class records; station alarm distribution should never classify offline stations as `告警` or `故障`.
+- The single-station and single-subsystem right-side `预警/告警清单` should not show the top `全部 / 一级 / 二级 / 数据` tab row. Keep the remaining time and category/source controls below it.
