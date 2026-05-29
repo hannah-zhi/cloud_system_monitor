@@ -5035,10 +5035,11 @@ h2 {
 }
 
 .alarm-tags .alarm-card-status {
-  height: auto;
-  min-height: 22px;
+  height: 20px;
+  min-height: 20px;
   padding: 0 8px;
-  border-radius: 4px;
+  border-radius: 0;
+  font-size: 12px;
   line-height: 1.2;
   white-space: nowrap;
 }
