@@ -3689,7 +3689,7 @@ function renderSubsystemDetail(station, subsystemNo) {
     ${renderSubsystemPartsTopology(station, subsystemNo)}
     <article class="panel station-power-panel subsystem-chart-panel">
       <div class="panel-title-row">
-        <div class="panel-title"><span></span>场站功率</div>
+        <div class="panel-title"><span></span>子系统功率</div>
         <div class="chart-date-range alarm-detail-date" data-chart-range="power"><input type="date" value="${state.overviewPowerStartDate}" aria-label="开始日期" /><span>→</span><input type="date" value="${state.overviewPowerEndDate}" aria-label="结束日期" /></div>
       </div>
       <div class="overview-chart-wrap">
