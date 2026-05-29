@@ -5035,8 +5035,30 @@ h2 {
 }
 
 .alarm-tags .alarm-card-status {
-  border-radius: 3px;
-  font-size: 11px;
+  height: auto;
+  min-height: 22px;
+  padding: 0 8px;
+  border-radius: 4px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.alarm-tags .alarm-card-status.status-pending {
+  border: 1px solid rgba(244, 165, 28, 0.4);
+  background: rgba(244, 165, 28, 0.12);
+  color: #ffd17a;
+}
+
+.alarm-tags .alarm-card-status.status-investigating {
+  border: 1px solid rgba(18, 152, 255, 0.48);
+  background: rgba(18, 152, 255, 0.13);
+  color: #9ed8ff;
+}
+
+.alarm-tags .alarm-card-status.status-closed {
+  border: 1px solid rgba(143, 151, 168, 0.44);
+  background: rgba(143, 151, 168, 0.12);
+  color: #b9c0cf;
 }
 
 .risk-alarm-grid .legend-item {
