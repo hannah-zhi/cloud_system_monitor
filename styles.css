@@ -5034,6 +5034,11 @@ h2 {
   font-size: 12px;
 }
 
+.alarm-tags .alarm-card-status {
+  border-radius: 3px;
+  font-size: 11px;
+}
+
 .risk-alarm-grid .legend-item {
   display: grid;
   grid-template-columns: auto 32px;

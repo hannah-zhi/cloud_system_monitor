@@ -452,3 +452,8 @@
 - On the subsystem diagnosis detail page, the right `预警清单` shows top warning-level tabs `全部 / 一级 / 二级 / 三级` with counts and filters the warning-only list by the selected level.
 - Station and subsystem overview power chart titles should display `场站功率`.
 - In `SOS安全指数与相关数据趋势`, only `SOS指数` renders as a line. Every other selected parameter renders as a grouped bar series on the right axis.
+
+## 38. 2026-05-29 Side Alarm List Status Tags
+
+- In right-side `预警/告警清单` and warning-only `预警清单` cards, add a status tag immediately after the module/system tag such as `电池系统`.
+- The status tag uses the same status source as the alarm-management table and the same semantic colors as table status pills.

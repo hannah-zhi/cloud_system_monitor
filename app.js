@@ -1081,12 +1081,28 @@ function homeAlarmRightLabel(alarm) {
 
 function homeAlarmLeftTags(alarm) {
   const category = homeAlarmCategory(alarm);
-  if (category === "data") return `<span>${alarm.module}</span>`;
+  const status = homeAlarmStatusTag(alarm);
+  if (category === "data") return `<span>${alarm.module}</span>${status}`;
   if (category === "alarm") {
     const severity = homeDeviceAlarmSeverity(alarm);
-    return `<span class="alarm-level alarm-device-${severity}">${severity === "fault" ? "故障" : "告警"}</span><span>${alarm.module}</span>`;
+    return `<span class="alarm-level alarm-device-${severity}">${severity === "fault" ? "故障" : "告警"}</span><span>${alarm.module}</span>${status}`;
   }
-  return `<span class="alarm-level">${alarm.level}</span><span>${alarm.module}</span>`;
+  return `<span class="alarm-level">${alarm.level}</span><span>${alarm.module}</span>${status}`;
+}
+
+function homeAlarmStatusTag(alarm) {
+  const status = alarmManagementStatusForAlarm(alarm);
+  return status ? `<span class="alarm-card-status ${statusClass(status)}">${status}</span>` : "";
+}
+
+function alarmManagementStatusForAlarm(alarm) {
+  const exact = state.allAlarms?.find((item) => item.id === alarm.id);
+  if (exact?.status) return exact.status;
+  if (alarm.linkGroupId) {
+    const linked = state.allAlarms?.find((item) => item.linkGroupId === alarm.linkGroupId && item.status);
+    if (linked?.status) return linked.status;
+  }
+  return alarm.status || "";
 }
 
 function homeAlarmPillClass(alarm) {
