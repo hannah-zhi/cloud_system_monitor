@@ -3689,7 +3689,7 @@ function renderSubsystemDetail(station, subsystemNo) {
     ${renderSubsystemPartsTopology(station, subsystemNo)}
     <article class="panel station-power-panel subsystem-chart-panel">
       <div class="panel-title-row">
-        <div class="panel-title"><span></span>子系统有功功率</div>
+        <div class="panel-title"><span></span>场站功率</div>
         <div class="chart-date-range alarm-detail-date" data-chart-range="power"><input type="date" value="${state.overviewPowerStartDate}" aria-label="开始日期" /><span>→</span><input type="date" value="${state.overviewPowerEndDate}" aria-label="结束日期" /></div>
       </div>
       <div class="overview-chart-wrap">
@@ -3787,10 +3787,10 @@ function subsystemDiagnosisSeriesOptions() {
   return [
     { key: "charge", label: "充电能量", color: "#20d3c5", type: "bar", unit: "kWh" },
     { key: "discharge", label: "放电能量", color: "#1689ff", type: "bar", unit: "kWh" },
-    { key: "soh", label: "SOH", color: "#ffd437", type: "line", unit: "%" },
-    { key: "avgTemp", label: "平均温度", color: "#b95cff", type: "line", unit: "℃" },
-    { key: "maxTemp", label: "最高温度", color: "#ff8a3d", type: "line", unit: "℃" },
-    { key: "cycles", label: "循环次数", color: "#8fcfff", type: "line", unit: "次" },
+    { key: "soh", label: "SOH", color: "#ffd437", type: "bar", unit: "%" },
+    { key: "avgTemp", label: "平均温度", color: "#b95cff", type: "bar", unit: "℃" },
+    { key: "maxTemp", label: "最高温度", color: "#ff8a3d", type: "bar", unit: "℃" },
+    { key: "cycles", label: "循环次数", color: "#8fcfff", type: "bar", unit: "次" },
   ];
 }
 
@@ -3892,13 +3892,16 @@ function renderSubsystemDiagnosisTrend(snapshot) {
     const x = xFor(index);
     const isHover = state.subsystemDiagnosisTrendHover?.index === index;
     if (isHover) drawOverviewHoverGuide(ctx, x, pad, canvas.height);
-    const barWidth = Math.max(5, Math.min(13, (canvas.width - pad.left - pad.right) / data.length / 4));
-    if (state.subsystemDiagnosisTrendSeries.has("charge")) {
-      drawOverviewBar(ctx, x - barWidth - 2, yParam(item.charge), barWidth, canvas.height - pad.bottom - yParam(item.charge), "#20d3c5", seriesAlpha(state.subsystemDiagnosisTrendHighlight, "charge"));
-    }
-    if (state.subsystemDiagnosisTrendSeries.has("discharge")) {
-      drawOverviewBar(ctx, x + 2, yParam(item.discharge), barWidth, canvas.height - pad.bottom - yParam(item.discharge), "#1689ff", seriesAlpha(state.subsystemDiagnosisTrendHighlight, "discharge"));
-    }
+    const barSeries = rightSeries.filter((series) => series.type === "bar");
+    const slotWidth = (canvas.width - pad.left - pad.right) / Math.max(1, data.length);
+    const barGap = 2;
+    const barWidth = Math.max(4, Math.min(12, (slotWidth * 0.62 - barGap * Math.max(0, barSeries.length - 1)) / Math.max(1, barSeries.length)));
+    const totalBarWidth = barSeries.length * barWidth + Math.max(0, barSeries.length - 1) * barGap;
+    barSeries.forEach((series, seriesIndex) => {
+      const barX = x - totalBarWidth / 2 + seriesIndex * (barWidth + barGap);
+      const barY = yParam(item[series.key]);
+      drawOverviewBar(ctx, barX, barY, barWidth, canvas.height - pad.bottom - barY, series.color, seriesAlpha(state.subsystemDiagnosisTrendHighlight, series.key));
+    });
     drawOverviewXAxis(ctx, item.label, x, canvas.height, pad, index, data.length);
     state.subsystemDiagnosisTrendHitboxes.push({ index, x, item });
   });
@@ -4049,7 +4052,7 @@ function renderStationOverview(station) {
     </article>
     <article class="panel station-power-panel">
       <div class="panel-title-row">
-        <div class="panel-title"><span></span>场站有功功率</div>
+        <div class="panel-title"><span></span>场站功率</div>
         <div class="chart-date-range alarm-detail-date" data-chart-range="power"><input type="date" value="${state.overviewPowerStartDate}" aria-label="开始日期" /><span>→</span><input type="date" value="${state.overviewPowerEndDate}" aria-label="结束日期" /></div>
       </div>
       <div class="overview-chart-wrap">
@@ -5014,7 +5017,7 @@ function renderDetailAlarms(station) {
     .filter((alarm) => !warningOnly || homeAlarmCategory(alarm) === "warning")
     .filter((alarm) => alarmMatchesPartFilter(alarm, partFilter));
   const activeCategory = warningOnly ? "warning" : state.detailAlarmCategory;
-  const activeSubfilter = warningOnly ? "all" : state.detailAlarmSubfilter;
+  const activeSubfilter = warningOnly ? state.detailAlarmSubfilter : state.detailAlarmSubfilter;
   const categoryAlarms = rangeAlarms.filter((alarm) => activeCategory === "all" || homeAlarmCategory(alarm) === activeCategory);
   const alarms = categoryAlarms.filter((alarm) => homeAlarmSubfilterMatch(alarm, activeSubfilter));
   const filterSuffix = partFilter ? ` · ${partFilter.label}` : "";
@@ -5037,8 +5040,27 @@ function renderDetailAlarms(station) {
     }
   }
   if (els.detailAlarmTabs) {
-    els.detailAlarmTabs.innerHTML = "";
-    els.detailAlarmTabs.hidden = true;
+    if (warningOnly) {
+      const warningTabCounts = {
+        all: rangeAlarms.length,
+        level1: rangeAlarms.filter((alarm) => alarm.type === "level1").length,
+        level2: rangeAlarms.filter((alarm) => alarm.type === "level2").length,
+        level3: rangeAlarms.filter((alarm) => alarm.type === "level3").length,
+      };
+      const warningTabs = [
+        { key: "all", label: "全部" },
+        { key: "level1", label: "一级" },
+        { key: "level2", label: "二级" },
+        { key: "level3", label: "三级" },
+      ];
+      els.detailAlarmTabs.innerHTML = warningTabs
+        .map((tab) => `<button class="${activeSubfilter === tab.key ? "active" : ""}" data-type="${tab.key}" type="button">${tab.label} <span id="detailAlarmCount${tab.key === "all" ? "All" : tab.key === "level1" ? "Level1" : tab.key === "level2" ? "Level2" : "Level3"}">${warningTabCounts[tab.key]}</span></button>`)
+        .join("");
+      els.detailAlarmTabs.hidden = false;
+    } else {
+      els.detailAlarmTabs.innerHTML = "";
+      els.detailAlarmTabs.hidden = true;
+    }
     els.detailAlarmTabs.classList.toggle("warning-only", warningOnly);
   }
   const setDetailCount = (id, value) => {

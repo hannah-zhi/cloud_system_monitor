@@ -446,3 +446,9 @@
 - Batch processing opens the same process-choice modal as a single row, with `关闭预警` and `下发 SR` actions.
 - The batch close-warning flow reuses the single-row close modal fields and validation. Confirming applies the selected close status, reason, remark, and close time to every selected group.
 - The batch SR flow reuses the single-row SR form content but omits the top alarm-context box that shows station, location, module, and name. Confirming applies the SR-issued status and shared SR form values to every selected group.
+
+## 37. 2026-05-29 Diagnosis Subsystem Chart Refinement
+
+- On the subsystem diagnosis detail page, the right `预警清单` shows top warning-level tabs `全部 / 一级 / 二级 / 三级` with counts and filters the warning-only list by the selected level.
+- Station and subsystem overview power chart titles should display `场站功率`.
+- In `SOS安全指数与相关数据趋势`, only `SOS指数` renders as a line. Every other selected parameter renders as a grouped bar series on the right axis.
