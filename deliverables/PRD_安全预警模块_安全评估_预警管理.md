@@ -76,8 +76,8 @@
 
 | 来源页面/模块 | 触发动作 | 目标页面/模块 | 联动规则 |
 | --- | --- | --- | --- |
-| 安全评估-风险场站 TOP5 | 点击场站条目 | 单站详情-安全诊断 | 携带 stationId，进入单站详情并默认打开“安全诊断”标签 |
-| 安全评估-场站 SOS 分布 | 点击柱子 | 单站详情-安全诊断 | 携带 stationId |
+| 安全评估-风险场站 TOP5 | 点击场站条目 | 单站详情-安全诊断 | 携带 siteId，进入单站详情并默认打开“安全诊断”标签 |
+| 安全评估-场站 SOS 分布 | 点击柱子 | 单站详情-安全诊断 | 携带 siteId |
 | 安全评估-预警类型 TOP5 | 点击预警类型 | 预警管理 | 携带预警名称筛选条件 |
 | 预警管理-列表行 | 点击行 | 预警详情弹窗 | 打开该聚合预警详情 |
 | 预警详情弹窗-关联预警按钮 | 点击关联 | 预警详情弹窗 | 切换到关联的云端/站端预警 |
@@ -91,12 +91,12 @@
 | 序号 | 功能模块 | 功能名称 | 功能类型 | 优先级 |
 | --- | --- | --- | --- | --- |
 | 1 | 安全评估页面 | 页面定位 (Page Positioning) | 前端展示功能 | P1 |
-| 2 | 安全评估页面 | 全量场站展示口径 (All-station Display Scope) | 前端展示功能 | P0 |
-| 3 | 安全评估页面 | 风险场站 TOP5 (Risk Station TOP5) | 前端展示功能 | P1 |
-| 4 | 安全评估页面 | 全量场站平均 SOS (Average SOS of All Stations) | 前端展示功能 | P1 |
-| 5 | 安全评估页面 | 场站风险等级占比 (Station Risk Level Ratio) | 前端展示功能 | P1 |
-| 6 | 安全评估页面 | 场站 SOS 分布 (Station SOS Distribution) | 前端展示功能 | P1 |
-| 7 | 安全评估页面 | 全量场站 SOS 趋势 (All Stations SOS Trend) | 前端展示功能 | P1 |
+| 2 | 安全评估页面 | 全量场站展示口径 (All-site Display Scope) | 前端展示功能 | P0 |
+| 3 | 安全评估页面 | 风险场站 TOP5 (Risk Site TOP5) | 前端展示功能 | P1 |
+| 4 | 安全评估页面 | 全量场站平均 SOS (Average SOS of All Sites) | 前端展示功能 | P1 |
+| 5 | 安全评估页面 | 场站风险等级占比 (Site Risk Level Ratio) | 前端展示功能 | P1 |
+| 6 | 安全评估页面 | 场站 SOS 分布 (Site SOS Distribution) | 前端展示功能 | P1 |
+| 7 | 安全评估页面 | 全量场站 SOS 趋势 (All Sites SOS Trend) | 前端展示功能 | P1 |
 | 8 | 安全评估页面 | 预警等级占比 (Warning Level Ratio) | 前端展示功能 | P1 |
 | 9 | 安全评估页面 | 预警模块分布 (Warning Module Distribution) | 前端展示功能 | P1 |
 | 10 | 安全评估页面 | 预警类型 TOP5 (Warning Type TOP5) | 前端展示功能 | P1 |
@@ -130,7 +130,7 @@
 
 安全评估页不提供场站筛选，页面内所有图表和功能板块始终按全量有效场站口径统计展示。
 
-### 2.1.3 风险场站 TOP5 (Risk Station TOP5)
+### 2.1.3 风险场站 TOP5 (Risk Site TOP5)
 
 界面截图：
 
@@ -177,7 +177,7 @@
 | sortOrder | asc | 排序方向，默认从低到高 |
 | excludeInvalidSos | true | 是否过滤无有效 SOS 的场站 |
 
-### 2.1.4 全量场站平均 SOS (Average SOS of All Stations)
+### 2.1.4 全量场站平均 SOS (Average SOS of All Sites)
 
 界面截图：
 
@@ -216,13 +216,13 @@
 
 | 参数字段 | 默认值 | 说明 |
 | --- | --- | --- |
-| includeOfflineStation | false | 是否纳入离线场站 |
+| includeOfflineSite | false | 是否纳入离线场站 |
 | excludeInvalidSos | true | 是否剔除无效 SOS 场站 |
 | decimalPlaces | 2 | SOS 数值保留小数位 |
 | gaugeMin | 0 | 仪表盘最小刻度 |
 | gaugeMax | 100 | 仪表盘最大刻度 |
 
-### 2.1.5 场站风险等级占比 (Station Risk Level Ratio)
+### 2.1.5 场站风险等级占比 (Site Risk Level Ratio)
 
 界面截图：
 
@@ -268,7 +268,7 @@
 | showPercent | true | tooltip 是否展示占比 |
 | includeHealthy | true | 是否展示健康场站 |
 
-### 2.1.6 场站 SOS 分布 (Station SOS Distribution)
+### 2.1.6 场站 SOS 分布 (Site SOS Distribution)
 
 界面截图：
 
@@ -326,7 +326,7 @@
 | warningLineHigh | 60 | 高/中风险辅助线 |
 | enableHorizontalScroll | true | 场站较多时是否启用横向滚动 |
 
-### 2.1.7 全量场站 SOS 趋势 (All Stations SOS Trend)
+### 2.1.7 全量场站 SOS 趋势 (All Sites SOS Trend)
 
 界面截图：
 
@@ -787,7 +787,7 @@
 
 | 参数字段 | 默认值 | 说明 |
 | --- | --- | --- |
-| groupKeys | name/module/station/location/source | 聚合字段 |
+| groupKeys | name/module/site/location/source | 聚合字段 |
 | defaultSortField | warningTime | 默认排序字段 |
 | defaultSortOrder | desc | 默认排序方向 |
 | pageSize | 20 | 默认分页条数；如采用虚拟滚动可不分页 |
@@ -1513,7 +1513,7 @@ SR 返回确认字段：
 
 | 字段 | 说明 |
 | --- | --- |
-| stationIds | 场站 ID 列表，可空 |
+| siteIds | 场站 ID 列表，可空 |
 | regionIds | 区域 ID 列表，可空 |
 | riskLevels | 风险等级列表，可空 |
 | trendRange | 7/15/30 |
@@ -1522,8 +1522,8 @@ SR 返回确认字段：
 
 - riskTop5。
 - globalAverageSos。
-- stationRiskDistribution。
-- stationSosDistribution。
+- siteRiskDistribution。
+- siteSosDistribution。
 - globalSosTrend。
 - alarmLevelDistribution。
 - alarmModuleDistribution。
@@ -1541,7 +1541,7 @@ SR 返回确认字段：
 - statuses。
 - modules。
 - names。
-- stationIds。
+- siteIds。
 - locations。
 - sources。
 - pageNo。
