@@ -90,39 +90,39 @@
 
 | 序号 | 功能模块 | 功能名称 | 功能类型 | 优先级 |
 | --- | --- | --- | --- | --- |
-| 1 | 安全评估页面 | 页面定位 | 前端展示功能 | P1 |
-| 2 | 安全评估页面 | 全量场站展示口径 | 前端展示功能 | P0 |
-| 3 | 安全评估页面 | 风险场站 TOP5 | 前端展示功能 | P1 |
-| 4 | 安全评估页面 | 全量场站平均 SOS 仪表盘 | 前端展示功能 | P1 |
-| 5 | 安全评估页面 | 场站风险等级占比 | 前端展示功能 | P1 |
-| 6 | 安全评估页面 | 场站 SOS 分布柱状图 | 前端展示功能 | P1 |
-| 7 | 安全评估页面 | 全量场站 SOS 趋势 | 前端展示功能 | P1 |
-| 8 | 安全评估页面 | 预警等级占比 | 前端展示功能 | P1 |
-| 9 | 安全评估页面 | 预警模块分布 | 前端展示功能 | P1 |
-| 10 | 安全评估页面 | 预警类型 TOP5 | 前端展示功能 | P1 |
-| 11 | 预警管理页面 | 页面定位 | 前端展示功能 | P1 |
-| 12 | 预警管理页面 | 顶部统计卡片 | 前端展示功能 | P1 |
-| 13 | 预警管理页面 | 预警/告警等级占比 | 前端展示功能 | P1 |
-| 14 | 预警管理页面 | 预警/告警来源分布 | 前端展示功能 | P1 |
-| 15 | 预警管理页面 | 预警/告警模块分布 | 前端展示功能 | P1 |
-| 16 | 预警管理页面 | 预警/告警类型 TOP5 | 前端展示功能 | P1 |
-| 17 | 预警管理页面 | 查询筛选栏 | 前端展示功能 | P0 |
-| 18 | 预警管理页面 | 预警/告警列表 | 前端展示功能 | P0 |
-| 19 | 预警管理页面 | 状态流转规则 | 前端展示功能 | P1 |
-| 20 | 预警管理页面 | 预警/告警详情弹窗 | 前端展示功能 | P0 |
-| 21 | 预警管理页面 | 同组预警/告警列表 | 前端展示功能 | P0 |
-| 22 | 预警管理页面 | 相关数据趋势图 | 前端展示功能 | P1 |
-| 23 | 预警管理页面 | 预警处理完整流程图 | 前端展示功能 | P0 |
-| 24 | 预警管理页面 | 关闭预警流程 | 前端展示功能 | P0 |
-| 25 | 预警管理页面 | 下发 SR 流程 | 前端展示功能 | P0 |
-| 26 | 预警管理页面 | SR 返回确认流程 | 前端展示功能 | P0 |
-| 27 | 预警管理页面 | 根因补充流程 | 前端展示功能 | P0 |
-| 28 | 预警管理页面 | 批量处理 | 前端展示功能 | P0 |
-| 29 | 后台功能 | SOS 定时计算 | 后台自动功能 | P0 |
-| 30 | 后台功能 | 预警/告警数据同步 | 后台自动功能 | P0 |
-| 31 | 后台功能 | 自动生成安全评估报告 | 后台自动功能 | P1 |
-| 32 | 后台功能 | 页面数据定期刷新 | 后台自动功能 | P0 |
-| 33 | 后台功能 | 状态同步与关联预警同步 | 后台自动功能 | P0 |
+| 1 | 安全评估页面 | 页面定位 (Page Positioning) | 前端展示功能 | P1 |
+| 2 | 安全评估页面 | 全量场站展示口径 (All-station Display Scope) | 前端展示功能 | P0 |
+| 3 | 安全评估页面 | 风险场站 TOP5 (Risk Station TOP5) | 前端展示功能 | P1 |
+| 4 | 安全评估页面 | 全量场站平均 SOS (Average SOS of All Stations) | 前端展示功能 | P1 |
+| 5 | 安全评估页面 | 场站风险等级占比 (Station Risk Level Ratio) | 前端展示功能 | P1 |
+| 6 | 安全评估页面 | 场站 SOS 分布 (Station SOS Distribution) | 前端展示功能 | P1 |
+| 7 | 安全评估页面 | 全量场站 SOS 趋势 (All Stations SOS Trend) | 前端展示功能 | P1 |
+| 8 | 安全评估页面 | 预警等级占比 (Warning Level Ratio) | 前端展示功能 | P1 |
+| 9 | 安全评估页面 | 预警模块分布 (Warning Module Distribution) | 前端展示功能 | P1 |
+| 10 | 安全评估页面 | 预警类型 TOP5 (Warning Type TOP5) | 前端展示功能 | P1 |
+| 11 | 预警管理页面 | 预警管理 (Warning Management) | 前端展示功能 | P1 |
+| 12 | 预警管理页面 | 顶部统计卡片 (Top Statistic Cards) | 前端展示功能 | P1 |
+| 13 | 预警管理页面 | 预警/告警等级占比 (Warning/Alarm Level Ratio) | 前端展示功能 | P1 |
+| 14 | 预警管理页面 | 预警/告警来源分布 (Warning/Alarm Source Distribution) | 前端展示功能 | P1 |
+| 15 | 预警管理页面 | 预警/告警模块分布 (Warning/Alarm Module Distribution) | 前端展示功能 | P1 |
+| 16 | 预警管理页面 | 预警/告警类型 TOP5 (Warning/Alarm Type TOP5) | 前端展示功能 | P1 |
+| 17 | 预警管理页面 | 查询筛选栏 (Query Filter Bar) | 前端展示功能 | P0 |
+| 18 | 预警管理页面 | 预警/告警列表 (Warning/Alarm List) | 前端展示功能 | P0 |
+| 19 | 预警管理页面 | 状态流转规则 (Status Transition Rules) | 前端展示功能 | P1 |
+| 20 | 预警管理页面 | 预警/告警详情 (Warning/Alarm Details) | 前端展示功能 | P0 |
+| 21 | 预警管理页面 | 同组预警/告警列表 (Grouped Warning/Alarm List) | 前端展示功能 | P0 |
+| 22 | 预警管理页面 | 相关数据趋势图 (Related Data Trend) | 前端展示功能 | P1 |
+| 23 | 预警管理页面 | 预警处理流程 (Warning Handling Workflow) | 前端展示功能 | P0 |
+| 24 | 预警管理页面 | 关闭预警 (Close Warning) | 前端展示功能 | P0 |
+| 25 | 预警管理页面 | 下发 SR (Dispatch SR) | 前端展示功能 | P0 |
+| 26 | 预警管理页面 | SR 返回确认 (SR Return Confirmation) | 前端展示功能 | P0 |
+| 27 | 预警管理页面 | 根因补充 (Root Cause Supplement) | 前端展示功能 | P0 |
+| 28 | 预警管理页面 | 批量处理 (Batch Handling) | 前端展示功能 | P0 |
+| 29 | 后台功能 | SOS 定时计算 (Scheduled SOS Calculation) | 后台自动功能 | P0 |
+| 30 | 后台功能 | 预警/告警数据同步 (Warning/Alarm Data Synchronization) | 后台自动功能 | P0 |
+| 31 | 后台功能 | 自动生成安全评估报告 (Auto-generated Safety Assessment Report) | 后台自动功能 | P1 |
+| 32 | 后台功能 | 页面数据定期刷新 (Periodic Page Data Refresh) | 后台自动功能 | P0 |
+| 33 | 后台功能 | 状态同步与关联预警同步 (Status and Related Warning Synchronization) | 后台自动功能 | P0 |
 
 ## 二、功能详细描述
 
@@ -130,7 +130,7 @@
 
 安全评估页不提供场站筛选，页面内所有图表和功能板块始终按全量有效场站口径统计展示。
 
-### 2.1.3 风险场站 TOP5
+### 2.1.3 风险场站 TOP5 (Risk Station TOP5)
 
 界面截图：
 
@@ -177,7 +177,7 @@
 | sortOrder | asc | 排序方向，默认从低到高 |
 | excludeInvalidSos | true | 是否过滤无有效 SOS 的场站 |
 
-### 2.1.4 全量场站平均 SOS 仪表盘
+### 2.1.4 全量场站平均 SOS (Average SOS of All Stations)
 
 界面截图：
 
@@ -222,7 +222,7 @@
 | gaugeMin | 0 | 仪表盘最小刻度 |
 | gaugeMax | 100 | 仪表盘最大刻度 |
 
-### 2.1.5 场站风险等级占比
+### 2.1.5 场站风险等级占比 (Station Risk Level Ratio)
 
 界面截图：
 
@@ -268,7 +268,7 @@
 | showPercent | true | tooltip 是否展示占比 |
 | includeHealthy | true | 是否展示健康场站 |
 
-### 2.1.6 场站 SOS 分布柱状图
+### 2.1.6 场站 SOS 分布 (Station SOS Distribution)
 
 界面截图：
 
@@ -326,7 +326,7 @@
 | warningLineHigh | 60 | 高/中风险辅助线 |
 | enableHorizontalScroll | true | 场站较多时是否启用横向滚动 |
 
-### 2.1.7 全量场站 SOS 趋势
+### 2.1.7 全量场站 SOS 趋势 (All Stations SOS Trend)
 
 界面截图：
 
@@ -379,7 +379,7 @@
 | warningLineMiddle | 80 | 中/低风险辅助线 |
 | warningLineHigh | 60 | 高/中风险辅助线 |
 
-### 2.1.8 预警等级占比
+### 2.1.8 预警等级占比 (Warning Level Ratio)
 
 界面截图：
 
@@ -426,7 +426,7 @@
 | showPercent | true | tooltip 是否展示占比 |
 | chartType | donut | 图表类型 |
 
-### 2.1.9 预警模块分布
+### 2.1.9 预警模块分布 (Warning Module Distribution)
 
 界面截图：
 
@@ -470,7 +470,7 @@
 | legendNumberAlign | right | legend 数字列对齐方式 |
 | chartType | donut | 图表类型 |
 
-### 2.1.10 预警类型 TOP5
+### 2.1.10 预警类型 TOP5 (Warning Type TOP5)
 
 界面截图：
 
@@ -520,7 +520,7 @@
 
 ### 2.2 预警管理页面功能模块
 
-### 2.2.1 页面定位
+### 2.2.1 预警管理 (Warning Management)
 
 预警管理页面用于集中展示云端预警、站端预警、设备告警，支持统计分析、复合筛选、聚合列表、详情查看和闭环处理。
 
@@ -531,7 +531,7 @@
 3. 预警/告警列表。
 4. 详情与处理弹窗。
 
-### 2.2.2 顶部统计卡片
+### 2.2.2 顶部统计卡片 (Top Statistic Cards)
 
 顶部展示四个统计卡：
 
@@ -546,7 +546,7 @@
 - 筛选条件变更后，统计卡和列表需同步刷新。
 - 空数据时展示空状态。
 
-### 2.2.3 预警/告警等级占比
+### 2.2.3 预警/告警等级占比 (Warning/Alarm Level Ratio)
 
 界面截图：
 
@@ -576,7 +576,7 @@
 | chartType | donut | 图表类型 |
 | canvasAspectRatio | 1:1 | canvas 坐标系比例 |
 
-### 2.2.4 预警/告警来源分布
+### 2.2.4 预警/告警来源分布 (Warning/Alarm Source Distribution)
 
 界面截图：
 
@@ -614,7 +614,7 @@
 | includeDataAlarm | false | 是否纳入数据告警，预警管理页默认否 |
 | chartType | donut | 图表类型 |
 
-### 2.2.5 预警/告警模块分布
+### 2.2.5 预警/告警模块分布 (Warning/Alarm Module Distribution)
 
 界面截图：
 
@@ -643,7 +643,7 @@
 | legendNumberAlign | right | legend 数字列对齐方式 |
 | chartType | donut | 图表类型 |
 
-### 2.2.6 预警/告警类型 TOP5
+### 2.2.6 预警/告警类型 TOP5 (Warning/Alarm Type TOP5)
 
 界面截图：
 
@@ -675,7 +675,7 @@
 | sortOrder | desc | 数量排序方向 |
 | colorSequence | 红/黄/绿/青/紫 | 进度条颜色序列 |
 
-### 2.2.7 查询筛选栏
+### 2.2.7 查询筛选栏 (Query Filter Bar)
 
 界面截图：
 
@@ -723,7 +723,7 @@
 | multiSelectMaxCount | 不限制 | 单个筛选项最多选择数量 |
 | dropdownZIndex | 高于表格表头 | 下拉面板层级 |
 
-### 2.2.8 预警/告警列表
+### 2.2.8 预警/告警列表 (Warning/Alarm List)
 
 界面截图：
 
@@ -794,7 +794,7 @@
 | showSrReturnIcon | true | 是否展示 SR 返回信封标记 |
 | fixedHeader | true | 是否冻结表头 |
 
-### 2.2.9 状态流转规则
+### 2.2.9 状态流转规则 (Status Transition Rules)
 
 状态枚举：
 
@@ -828,7 +828,7 @@
 - “排查中”使用处理中样式。
 - “待处理”使用强调样式。
 
-### 2.2.10 预警/告警详情弹窗
+### 2.2.10 预警/告警详情 (Warning/Alarm Details)
 
 界面截图：
 
@@ -888,7 +888,7 @@
 | timeFormat | YYYY/MM/DD HH:mm:ss | 完整时间展示格式 |
 | enableRelatedJump | true | 是否展示关联预警跳转按钮 |
 
-### 2.2.11 同组预警/告警列表
+### 2.2.11 同组预警/告警列表 (Grouped Warning/Alarm List)
 
 功能概述：
 
@@ -923,7 +923,7 @@
 | durationUnit | 小时 | 持续时长展示单位 |
 | maxVisibleRows | 4 | 弹窗中默认可见行数，超出滚动 |
 
-### 2.2.12 相关数据趋势图
+### 2.2.12 相关数据趋势图 (Related Data Trend)
 
 功能概述：
 
@@ -965,7 +965,7 @@
 | maxSeriesCount | 3 | 单图最大曲线数量 |
 | emptyPointPolicy | 不补点 | 缺失测点处理策略 |
 
-### 2.2.13 预警处理完整流程图
+### 2.2.13 预警处理流程 (Warning Handling Workflow)
 
 功能概述：
 
@@ -1092,7 +1092,7 @@ flowchart LR
 - 任一处理动作完成后，均需刷新详情弹窗、预警/告警列表和顶部统计卡。
 - 任一状态变更均需记录操作日志；如存在云端/站端关联预警，需同步更新关联预警闭环字段。
 
-### 2.2.14 关闭预警流程
+### 2.2.14 关闭预警 (Close Warning)
 
 界面截图：
 
@@ -1137,7 +1137,7 @@ flowchart LR
 | batchCloseEnabled | true | 是否允许批量关闭 |
 | closeStatusPrefix | 关闭- | 关闭状态前缀 |
 
-### 2.2.15 下发 SR 流程
+### 2.2.15 下发 SR (Dispatch SR)
 
 界面截图：
 
@@ -1189,7 +1189,7 @@ SR 表单字段：
 | attachmentMaxCount | 5 | 附件数量上限 |
 | expectedFinishRequired | true | 期望完成时间是否必填 |
 
-### 2.2.16 SR 返回确认流程
+### 2.2.16 SR 返回确认 (SR Return Confirmation)
 
 触发条件：
 
@@ -1234,7 +1234,7 @@ SR 返回确认字段：
 | requireInputForOtherFailureMode | true | 选择其他时是否必填 |
 | rootCauseRequiredModes | 规则库配置 | 需要补充根因的失效模式集合 |
 
-### 2.2.17 根因补充流程
+### 2.2.17 根因补充 (Root Cause Supplement)
 
 触发条件：
 
@@ -1270,7 +1270,7 @@ SR 返回确认字段：
 | rootCauseRequired | true | 关闭-待补充根因状态下是否必填 |
 | finalStatusField | pendingFinalStatus | 根因提交后使用的最终状态字段 |
 
-### 2.2.18 批量处理
+### 2.2.18 批量处理 (Batch Handling)
 
 功能概述：
 
@@ -1308,7 +1308,7 @@ SR 返回确认字段：
 
 ### 2.3 后台自动功能模块
 
-### 2.3.1 SOS 定时计算
+### 2.3.1 SOS 定时计算 (Scheduled SOS Calculation)
 
 功能概述：
 
@@ -1342,7 +1342,7 @@ SR 返回确认字段：
 - 是否剔除离线场站。
 - 风险等级阈值。
 
-### 2.3.2 预警/告警数据同步
+### 2.3.2 预警/告警数据同步 (Warning/Alarm Data Synchronization)
 
 功能概述：
 
@@ -1365,7 +1365,7 @@ SR 返回确认字段：
 - 设备告警需映射到统一等级、模块、场站、位置字段。
 - 同步失败需记录日志并重试。
 
-### 2.3.3 自动生成安全评估报告
+### 2.3.3 自动生成安全评估报告 (Auto-generated Safety Assessment Report)
 
 功能概述：
 
@@ -1394,7 +1394,7 @@ SR 返回确认字段：
 - PDF 或 Excel 报告文件。
 - 报告元数据，包括生成时间、统计范围、文件地址。
 
-### 2.3.4 页面数据定期刷新
+### 2.3.4 页面数据定期刷新 (Periodic Page Data Refresh)
 
 功能概述：
 
@@ -1412,7 +1412,7 @@ SR 返回确认字段：
 - 提供按更新时间增量拉取能力。
 - 返回 serverTime，用于前端判断数据新鲜度。
 
-### 2.3.5 状态同步与关联预警同步
+### 2.3.5 状态同步与关联预警同步 (Status and Related Warning Synchronization)
 
 功能概述：
 
