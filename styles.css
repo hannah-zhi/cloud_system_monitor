@@ -5373,6 +5373,10 @@ h2 {
   flex: 0 0 110px;
 }
 
+#alarmDetailCode {
+  flex: 0 0 168px;
+}
+
 #alarmDetailModule,
 #alarmDetailSource {
   flex: 0 0 132px;
@@ -5382,6 +5386,11 @@ h2 {
 #alarmDetailStation,
 #alarmDetailLocation {
   flex: 1 1 168px;
+}
+
+#alarmDetailCode .alarm-multi-menu {
+  width: 260px;
+  min-width: 260px;
 }
 
 .alarm-detail-filterbar > button {

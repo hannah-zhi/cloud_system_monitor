@@ -110,6 +110,7 @@ const state = {
   detailSubsystems: [],
   detailTableSort: { key: "score", direction: "asc" },
   alarmDetailSelections: {
+    code: new Set(),
     level: new Set(),
     module: new Set(),
     name: new Set(),
@@ -246,6 +247,7 @@ function bindElements() {
     "riskModuleLegend",
     "riskAlarmNameTopList",
     "alarmDetailName",
+    "alarmDetailCode",
     "alarmDetailStation",
     "alarmDetailLocation",
     "alarmDetailStatus",
@@ -2097,6 +2099,7 @@ function renderAlarmDetailFilters() {
     ...alarms.map((alarm) => alarm.status),
   ]).filter((status) => status !== "关闭-站端已处理");
   const optionMap = {
+    code: { el: els.alarmDetailCode, label: "全部编号", searchable: true, options: uniqueSorted(groupAlarmsForTable(alarms).map((group) => alarmCodeForGroup(group))) },
     level: { el: els.alarmDetailLevel, label: "全部等级", searchable: false, options: ["一级", "二级", "三级", "故障", "告警"] },
     status: { el: els.alarmDetailStatus, label: "全部状态", searchable: false, options: statusOptions },
     module: { el: els.alarmDetailModule, label: "全部模块", searchable: false, options: ["电池系统", "电气系统", "环控系统", "消防系统"] },
@@ -2362,8 +2365,8 @@ function handleBatchAlarmProcess(event) {
 function filterAlarmDetailItems() {
   const start = els.alarmDetailStart.value ? new Date(`${els.alarmDetailStart.value}T00:00:00`) : null;
   const end = els.alarmDetailEnd.value ? new Date(`${els.alarmDetailEnd.value}T23:59:59`) : null;
-  const { level, module, name, station, location, status, source } = state.alarmDetailSelections;
-  return alarmManagementItems().filter((alarm) => {
+  const { code, level, module, name, station, location, status, source } = state.alarmDetailSelections;
+  const filtered = alarmManagementItems().filter((alarm) => {
     const date = new Date(`${alarm.dateISO}T12:00:00`);
     const stationLabel = `${alarm.stationId}${alarm.stationName}`;
     return (
@@ -2378,6 +2381,13 @@ function filterAlarmDetailItems() {
       (!end || date <= end)
     );
   });
+  if (!code.size) return filtered;
+  const selectedIds = new Set(
+    groupAlarmsForTable(filtered)
+      .filter((group) => code.has(alarmCodeForGroup(group)))
+      .flatMap((group) => group.alarms.map((alarm) => alarm.id))
+  );
+  return filtered.filter((alarm) => selectedIds.has(alarm.id));
 }
 
 function alarmGroupKey(alarm) {

@@ -457,3 +457,8 @@
 
 - In right-side `预警/告警清单` and warning-only `预警清单` cards, add a status tag immediately after the module/system tag such as `电池系统`.
 - The status tag uses the same status source as the alarm-management table and the same semantic colors as table status pills.
+
+## 39. 2026-06-02 Alarm Management Code Filter
+
+- In the alarm-management `预警/告警列表` filter bar, add a searchable multi-select `编号` filter immediately after the date range.
+- The `编号` filter options must match the grouped table code values exactly, and selecting one or more codes filters the table to the corresponding grouped rows.
