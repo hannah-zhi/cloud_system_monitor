@@ -5334,8 +5334,8 @@ h2 {
   position: relative;
   z-index: 30;
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  flex-wrap: nowrap;
+  gap: 6px;
   align-items: center;
   margin-top: 12px;
   overflow: visible;
@@ -5361,31 +5361,31 @@ h2 {
 }
 
 #alarmDetailStatus {
-  flex: 0 0 150px;
-  min-width: 150px;
+  flex: 0 0 128px;
+  min-width: 128px;
 }
 
 .alarm-detail-date {
-  flex: 0 0 230px;
+  flex: 0 0 220px;
 }
 
 #alarmDetailLevel {
-  flex: 0 0 110px;
+  flex: 0 0 100px;
 }
 
 #alarmDetailCode {
-  flex: 0 0 168px;
+  flex: 0 0 150px;
 }
 
 #alarmDetailModule,
 #alarmDetailSource {
-  flex: 0 0 132px;
+  flex: 0 0 118px;
 }
 
 #alarmDetailName,
 #alarmDetailStation,
 #alarmDetailLocation {
-  flex: 1 1 168px;
+  flex: 1 1 120px;
 }
 
 #alarmDetailCode .alarm-multi-menu {
@@ -5522,6 +5522,9 @@ h2 {
 }
 
 .alarm-detail-count {
+  display: inline-flex;
+  height: 34px;
+  align-items: center;
   color: #8d96aa;
   font-size: 13px;
   white-space: nowrap;
