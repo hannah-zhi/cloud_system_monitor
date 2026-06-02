@@ -779,7 +779,9 @@ function createAlarms(stations) {
     if ((alarm.source === alarmSourceLabels[1] && stationHandledGroupIds.has(alarm.linkGroupId)) || shouldMarkStandalone) {
       const closedAt = alarm.closedAt || formatFullDateTime(new Date(alarmTimestamp(alarm) + 46 * 60 * 1000));
       Object.assign(alarm, {
-        status: "关闭-站端已处理",
+        status: "关闭-正确-类型准确",
+        srCloseReason: "预警正确",
+        srTypeAccuracy: "类型准确",
         closedAt,
         stationHandled: true,
         stationAction: "站端已完成现场复核，执行端子紧固、线束复插、BMS采样通道复测，并同步复核云端诊断结果。",
@@ -2090,12 +2092,12 @@ function renderAlarmDetailFilters() {
   const statusOptions = uniqueSorted([
     "待处理",
     "排查中",
-    "关闭-误报",
-    "关闭-数据异常",
-    "关闭-其他",
-    "关闭-待补充根因",
-    "关闭-准确",
-    "关闭-类型不准确",
+    "关闭-正确-类型准确",
+    "关闭-正确-类型不准确",
+    "关闭-正确-待补充根因",
+    "关闭-错误-误报",
+    "关闭-错误-数据异常",
+    "关闭-错误-其他",
     ...alarms.map((alarm) => alarm.status),
   ]).filter((status) => status !== "关闭-站端已处理");
   const optionMap = {
@@ -2481,7 +2483,7 @@ function renderClosedAlarmSummary(alarm) {
     alarm.srConclusion ||
     alarm.stationConclusion ||
     (alarm.closeReason ? `预警已按“${alarm.closeReason}”关闭。` : "预警已关闭，闭环信息已归档。");
-  const accuracy = alarm.srCloseReason || (alarm.stationHandled ? "类型准确" : "--");
+  const accuracy = [alarm.srCloseReason, alarm.srTypeAccuracy].filter(Boolean).join(" / ") || (alarm.stationHandled ? "预警正确 / 类型准确" : "--");
   const failureMode = alarm.srFailureMode || (alarm.stationHandled ? srFailureModesForAlarm(alarm)[0] || "站端现场处置" : "--");
   const rootCause = alarm.rootCause || "";
   return `
@@ -2504,7 +2506,7 @@ function renderSrResultReview(group) {
       <label><span>SR编号</span><input value="${alarm.srNo || ""}" readonly /></label>
       <label><span>关联工单编号</span><input value="${alarm.srWorkOrderNo || alarm.workOrderNo || ""}" readonly /></label>
       <label class="sr-full-field"><span>排查结论</span><textarea readonly>${alarm.srConclusion || srReturnConclusionForAlarm(alarm)}</textarea></label>
-      <label><span>确认结果</span><input value="${alarm.srCloseReason || ""}" readonly /></label>
+      <label><span>确认结果</span><input value="${[alarm.srCloseReason, alarm.srTypeAccuracy || alarm.closeReason].filter(Boolean).join(" / ")}" readonly /></label>
       <label><span>失效模式</span><input value="${alarm.srFailureMode || ""}" readonly /></label>
       ${
         alarm.pendingRootCause
@@ -2576,15 +2578,29 @@ function renderSrReturnConfirmation(group) {
       <div class="sr-full-field sr-decision-row">
         <span>确认结果</span>
         <div class="process-options">
-          <label><input name="srCloseReason" type="radio" value="类型准确" />类型准确</label>
-          <label><input name="srCloseReason" type="radio" value="类型不准确" />类型不准确</label>
+          <label><input name="srVerdict" type="radio" value="预警正确" />预警正确</label>
+          <label><input name="srVerdict" type="radio" value="预警错误" />预警错误</label>
         </div>
       </div>
-      <label class="sr-full-field"><span>类型选择</span><select id="srFailureModeSelect">
-        <option value="">请选择失效模式</option>
+      <div class="sr-full-field sr-decision-row sr-correct-options" hidden>
+        <span>类型判断</span>
+        <div class="process-options">
+          <label><input name="srTypeAccuracy" type="radio" value="类型准确" />类型准确</label>
+          <label><input name="srTypeAccuracy" type="radio" value="类型不准确" />类型不准确</label>
+        </div>
+      </div>
+      <label class="sr-full-field sr-correct-options" hidden><span>类型选择</span><select id="srFailureModeSelect">
+        <option value="">请选择类型</option>
         ${modes.map((mode) => `<option value="${mode}">${mode}</option>`).join("")}
       </select></label>
-      <label class="sr-full-field sr-other-mode" hidden><span>具体失效模式</span><input id="srFailureModeOther" placeholder="请输入具体失效模式" /></label>
+      <label class="sr-full-field sr-other-mode" hidden><span>具体类型</span><input id="srFailureModeOther" placeholder="请输入具体类型" /></label>
+      <div class="sr-full-field sr-decision-row sr-error-options" hidden>
+        <span>错误原因</span>
+        <div class="process-options">
+          ${["误报", "数据异常", "其他"].map((reason) => `<label><input name="srErrorReason" type="radio" value="${reason}" />${reason}</label>`).join("")}
+        </div>
+      </div>
+      <label class="sr-full-field sr-error-other" hidden><span>具体原因</span><textarea id="srErrorOtherReason" placeholder="选择“其他”时必须填写具体原因"></textarea></label>
     </div>
     <div class="process-actions">
       <button type="button" data-process-action="confirm-sr-close">确认关闭</button>
@@ -2749,12 +2765,12 @@ function renderAlarmInspector(alarmOrGroup) {
     const rootCause = els.alarmInspectorBody.querySelector("#alarmRootCauseInput")?.value.trim() || "";
     if (!rootCause) return;
     updateAlarmGroup(group, {
-      status: group.latest.pendingFinalStatus || "关闭-准确",
+      status: group.latest.pendingFinalStatus || "关闭-正确-类型准确",
       rootCause,
       pendingRootCause: false,
     });
     renderAlarmInspector(state.selectedAlarmGroup);
-    renderAlarmTable();
+    renderAlarmDetailPage();
   });
   if (els.alarmProcessBtn) {
     const locked = Boolean(group.latest.stationHandled);
@@ -2874,8 +2890,8 @@ function renderAlarmProcessPanel() {
     els.alarmProcessPanel.innerHTML = `
       <div class="process-head"><strong>SR 返回确认</strong><span>请选择预警类型判断结果</span></div>
       <div class="process-options">
-        <label><input name="srCloseReason" type="radio" value="类型准确" />类型准确</label>
-        <label><input name="srCloseReason" type="radio" value="类型不准确" />类型不准确</label>
+        <label><input name="srVerdict" type="radio" value="预警正确" />预警正确</label>
+        <label><input name="srVerdict" type="radio" value="预警错误" />预警错误</label>
       </div>
       <div class="process-actions">
         <button type="button" data-process-action="confirm-sr-close">确认关闭</button>
@@ -2896,11 +2912,47 @@ function bindAlarmProcessPanel() {
   els.alarmProcessPanel.querySelectorAll("[data-process-action]").forEach((button) => {
     button.addEventListener("click", () => handleAlarmProcessAction(button.dataset.processAction));
   });
+  els.alarmProcessPanel.querySelectorAll("input[name='srVerdict']").forEach((input) => {
+    input.addEventListener("change", () => {
+      const verdict = els.alarmProcessPanel.querySelector("input[name='srVerdict']:checked")?.value || "";
+      const isCorrect = verdict === "预警正确";
+      const isError = verdict === "预警错误";
+      els.alarmProcessPanel.querySelectorAll(".sr-correct-options").forEach((item) => {
+        item.hidden = !isCorrect;
+      });
+      els.alarmProcessPanel.querySelectorAll(".sr-error-options").forEach((item) => {
+        item.hidden = !isError;
+      });
+      if (!isCorrect) {
+        els.alarmProcessPanel.querySelectorAll("input[name='srTypeAccuracy']").forEach((item) => {
+          item.checked = false;
+        });
+        const modeSelect = els.alarmProcessPanel.querySelector("#srFailureModeSelect");
+        if (modeSelect) modeSelect.value = "";
+        const otherModeField = els.alarmProcessPanel.querySelector(".sr-other-mode");
+        if (otherModeField) otherModeField.hidden = true;
+      }
+      if (!isError) {
+        els.alarmProcessPanel.querySelectorAll("input[name='srErrorReason']").forEach((item) => {
+          item.checked = false;
+        });
+        const otherReasonField = els.alarmProcessPanel.querySelector(".sr-error-other");
+        if (otherReasonField) otherReasonField.hidden = true;
+      }
+    });
+  });
   const failureModeSelect = els.alarmProcessPanel.querySelector("#srFailureModeSelect");
   const otherModeField = els.alarmProcessPanel.querySelector(".sr-other-mode");
   failureModeSelect?.addEventListener("change", () => {
     if (!otherModeField) return;
     otherModeField.hidden = failureModeSelect.value !== "其他";
+  });
+  els.alarmProcessPanel.querySelectorAll("input[name='srErrorReason']").forEach((input) => {
+    input.addEventListener("change", () => {
+      const otherReasonField = els.alarmProcessPanel.querySelector(".sr-error-other");
+      if (!otherReasonField) return;
+      otherReasonField.hidden = input.value !== "其他" || !input.checked;
+    });
   });
 }
 
@@ -2926,7 +2978,7 @@ function handleAlarmProcessAction(action) {
       return;
     }
     groups.forEach((item) => updateAlarmGroup(item, {
-      status: `关闭-${reason}`,
+      status: `关闭-错误-${reason}`,
       closeReason: reason,
       closeRemark: remark,
     }));
@@ -2978,34 +3030,63 @@ function handleAlarmProcessAction(action) {
       return;
     }
     updateAlarmGroup(group, {
-      status: group.latest.pendingFinalStatus || "关闭-准确",
+      status: group.latest.pendingFinalStatus || "关闭-正确-类型准确",
       rootCause,
       pendingRootCause: false,
     });
     state.alarmProcessMode = "srResult";
     renderAlarmInspector(state.selectedAlarmGroup);
-    renderAlarmTable();
+    renderAlarmDetailPage();
     renderAlarmProcessPanel();
     return;
   }
   if (action === "confirm-sr-close") {
-    const reason = els.alarmProcessPanel.querySelector("input[name='srCloseReason']:checked")?.value;
+    const verdict = els.alarmProcessPanel.querySelector("input[name='srVerdict']:checked")?.value;
+    const typeAccuracy = els.alarmProcessPanel.querySelector("input[name='srTypeAccuracy']:checked")?.value;
+    const errorReason = els.alarmProcessPanel.querySelector("input[name='srErrorReason']:checked")?.value;
+    const errorRemark = els.alarmProcessPanel.querySelector("#srErrorOtherReason")?.value.trim() || "";
     const selectedMode = els.alarmProcessPanel.querySelector("#srFailureModeSelect")?.value || "";
     const customMode = els.alarmProcessPanel.querySelector("#srFailureModeOther")?.value.trim() || "";
     const failureMode = selectedMode === "其他" ? customMode : selectedMode;
-    if (!reason) {
-      showAlarmProcessError("请选择类型判断结果");
+    if (!verdict) {
+      showAlarmProcessError("请选择预警正确或预警错误");
+      return;
+    }
+    if (verdict === "预警错误") {
+      if (!errorReason || (errorReason === "其他" && !errorRemark)) {
+        showAlarmProcessError(errorReason === "其他" ? "请填写具体原因" : "请选择错误原因");
+        return;
+      }
+      updateAlarmGroup(group, {
+        status: `关闭-错误-${errorReason}`,
+        srCloseReason: verdict,
+        closeReason: errorReason,
+        closeRemark: errorRemark,
+        srWorkOrderNo: els.alarmProcessPanel.querySelector("#srWorkOrderInput")?.value.trim() || "",
+        srConclusion: els.alarmProcessPanel.querySelector("#srConclusionInput")?.value.trim() || "",
+        pendingRootCause: false,
+        pendingFinalStatus: "",
+      });
+      state.alarmProcessMode = null;
+      closeAlarmProcessModal();
+      renderAlarmInspector(state.selectedAlarmGroup);
+      renderAlarmDetailPage();
+      return;
+    }
+    if (!typeAccuracy) {
+      showAlarmProcessError("请选择类型准确或类型不准确");
       return;
     }
     if (!selectedMode || (selectedMode === "其他" && !customMode)) {
-      showAlarmProcessError(selectedMode === "其他" ? "请输入具体失效模式" : "请选择失效模式");
+      showAlarmProcessError(selectedMode === "其他" ? "请输入具体类型" : "请选择类型");
       return;
     }
-    const finalStatus = reason === "类型准确" ? "关闭-准确" : "关闭-类型不准确";
-    const needsRootCause = failureModeNeedsRootCause(selectedMode);
+    const needsRootCause = typeAccuracy === "类型不准确" && failureModeNeedsRootCause(selectedMode);
+    const finalStatus = typeAccuracy === "类型准确" ? "关闭-正确-类型准确" : "关闭-正确-类型不准确";
     updateAlarmGroup(group, {
-      status: needsRootCause ? "关闭-待补充根因" : finalStatus,
-      srCloseReason: reason,
+      status: needsRootCause ? "关闭-正确-待补充根因" : finalStatus,
+      srCloseReason: verdict,
+      srTypeAccuracy: typeAccuracy,
       srWorkOrderNo: els.alarmProcessPanel.querySelector("#srWorkOrderInput")?.value.trim() || "",
       srConclusion: els.alarmProcessPanel.querySelector("#srConclusionInput")?.value.trim() || "",
       srFailureMode: failureMode,
@@ -3015,7 +3096,7 @@ function handleAlarmProcessAction(action) {
     state.alarmProcessMode = null;
     closeAlarmProcessModal();
     renderAlarmInspector(state.selectedAlarmGroup);
-    renderAlarmTable();
+    renderAlarmDetailPage();
   }
 }
 
