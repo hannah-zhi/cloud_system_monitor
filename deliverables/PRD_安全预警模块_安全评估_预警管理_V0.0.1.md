@@ -1,4 +1,4 @@
-﻿# 储能数智运营系统_安全预警模块_安全评估&预警管理 产品需求规格说明书
+﻿# 安全预警模块_安全评估&预警管理_产品需求规格说明书
 
 ## 版本历史
 
@@ -17,7 +17,15 @@
 | SR | Service Request，服务请求/现场排查请求 |
 
 
-## 通用规则
+## 全局通用规则
+
+SOS 数值显示规则（可配置）：
+
+| SOS 范围 | 显示 |
+| --- | --- |
+| SOS = 100 | 100 |
+| SOS = 0 | 0 |
+| 0 < SOS < 100 | 保留 2 位小数 |
 
 风险等级规则（可配置）：
 
@@ -57,39 +65,18 @@
 
 | 序号 | 功能模块 | 功能名称 | 功能类型 | 优先级 |
 | --- | --- | --- | --- | --- |
-| 1 | 安全评估页面 | 页面定位 (Page Positioning) | 前端展示功能 | P1 |
-| 2 | 安全评估页面 | 全量场站展示口径 (All-site Display Scope) | 前端展示功能 | P0 |
-| 3 | 安全评估页面 | 风险场站 TOP5 (Risk Site TOP5) | 前端展示功能 | P1 |
-| 4 | 安全评估页面 | 全量场站平均 SOS (Average SOS of All Sites) | 前端展示功能 | P1 |
-| 5 | 安全评估页面 | 场站风险等级占比 (Site Risk Level Ratio) | 前端展示功能 | P1 |
-| 6 | 安全评估页面 | 场站 SOS 分布 (Site SOS Distribution) | 前端展示功能 | P1 |
-| 7 | 安全评估页面 | 全量场站 SOS 趋势 (All Sites SOS Trend) | 前端展示功能 | P1 |
-| 8 | 安全评估页面 | 预警等级占比 (Warning Level Ratio) | 前端展示功能 | P1 |
-| 9 | 安全评估页面 | 预警模块分布 (Warning Module Distribution) | 前端展示功能 | P1 |
-| 10 | 安全评估页面 | 预警类型 TOP5 (Warning Type TOP5) | 前端展示功能 | P1 |
-| 11 | 预警管理页面 | 预警管理 (Warning Management) | 前端展示功能 | P1 |
-| 12 | 预警管理页面 | 顶部统计卡片 (Top Statistic Cards) | 前端展示功能 | P1 |
-| 13 | 预警管理页面 | 预警等级占比 (Warning Level Ratio) | 前端展示功能 | P1 |
-| 14 | 预警管理页面 | 告警等级占比 (Alarm Level Ratio) | 前端展示功能 | P1 |
-| 15 | 预警管理页面 | 预警/告警模块分布 (Warning/Alarm Module Distribution) | 前端展示功能 | P1 |
-| 16 | 预警管理页面 | 预警/告警类型 TOP5 (Warning/Alarm Type TOP5) | 前端展示功能 | P1 |
-| 17 | 预警管理页面 | 查询筛选栏 (Query Filter Bar) | 前端展示功能 | P0 |
-| 18 | 预警管理页面 | 预警/告警列表 (Warning/Alarm List) | 前端展示功能 | P0 |
-| 19 | 预警管理页面 | 状态流转规则 (Status Transition Rules) | 前端展示功能 | P1 |
-| 20 | 预警管理页面 | 预警/告警详情 (Warning/Alarm Details) | 前端展示功能 | P0 |
-| 21 | 预警管理页面 | 同组预警/告警列表 (Grouped Warning/Alarm List) | 前端展示功能 | P0 |
-| 22 | 预警管理页面 | 相关数据趋势图 (Related Data Trend) | 前端展示功能 | P1 |
-| 23 | 预警管理页面 | 预警处理流程 (Warning Handling Workflow) | 前端展示功能 | P0 |
-| 24 | 预警管理页面 | 关闭预警 (Close Warning) | 前端展示功能 | P0 |
-| 25 | 预警管理页面 | 下发 SR (Dispatch SR) | 前端展示功能 | P0 |
-| 26 | 预警管理页面 | SR 返回确认 (SR Return Confirmation) | 前端展示功能 | P0 |
-| 27 | 预警管理页面 | 根因补充 (Root Cause Supplement) | 前端展示功能 | P0 |
-| 28 | 预警管理页面 | 批量处理 (Batch Handling) | 前端展示功能 | P0 |
-| 29 | 后台功能 | SOS 定时计算 (Scheduled SOS Calculation) | 后台自动功能 | P0 |
-| 30 | 后台功能 | 预警/告警数据同步 (Warning/Alarm Data Synchronization) | 后台自动功能 | P0 |
-| 31 | 后台功能 | 自动生成安全评估报告 (Auto-generated Safety Assessment Report) | 后台自动功能 | P1 |
-| 32 | 后台功能 | 页面数据定期刷新 (Periodic Page Data Refresh) | 后台自动功能 | P0 |
-| 33 | 后台功能 | 状态同步与关联预警同步 (Status and Related Warning Synchronization) | 后台自动功能 | P0 |
+| 1 | 安全评估页面 | 风险场站 TOP5 (Risk Site TOP5) | 前端展示功能 | P0 |
+| 2 | 安全评估页面 | 全量场站平均 SOS (Average SOS of All Sites) | 前端展示功能 | P0 |
+| 3 | 安全评估页面 | 场站风险等级占比 (Site Risk Level Ratio) | 前端展示功能 | P0 |
+| 4 | 安全评估页面 | 场站 SOS 分布 (Site SOS Distribution) | 前端展示功能 | P0 |
+| 5 | 安全评估页面 | 全量场站 SOS 趋势 (All Sites SOS Trend) | 前端展示功能 | P0 |
+| 6 | 预警管理页面 | 预警等级占比 (Warning Level Ratio) | 前端展示功能 | P0 |
+| 7 | 预警管理页面 | 告警等级占比 (Alarm Level Ratio) | 前端展示功能 | P0 |
+| 8 | 预警管理页面 | 预警/告警模块分布 (Warning/Alarm Module Distribution) | 前端展示功能 | P0 |
+| 9 | 预警管理页面 | 预警/告警类型 TOP5 (Warning/Alarm Type TOP5) | 前端展示功能 | P0 |
+| 10 | 预警管理页面 | 预警/告警列表 (Warning/Alarm List) | 前端展示功能 | P0 |
+| 11 | 预警管理页面 | 预警/告警详情 (Warning/Alarm Details) | 前端展示功能 | P0 |
+| 12 | 预警管理页面 | 预警处理流程 (Warning Handling Workflow) | 前端展示&后端自动功能 | P0 |
 
 ## 二、功能详细描述
 
@@ -611,7 +598,7 @@
 - 内列表按预警/告警时间倒序排列，最新预警/告警在最上方。
 - 点击不同行后，下方相关数据图表切换到对应明细。
 
-### 2.2.13 预警处理流程 (Warning Handling Workflow)
+### 2.2.9 预警处理流程 (Warning Handling Workflow)
 
 功能概述：
 
