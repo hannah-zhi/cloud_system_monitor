@@ -578,34 +578,6 @@
 | 默认时间范围 | 全部 |
 | 默认排序字段 | 等级 + 预警/告警时间 |
 
-### 2.2.9 状态流转规则 (Status Transition Rules)
-
-状态列表（可配置）：
-
-| 状态 | 说明 |
-| --- | --- |
-| 待处理 | 预警初始生成状态 |
-| 排查中 | 已下发 SR |
-| 关闭-误报 | 人工判断为误报后关闭 |
-| 关闭-数据异常 | 因数据异常关闭 |
-| 关闭-其他 | 其他原因关闭 |
-| 关闭-准确 | SR 返回后确认类型准确并关闭 |
-| 关闭-类型不准确 | SR 返回后确认类型不准确并关闭 |
-| 关闭-待补充根因 | 已确认关闭，但仍需补充根因 |
-| 关闭-站端已处理 | 站端已处理完成并同步云端 |
-
-流转流程：
-
-1. 云端预警/设备告警生成后，初始状态为“待处理”。
-2. 来源为站端且站端已闭环的预警，初始状态为“关闭-站端已处理”。
-3. 待处理状态点击处理，可选择“关闭预警”或“下发 SR”。
-4. 选择关闭预警后，需选择误报、数据异常或其他；选择其他时必须填写原因。
-5. 选择下发 SR 后，状态变为“排查中”。
-6. SR 完成返回后，列表出现信封标记，用户再次进入详情进行回执确认。
-7. 回执确认时选择类型准确/类型不准确，并选择失效模式。
-8. 若失效模式需要补充根因，状态先变为“关闭-待补充根因”。
-9. 根因补充完成后，状态变为“关闭-准确”或“关闭-类型不准确”。
-
 ### 2.2.10 预警/告警详情 (Warning/Alarm Details)
 
 界面截图：
@@ -643,342 +615,162 @@
 
 功能概述：
 
-用户在预警/告警详情弹窗中点击“处理”后，系统需根据当前聚合预警状态进入不同处理路径。完整流程如下：
-
-处理入口及状态分流：
-
-```mermaid
-%%{init: {"themeVariables": {"fontSize": "28px"}, "flowchart": {"nodeSpacing": 35, "rankSpacing": 40}}}%%
-flowchart LR
-    A["用户在预警/告警详情弹窗点击处理"] --> B{"当前聚合预警状态"}
-    B -->|"待处理"| C["进入处理方式选择流程"]
-    B -->|"排查中且 SR 未返回"| D["展示 SR 排查中状态，等待回执"]
-    B -->|"排查中且 SR 已返回"| E["进入 SR 返回确认流程"]
-    B -->|"关闭-待补充根因"| F["进入根因补充流程"]
-    B -->|"已关闭且无需补充根因"| G["展示已关闭处理结果"]
-    B -->|"关闭-站端已处理"| H["展示闭环摘要并禁用处理按钮"]
-
-    C --> Z["刷新或结束"]
-    D --> Z
-    E --> Z
-    F --> Z
-    G --> Z
-    H --> Z
-```
-
-待处理状态处理流程 - 关闭预警：
-
-```mermaid
-%%{init: {"themeVariables": {"fontSize": "28px"}, "flowchart": {"nodeSpacing": 35, "rankSpacing": 40}}}%%
-flowchart LR
-    A["点击处理"] --> B["选择关闭预警"]
-    B --> C["展示关闭原因表单"]
-    C --> D{"关闭原因"}
-    D -->|"误报"| E["提交关闭"]
-    D -->|"数据异常"| E
-    D -->|"其他"| F{"是否填写<br/>具体原因"}
-    D -->|"未选择"| G["提示选择<br/>关闭原因"]
-    G --> C
-    F -->|"否"| H["提示填写<br/>具体原因"]
-    H --> C
-    F -->|"是"| E
-    E --> I["更新聚合组<br/>及关联明细状态"]
-    I --> J["状态变更为<br/>关闭-误报/数据异常/其他"]
-    J --> K["生成闭环摘要<br/>记录操作日志"]
-    K --> L["刷新详情、统计卡、列表"]
-```
-
-待处理状态处理流程 - 下发 SR：
-
-```mermaid
-%%{init: {"themeVariables": {"fontSize": "28px"}, "flowchart": {"nodeSpacing": 35, "rankSpacing": 40}}}%%
-flowchart LR
-    A["点击处理"] --> B["选择下发 SR"]
-    B --> C["展示 SR 表单"]
-    C --> D["固定展示场站、位置、模块、预警/告警名称"]
-    D --> E["填写操作指导、附件、期望完成时间"]
-    E --> F{"表单校验"}
-    F -->|"不通过"| G["提示补充必填项<br/>或修正附件"]
-    G --> C
-    F -->|"通过"| H["调用 SR/工单系统<br/>创建 SR"]
-    H --> I{"SR 创建"}
-    I -->|"失败"| J["提示创建失败<br/>状态保持待处理"]
-    J --> C
-    I -->|"成功"| K["回写 SR 编号、下发时间、期望完成时间"]
-    K --> L["状态更新为排查中"]
-    L --> M["记录操作日志"]
-    M --> N["刷新详情、统计卡、列表"]
-```
-
-SR 返回确认流程：
-
-```mermaid
-%%{init: {"themeVariables": {"fontSize": "28px"}, "flowchart": {"nodeSpacing": 35, "rankSpacing": 40}}}%%
-flowchart LR
-    A["排查中预警<br/>点击处理"] --> B{"SR 是否已返回"}
-    B -->|"否"| C["展示 SR 排查中状态"]
-    C --> D["提示等待 SR/工单系统回执"]
-    D --> Z["流程结束"]
-
-    B -->|"是"| E["展示 SR 返回确认弹窗"]
-    E --> F["展示 SR 编号、关联工单编号、排查结论"]
-    F --> G{"类型准确性"}
-    G -->|"未选择"| H["提示选择<br/>类型准确/不准确"]
-    H --> G
-    G -->|"已选择"| I["选择失效模式"]
-    I --> J{"失效模式"}
-    J -->|"未选择"| K["提示选择失效模式"]
-    K --> I
-    J -->|"其他未填写"| L["提示填写具体失效模式"]
-    L --> I
-    J -->|"填写完整"| M{"是否需补充根因"}
-    M -->|"是"| N["状态更新为<br/>关闭-待补充根因"]
-    M -->|"否，类型准确"| O["状态更新为关闭-准确"]
-    M -->|"否，类型不准确"| P["状态更新为<br/>关闭-类型不准确"]
-    O --> Q["写入 SR 回执闭环摘要"]
-    P --> Q
-    Q --> R["刷新详情、统计卡、列表"]
-```
-
-根因补充流程：
-
-```mermaid
-%%{init: {"themeVariables": {"fontSize": "28px"}, "flowchart": {"nodeSpacing": 35, "rankSpacing": 40}}}%%
-flowchart LR
-    A["关闭-待补充根因<br/>点击处理"] --> B["展示根因补充输入框"]
-    B --> C{"根因是否<br/>填写完整"}
-    C -->|"否"| D["提示填写根因"]
-    D --> B
-    C -->|"是"| E["提交根因"]
-    E --> F["后端保存根因<br/>并写入闭环摘要"]
-    F --> G["状态更新为 pendingFinalStatus"]
-    G --> H["刷新详情、统计卡、列表"]
-```
-
-流程规则：
-
-- 点击“处理”后，不在详情弹窗底部展开处理内容，必须打开新的居中处理弹窗。
-- 系统需先判断当前聚合预警状态，不同状态进入不同处理路径。
-- 已关闭且无需补充根因的预警，再次点击“处理”只展示处理结果，不重复展示关闭或下发 SR 表单。
-- 状态为“排查中”且 SR 未返回时，不允许关闭预警，只提示等待回执。
-- 状态为“排查中”且 SR 已返回时，进入 SR 返回确认流程。
-- 状态为“关闭-待补充根因”时，只允许补充根因，不允许重新关闭或重新下发 SR。
-- 任一处理动作完成后，均需刷新详情弹窗、预警/告警列表和顶部统计卡。
-- 任一状态变更均需记录操作日志；如存在云端/站端关联预警，需同步更新关联预警闭环字段。
-
-### 2.2.14 关闭预警 (Close Warning)
+用户在预警/告警详情弹窗中点击“处理”后，系统需根据当前聚合预警状态、SR 返回情况、根因补充规则进入不同处理路径。该模块覆盖单条关闭、单条下发 SR、SR 返回确认、根因补充、已关闭结果展示、批量关闭、批量下发 SR 以及处理完成后的统一收尾逻辑。
 
 界面截图：
 
-![预警处理弹窗](data:image/png;base64,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)
+![预警处理完整流程](images/warning-handling-full-flow-v4.png)
 
-流程：
+处理入口详情弹窗截图：
 
-1. 用户点击详情弹窗中的“处理”。
-2. 系统打开新的居中处理弹窗，不在详情弹窗底部展开。
-3. 用户选择“关闭预警”。
-4. 用户选择关闭原因：误报、数据异常、其他。
-5. 如选择“其他”，必须填写具体原因。
-6. 用户提交。
-7. 后端更新聚合组状态和全部关联明细状态。
-8. 前端关闭处理弹窗，刷新详情弹窗和列表。
+![预警/告警详情弹窗](images/alarm-detail-modal.png)
+
+处理弹窗截图：
+
+![预警处理弹窗](images/alarm-process-modal.png)
 
 输入：
 
 - 聚合组 ID。
-- 关闭原因。
-- 备注。
-- 操作人。
-- 操作时间。
+- 当前聚合预警状态。
+- 聚合组内预警/告警明细集合。
+- 用户选择的处理动作：关闭预警、下发 SR、确认 SR 返回、补充根因、批量关闭、批量下发 SR。
+- 关闭原因、具体原因、SR 表单、SR 返回回执、失效类型、根因说明等用户输入或外部系统回传信息。
+- 操作人、操作时间、处理来源。
 
 输出：
 
-- 状态变更为 `关闭-误报` / `关闭-数据异常` / `关闭-其他`。
-- 生成闭环摘要。
-- 记录操作日志。
+- 聚合组状态更新结果。
+- 聚合组内关联预警/告警明细状态更新结果。
+- SR 编号、关联工单编号、下发时间、期望完成时间、SR 返回确认结果。
+- 闭环摘要、根因信息、失败原因。
+- 操作日志。
+- 处理完成后的详情弹窗、预警/告警列表、顶部统计卡刷新结果。
+
+状态列表（可配置）：
+
+| 状态 | 说明 |
+| --- | --- |
+| 待处理 | 云端预警或站端告警生成后的初始待处理状态 |
+| 排查中 | 已下发 SR，等待 MAXIMO 系统返回排查结果 |
+| 关闭-误报 | 人工判断为误报后关闭 |
+| 关闭-数据异常 | 因数据异常关闭 |
+| 关闭-其他 | 按其他原因关闭，需记录具体原因 |
+| 关闭-正确-待补充根因 | SR 返回后确认预警结果及类型判断准确，且失效类型需要补充根因 |
+| 关闭-正确-XXX | SR 返回后确认预警结果及类型判断准确，且已完成闭环；XXX 为失效类型或根因配置结果 |
+| 关闭-错误-XXX | SR 返回后确认预警结果或类型判断不准确，且已完成闭环；XXX 为失效类型或根因配置结果 |
+| 已关闭 | 已完成处理并进入只读结果展示状态 |
+
+处理流程：
+
+1. 单条入口：用户在预警/告警详情弹窗中点击“处理”。
+2. 系统读取当前聚合预警状态。
+3. 状态为待处理时，进入“关闭预警或下发 SR”处理路径。
+4. 状态为排查中且 SR 未返回时，详情弹窗展示 SR 排查中状态，处理按钮不可执行关闭或重复下发。
+5. 状态为排查中且 SR 已返回时，进入 SR 返回确认流程。
+6. 状态为关闭-正确-待补充根因时，进入根因补充流程。
+7. 状态为已关闭时，点击处理只展示已关闭处理结果，不展示关闭或下发 SR 表单。
+8. 批量入口：用户在列表进入多选模式后，可选择批量关闭或批量下发 SR。
+9. 所有处理分支最终进入统一收尾，刷新详情弹窗、预警/告警列表，并写入操作日志。
+
+待处理状态处理流程：
+
+1. 点击“处理”后，系统打开新的居中处理弹窗，不在详情弹窗底部展开处理内容。
+2. 用户选择处理方式：关闭预警或下发 SR。
+3. 选择关闭预警时，展示关闭原因表单。
+4. 关闭原因支持误报、数据异常、其他；选择其他时必须填写具体原因。
+5. 关闭信息校验通过后，提交关闭。
+6. 后端更新聚合组及关联明细状态，生成闭环摘要，记录操作日志。
+7. 关闭信息缺失时，前端提示补充，状态不变。
+8. 选择下发 SR 时，展示 SR 表单，带入 site、位置、模块、预警/告警名称。
+9. 用户填写操作指导、附件、期望完成时间。
+10. 表单校验通过后，调用 MAXIMO 系统创建 SR。
+11. MAXIMO 创建成功后，回写 SR 编号，状态更新为排查中。
+12. MAXIMO 创建失败时，状态保持待处理，弹窗提示失败原因。
+
+SR 返回确认与根因补充流程：
+
+1. MAXIMO 系统返回完成回执后，列表状态列展示待关闭标识。
+2. 用户进入详情并点击“处理”，系统展示 SR 返回确认弹窗。
+3. 弹窗展示 SR 编号、关联工单编号、排查结论。
+4. 用户确认预警结果及类型判断准确性，并选择失效类型。
+5. 未选择失效类型或缺少必填信息时，提示补充，不允许提交。
+6. 若所选失效类型需要补充根因，状态更新为关闭-正确-待补充根因。
+7. 用户再次点击处理后，展示根因补充输入框。
+8. 根因长度和必填规则校验通过后，保存根因并写入闭环摘要。
+9. 根因提交完成后，状态更新为关闭-正确-XXX。
+10. 若所选失效类型不需要补充根因，则直接进入已关闭结果，状态更新为关闭-正确-XXX 或关闭-错误-XXX。
+11. 已关闭状态点击处理时，只展示已关闭处理结果、闭环摘要和关闭信息，禁用处理按钮，不展示关闭或下发 SR 表单。
+
+批量处理流程：
+
+1. 用户在预警/告警列表进入多选模式，页面展示批量操作条。
+2. 用户选择聚合组后，系统校验是否已选择聚合组、选中数量是否小于等于单次上限、是否均为待处理状态。
+3. 未选择、超出上限或包含不可处理项时，前端提示原因，不进入批量处理。
+4. 校验通过后，用户选择批量关闭或批量下发 SR。
+5. 选择批量关闭时，批量关闭表单展示关闭原因；选择其他时需填写具体原因。
+6. 批量关闭校验通过后，后端逐条更新状态并记录操作日志。
+7. 选择批量下发 SR 时，展示批量下发 SR 表单，填写统一操作指导、附件、期望完成时间。
+8. 批量下发 SR 调用 MAXIMO 系统创建 1 个 SR，多条预警绑定到同一个 SR。
+9. MAXIMO 创建成功后，多条预警统一回写同一个 SR 编号并更新为排查中。
+10. 批量处理完成后，展示批量处理结果，包含成功条数、失败条数和失败原因。
+
+页面设计要求：
+
+- 处理弹窗为居中弹窗，遮罩层覆盖当前详情弹窗，但不关闭详情弹窗上下文。
+- 处理弹窗标题需随处理路径变化，可展示为“关闭预警”“下发 SR”“SR 返回确认”“根因补充”“批量处理”。
+- 处理方式选择区使用单选卡片或按钮组展示“关闭预警”“下发 SR”。
+- 关闭原因使用单选或下拉组件；选择“其他”后展示具体原因输入框。
+- SR 表单中 site、位置、模块、预警/告警名称为只读字段。
+- SR 表单中操作指导为多行文本，附件支持上传，期望完成时间使用日期时间选择器。
+- SR 返回确认弹窗中 SR 编号、关联工单编号、排查结论为只读字段。
+- 预警结果及类型判断准确性、失效类型为必填项；缺失时在字段旁展示错误提示。
+- 根因补充输入框展示字数限制和必填提示。
+- 已关闭结果弹窗仅展示闭环摘要、关闭原因、SR 信息、根因信息和操作记录，不展示可编辑表单。
+- 批量处理结果需展示成功/失败统计，失败项需展示失败原因。
+- 所有提交按钮在接口请求中展示 loading 状态，避免重复提交。
+- 任一处理成功后，刷新详情弹窗、预警/告警列表和顶部统计卡。
 
 数据来源：
 
-- 用户输入。
+- 云端预警结果表。
+- 站端SCADA。
+- MAXIMO系统。
+- 模型配置表。
+- 失效类型规则库。
 - 登录用户信息。
+- 文件上传服务。
+
+外部系统联动：
+
+- 下发 SR 和批量下发 SR 需调用 MAXIMO 系统创建 SR。
+- MAXIMO 系统需返回 SR 编号、关联工单编号、排查结论、完成回执。
+- SR 返回后，预警管理列表需同步展示待关闭标识。
+- 处理完成后需同步更新聚合组及关联明细闭环字段。
+- 处理结果需联动预警/告警列表、顶部统计卡和详情弹窗。
 
 可配置参数：
 
 | 参数字段 | 默认值 |
 | --- | --- |
+| 状态枚举 | 待处理/排查中/关闭-误报/关闭-数据异常/关闭-其他/关闭-正确-待补充根因/关闭-正确-XXX/关闭-错误-XXX/已关闭 |
 | 关闭原因枚举 | 误报/数据异常/其他 |
 | 选择其他时是否必填原因 | true |
-| 是否允许批量关闭 | true |
-| 关闭状态前缀 | 关闭- |
-
-### 2.2.15 下发 SR (Dispatch SR)
-
-界面截图：
-
-![预警处理弹窗](data:image/png;base64,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)
-
-流程：
-
-1. 用户点击“处理”。
-2. 选择“下发 SR”。
-3. 系统展示 SR 表单。
-4. 用户填写操作指导、附件、期望完成时间。
-5. 系统自动生成/获取 SR 编号。
-6. 用户提交。
-7. 后端调用 SR/工单系统创建 SR。
-8. 创建成功后，预警状态变为“排查中”。
-9. 列表和详情同步刷新。
-
-SR 表单字段：
-
-| 字段 | 说明 |
-| --- | --- |
-| 场站 | 只读，来自当前预警 |
-| 位置 | 只读，来自当前预警 |
-| 模块 | 只读，来自当前预警 |
-| 预警/告警名称 | 只读，来自当前预警 |
-| SR 编号 | 系统生成或 SR 系统返回 |
-| 操作指导 | 用户填写，默认空白 |
-| 附件 | 支持上传 |
-| SR 下发时间 | 打开下发 SR 时的北京时间，不支持手动选择 |
-| 期望完成时间 | 用户选择 |
-
-外部系统：
-
-- 需拉通 SR/工单系统创建接口。
-- 需接收 SR 完成回执。
-
-异常处理：
-
-- SR 创建失败时，状态不变，提示用户重试。
-- 附件上传失败时，不允许提交。
-
-可配置参数：
-
-| 参数字段 | 默认值 |
-| --- | --- |
-| SR 编号前缀，最终以 SR 系统返回为准 | SR |
 | SR 下发时间时区 | Asia/Shanghai |
-| 单个附件大小上限 | 20 |
+| 单个附件大小上限 | 20MB |
 | 附件数量上限 | 5 |
 | 期望完成时间是否必填 | true |
-
-### 2.2.16 SR 返回确认 (SR Return Confirmation)
-
-触发条件：
-
-- 聚合预警状态为“排查中”。
-- SR/工单系统返回完成回执。
-
-流程：
-
-1. 后端接收 SR 回执。
-2. 聚合预警标记 `srCompleted=true`。
-3. 列表状态列前展示信封图标。
-4. 用户进入详情并点击“处理”。
-5. 系统展示 SR 返回确认弹窗。
-6. 用户确认类型准确/类型不准确。
-7. 用户选择失效模式；选择“其他”时必须填写具体失效模式。
-8. 如失效模式需根因补充，状态变为“关闭-待补充根因”。
-9. 否则状态变为“关闭-准确”或“关闭-类型不准确”。
-
-SR 返回确认字段：
-
-| 字段 | 说明 |
-| --- | --- |
-| SR 编号 | 只读 |
-| 关联工单编号 | 只读 |
-| 排查结论 | 只读，由 SR 系统回传 |
-| 类型准确性 | 类型准确/类型不准确 |
-| 失效模式 | 下拉选择，按预警名称关联 |
-| 其他失效模式 | 选择其他时必填 |
-
-数据来源：
-
-- SR/工单系统回执。
-- 失效模式规则库。
-
-可配置参数：
-
-| 参数字段 | 默认值 |
-| --- | --- |
-| SR 返回确认项 | 类型准确/类型不准确 |
-| 失效模式下拉数据来源 | 失效模式规则库 |
-| 是否必须选择失效模式 | true |
-| 选择其他时是否必填 | true |
-| 需要补充根因的失效模式集合 | 规则库配置 |
-
-### 2.2.17 根因补充 (Root Cause Supplement)
-
-触发条件：
-
-- 当前状态为“关闭-待补充根因”。
-
-流程：
-
-1. 用户进入详情弹窗。
-2. 闭环摘要下方展示根因填写框。
-3. 用户填写根因并提交。
-4. 后端保存根因。
-5. 状态变为 pendingFinalStatus 中记录的最终状态。
-6. 闭环摘要展示根因内容。
-
-输入：
-
-- 聚合组 ID。
-- 根因说明。
-- 操作人。
-- 提交时间。
-
-输出：
-
-- 状态更新为“关闭-准确”或“关闭-类型不准确”。
-- 闭环摘要增加根因。
-
-可配置参数：
-
-| 参数字段 | 默认值 |
-| --- | --- |
+| SR 返回确认项 | 预警结果及类型判断准确性/失效类型 |
+| 失效类型下拉数据来源 | 失效类型规则库 |
+| 是否必须选择失效类型 | true |
+| 需要补充根因的失效类型集合 | 规则库配置 |
 | 根因最小输入长度 | 5 |
 | 根因最大输入长度 | 500 |
-| 关闭-待补充根因状态下是否必填 | true |
-| 根因提交后使用的最终状态字段 | pendingFinalStatus |
-
-### 2.2.18 批量处理 (Batch Handling)
-
-功能概述：
-
-预警管理列表支持进入多选模式，对多个聚合预警进行批量处理。
-
-输入：
-
-- 用户选择的聚合组集合。
-
-限制规则：
-
-- 仅支持状态为“待处理”的聚合组批量关闭。
-- 已下发 SR、已关闭、站端已处理的预警不可参与批量关闭。
-- 不支持批量下发 SR。
-
-输出：
-
-- 批量关闭结果。
-- 成功/失败条数。
-
-展示要求：
-
-- 进入多选模式后展示批量操作条。
-- 未选择任何行时“批量处理”按钮置灰。
-- 提交后展示处理结果提示。
-
-可配置参数：
-
-| 参数字段 | 默认值 |
-| --- | --- |
-| 批量操作类型 | 批量关闭 |
 | 单次批量处理最大数量 | 50 |
 | 可参与批量处理的状态 | 待处理 |
-| 是否支持批量下发 SR | false |
+| 是否支持批量关闭 | true |
+| 是否支持批量下发 SR | true |
+| 批量下发 SR 创建方式 | 多条预警绑定到同一个 SR |
 
 ### 2.3 后台自动功能模块
 
@@ -1111,6 +903,5 @@ SR 返回确认字段：
 | 4 | SR 返回确认流程 | SR 返回确认流程 | SR/工单系统回执后，运营人员确认类型准确性和失效模式，完成闭环或转入根因补充 |
 | 5 | 根因补充流程 | 根因补充流程 | 对关闭-待补充根因状态的预警补充根因并写入闭环摘要 |
 | 6 | 批量处理流程 | 批量处理 | 对同一筛选结果或勾选项批量关闭/下发 SR，需逐条返回处理结果 |
-
 
 
