@@ -370,27 +370,28 @@
 - 当前页面已选的场站范围。
 - 用户选择的预警/告警类型标签。
 - 用户选择的时间范围或自定义日期区间。
-- 当前筛选范围内产生的预警、告警、数据异常记录。
+- 当前筛选范围内产生活跃状态的预警（仅包含一级/二级）、告警、数据告警清单。
 
 输出：
 
-- 右侧清单展示符合筛选条件的预警/告警/数据异常卡片。
+- 右侧清单展示符合筛选条件的预警/告警/数据告警卡片。
 - 清单顶部展示预警、告警、数据三类数量。
 - 每条记录提供查看详情或进入处理的操作入口。
 - 点击清单卡片后打开详情弹窗，弹窗样式、字段和交互与“预警管理”页详情弹窗保持一致。
 
 计算规则：
 
-1. 根据当前场站筛选结果，仅展示筛选范围内关联场站的预警、告警和数据异常。
-2. 类型标签切换时，按全部、一级、二级、数据等分类刷新清单和统计数量。
+1. 根据当前场站筛选结果，仅展示筛选范围内关联场站的预警、告警和数据告警。
+2. 类型标签切换时，按预警（一级/二级）、告警（故障/告警）、数据等分类刷新清单和统计数量。
 3. 时间筛选切换时，按全部、最近30天、最近7天、最近3天或自定义日期区间刷新清单。
 4. 清单默认按风险严重度优先、发生时间倒序排列；同等级事件优先展示较新的记录。
 5. 事件处理完成后，同步刷新清单状态、统计数量和对应场站卡片状态。
 
 展示要求：
 
-- 清单卡片需展示等级/类型、设备模块、处理状态、事件名称、所属场站或子系统、发生时间和操作入口。
+- 清单卡片需展示预警/告警/数据告警名称、类型、等级、场站、位置、设备模块、处理状态、事件时间。
 - 右侧清单区域高度固定，内容超出时在清单内部滚动，不影响主页面场站卡片区域。
+- 点击预警、告警、数据统计框及框内一级/二级、故障/告警标签时，对下方清单进行快速筛选。
 - 统计数量需随类型标签、时间范围、日期区间和场站筛选结果实时更新。
 - 点击清单卡片后打开详情弹窗，弹窗内容、按钮、处理入口、关闭方式与“预警管理”页详情弹窗一致。
 - 无符合条件数据时展示空态文案，并隐藏无效操作按钮。
@@ -399,102 +400,11 @@
 
 | 参数字段 | 默认值 |
 | --- | --- |
-| 列表字段 | 等级/设备模块/处理状态/事件名称/场站或子系统名称/发生时间/操作按钮 |
 | 默认时间范围 | 全部 |
-| 每页数量 | 20 条 |
-| 空态文案 | 暂无预警/告警数据 |
-
-业务说明：
-
-右侧预警/告警清单用于展示当前场站筛选范围内的预警、告警及数据异常，默认按风险严重度和发生时间综合排序。
-
-功能组成：
-
-| 功能 | 说明 |
-| --- | --- |
-| 类型标签 | 全部、一级、二级、数据 |
-| 时间快捷筛选 | 全部、最近30天、最近7天、最近3天 |
-| 自定义日期 | 支持开始日期、结束日期筛选 |
-| 分类统计 | 预警、告警、数据数量 |
-| 清单卡片 | 展示等级、模块、状态、标题、场站、时间 |
-
-交互逻辑：
-
-| 操作 | 系统响应 |
-| --- | --- |
-| 点击类型标签 | 按对应等级/类型过滤清单 |
-| 点击时间快捷按钮 | 按快捷时间范围过滤清单 |
-| 选择自定义日期 | 按日期区间过滤清单 |
-| 点击清单卡片 | 打开预警/告警详情弹窗，弹窗样式、字段、按钮和交互与“预警管理”页详情弹窗保持一致 |
-
-#### 2.1.7 预警处理弹窗
-
-界面截图：
-
-![预警处理弹窗](data:image/jpeg;base64,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)
-
-功能概述：
-
-展示事件详情或处理表单。
-
-输入：
-
-- 事件 ID。
-- 当前状态。
-- 用户表单输入。
-
-输出：
-
-- 弹窗内容。
-- 提交结果。
-- 状态刷新。
-
-计算规则：
-
-1. 按事件 ID 查询详情。
-2. 提交前校验必填项。
-3. 成功后刷新列表状态。
-
-展示要求：
-
-- 弹窗居中展示。
-- 字段分组清晰。
-- 失败提示错误原因。
-
-可配置参数：
-
-| 参数字段 | 默认值 |
-| --- | --- |
-| 弹窗宽度 | 960px |
-| 字段清单 | 事件名称/处理动作/关闭原因/具体原因/SR 单号/SR 回执/失效类型/根因说明 |
-| 必填规则 | 处理动作必填；关闭原因必填；选择其他原因时具体原因必填；派单时 SR 信息必填 |
-| 操作枚举 | 确认/关闭/派单 SR/补充根因 |
-
-业务说明：
-
-预警处理弹窗用于完成预警/告警确认、关闭、误报反馈、类型修正等处理动作。
-
-处理动作：
-
-| 动作 | 说明 |
-| --- | --- |
-| 确认预警 | 将待处理预警置为处理中/已确认 |
-| 关闭预警 | 填写关闭原因后关闭 |
-| 标记误报 | 选择误报原因并提交 |
-| 类型修正 | 对预警类型准确性进行确认或修正 |
-| 根因提交 | 填写根因说明并保存 |
-
-校验规则：
-
-- 关闭预警必须选择关闭原因；选择“其他”时必须填写具体说明。
-- 标记误报必须选择误报原因；选择“其他”时必须填写具体说明。
-- 根因提交必须填写根因说明。
-- 类型修正必须选择准确/不准确；不准确时必须选择或填写正确类型。
-
 
 ### 2.2 单站-场站概览页
 
-进入方式：点击集中监测主页面的场站卡片。
+进入方式：点击集中监测主页面的单场站卡片。
 
 单站-场站概览页用于查看单个场站的运行状态、核心指标、拓扑结构、功率趋势、充放电表现及该场站下的预警/告警。
 
@@ -510,31 +420,34 @@
 
 功能概述：
 
-定义页面进入方式、上下文传递和顶部状态展示。
+展示从集中监测进入单场站后的顶部导航与场站关键状态，帮助用户确认当前查看场站，并在“场站概览”“安全诊断”“健康管理”入口之间切换。
 
 输入：
 
-- 场站 ID。
-- 子系统 ID。
-- 当前标签。
-- 顶部状态数据。
+- 用户在集中监测主页面点击的场站卡片。
+- 当前场站的编号、名称等基础信息。
+- 当前场站通讯状态、风险等级和 SOS 安全指数。
+- 用户当前选择的横向标签页。
 
 输出：
 
-- 目标页面。
-- 顶部信息。
-- 返回入口。
+- 打开所选场站的“单站-场站概览页”。
+- 顶部展示返回入口、场站名称、通讯状态、风险等级和 SOS。
+- 横向标签页展示当前选中状态，并提供切换到安全诊断、健康管理的入口。
 
 计算规则：
 
-1. 按入口参数加载页面数据。
-2. 切换标签时保留当前上下文。
+1. 用户点击场站卡片后，打开该场站的概览页，并默认选中“场站概览”标签。
+2. 顶部展示内容以当前场站最新基础信息和状态数据为准。
+3. 切换横向标签页时，仍保持在当前场站范围内，仅切换下方页面内容。
+4. 点击返回入口时，返回集中监测主页面，并保留用户进入前的筛选结果。
 
 展示要求：
 
-- 返回入口清晰。
-- 当前标签高亮。
-- 状态标签与 SOS 固定展示。
+- 返回入口需固定展示在顶部左侧，便于用户回到场站列表。
+- 场站编号、场站名称、通讯状态、风险等级和 SOS 需在首屏清晰可见。
+- 当前横向标签页需高亮展示，未设计的“健康管理”仅保留入口，不展开页面内容。
+- 通讯状态、风险等级颜色需与集中监测主页面保持一致。
 
 可配置参数：
 
@@ -571,32 +484,34 @@
 
 功能概述：
 
-展示“单站指标卡”相关核心指标。
+以卡片形式展示当前场站最核心的安全、健康和可用电量指标，用于快速判断该场站当前整体状态。
 
 输入：
 
-- 页面上下文 ID。
-- 实时指标。
-- 统计周期。
-- 基础属性。
+- 当前场站的 SOS 安全指数。
+- 当前场站的健康指数。
+- 当前场站的可用电量或 SOE 数据。
+- 各指标对应的单位、颜色和风险等级规则。
 
 输出：
 
-- 指标数值。
-- 单位。
-- 状态展示。
+- 安全指数、健康指数、当前可用电量三张指标卡。
+- 每张卡展示指标名称、当前值、单位和图形化进度。
+- 数据缺失时展示占位符和空态图形。
 
 计算规则：
 
-1. 实时指标取最新数据。
-2. 周期类指标按所选周期聚合。
-3. 缺失字段展示占位符。
+1. 安全指数、健康指数取当前场站最新有效值。
+2. 当前可用电量按场站最新 SOE 或可用容量数据展示。
+3. 指标值按配置保留小数位，单位按字段类型展示。
+4. 数据为空、无权限或接口异常时，数值展示 `--`，不参与颜色判断。
 
 展示要求：
 
-- 指标名称和值对齐展示。
-- 单位明确。
-- 风险状态按颜色区分。
+- 指标名称、数值和单位需对齐展示，避免用户混淆指标含义。
+- 安全指数颜色遵循全局 SOS 风险等级规则。
+- 健康指数和可用电量使用与页面视觉体系一致的进度或仪表样式。
+- 数据为空时展示 `--`，图形区域展示空态，不展示错误颜色。
 
 可配置参数：
 
@@ -629,32 +544,35 @@
 
 功能概述：
 
-展示“场站运行”相关核心指标。
+展示当前场站的实时运行状态、SOC 和实时出力，帮助用户判断场站正在充电、放电、待机、停机或离线。
 
 输入：
 
-- 页面上下文 ID。
-- 实时指标。
-- 统计周期。
-- 基础属性。
+- 当前场站运行状态。
+- 当前场站 SOC。
+- 当前场站实时出力。
+- 最近一次有效采集时间和数据质量状态。
 
 输出：
 
-- 指标数值。
-- 单位。
-- 状态展示。
+- 场站运行状态文本和状态颜色。
+- 场站 SOC 当前值及单位。
+- 场站实时出力当前值及单位。
+- 离线或数据缺失时的占位展示。
 
 计算规则：
 
-1. 实时指标取最新数据。
-2. 周期类指标按所选周期聚合。
-3. 缺失字段展示占位符。
+1. 运行状态取当前场站最新运行状态，状态枚举包括充电、放电、待机、停机、离线等。
+2. SOC 和实时出力取最新有效采集值。
+3. 场站离线时，运行状态展示“离线”，实时出力可展示最近一次有效值或 `--`。
+4. 实时出力正负方向按系统约定展示，需与全站功率趋势口径一致。
 
 展示要求：
 
-- 指标名称和值对齐展示。
-- 单位明确。
-- 风险状态按颜色区分。
+- 运行状态需用文本和颜色共同表达，颜色规则与集中监测主页面保持一致。
+- SOC、实时出力需明确单位，数值保留位数按可配置参数执行。
+- 离线或缺失数据不得展示为正常状态。
+- 同一行指标的名称和值需对齐，便于快速扫描。
 
 可配置参数：
 
@@ -686,32 +604,34 @@
 
 功能概述：
 
-展示“场站属性”相关核心指标。
+展示当前场站的基础建设属性，包括场站类型、系统数量、额定容量和额定功率，作为运行指标和拓扑信息的基础说明。
 
 输入：
 
-- 页面上下文 ID。
-- 实时指标。
-- 统计周期。
-- 基础属性。
+- 当前场站基础档案信息。
+- 当前场站下属子系统数量。
+- 当前场站额定容量和额定功率。
 
 输出：
 
-- 指标数值。
-- 单位。
-- 状态展示。
+- 场站类型。
+- 系统数量。
+- 额定容量。
+- 额定功率。
 
 计算规则：
 
-1. 实时指标取最新数据。
-2. 周期类指标按所选周期聚合。
-3. 缺失字段展示占位符。
+1. 场站类型、额定容量、额定功率取场站档案配置。
+2. 系统数量按当前场站已接入的子系统数量统计。
+3. 数值字段按配置保留小数位，并按字段展示 MW、MWh 等单位。
+4. 档案信息缺失时展示 `--`，不做推算。
 
 展示要求：
 
-- 指标名称和值对齐展示。
-- 单位明确。
-- 风险状态按颜色区分。
+- 属性字段以名称和值成组展示，优先保证可读性。
+- 容量、功率字段必须带单位。
+- 系统数量需与下方场站拓扑图中的子系统数量保持一致。
+- 缺失字段统一展示 `--`。
 
 可配置参数：
 
@@ -739,32 +659,34 @@
 
 功能概述：
 
-展示“充放电统计”相关核心指标。
+展示当前场站在当日、当月、当年不同周期内的充电总量和放电总量，并支持用户切换统计周期。
 
 输入：
 
-- 页面上下文 ID。
-- 实时指标。
-- 统计周期。
-- 基础属性。
+- 当前场站充电电量统计数据。
+- 当前场站放电电量统计数据。
+- 用户选择的统计周期：当日、当月或当年。
 
 输出：
 
-- 指标数值。
-- 单位。
-- 状态展示。
+- 所选周期内的充电总量。
+- 所选周期内的放电总量。
+- 当前选中的统计周期状态。
 
 计算规则：
 
-1. 实时指标取最新数据。
-2. 周期类指标按所选周期聚合。
-3. 缺失字段展示占位符。
+1. 默认展示当日充电总量和放电总量。
+2. 用户切换“当月”时，展示当前自然月累计充电量和放电量。
+3. 用户切换“当年”时，展示当前自然年累计充电量和放电量。
+4. 统计数据按场站维度汇总，单位统一为 MWh。
+5. 数据缺失时展示 `--`，不以 0 代替未知数据。
 
 展示要求：
 
-- 指标名称和值对齐展示。
-- 单位明确。
-- 风险状态按颜色区分。
+- 当日、当月、当年切换按钮需突出当前选中项。
+- 充电总量和放电总量需并列展示，单位明确。
+- 周期切换后，数值需立即刷新，避免保留上一周期数据。
+- 数据为空时展示 `--`，并保留指标名称和单位位置。
 
 可配置参数：
 
@@ -800,27 +722,30 @@
 
 输入：
 
-- 拓扑节点。
-- 层级关系。
-- 节点状态。
-- 关键运行指标。
+- 当前场站下属子系统列表。
+- 各子系统运行状态、通讯状态和风险状态。
+- 各子系统 PCS 功率、SOC、SOH 等关键运行指标。
+- 各子系统关联的预警、告警和数据异常摘要。
 
 输出：
 
-- 拓扑图。
-- 节点信息。
-- 跳转或筛选参数。
+- 当前场站的子系统拓扑卡片。
+- 每个子系统的名称、状态、关键指标和异常提示。
+- 点击子系统卡片后的页面跳转入口。
 
 计算规则：
 
-1. 按节点层级生成拓扑。
-2. 节点颜色按风险或通讯状态映射。
+1. 按当前场站下属子系统生成拓扑卡片。
+2. 子系统卡片颜色优先体现风险等级；无风险时展示运行或通讯状态。
+3. 子系统关键指标取最新有效值，缺失时展示 `--`。
+4. 点击子系统卡片后进入对应“单子系统-子系统概览页”。
 
 展示要求：
 
-- 展示连接关系和关键指标。
-- 异常节点高亮。
-- 节点支持点击。
+- 子系统卡片需展示连接关系、子系统名称和关键运行指标。
+- 存在预警、告警、故障或通讯异常的子系统需突出显示。
+- 鼠标悬浮时展示该子系统关联预警、告警、数据异常摘要。
+- 子系统数量较多时需保证卡片排列整齐，并支持页面滚动查看。
 
 可配置参数：
 
@@ -860,30 +785,33 @@
 
 功能概述：
 
-展示指定时间范围内的趋势变化。
+展示当前场站在指定日期范围内的有功功率、无功功率、SOC 等趋势变化，帮助用户回看场站功率运行情况。
 
 输入：
 
-- 历史时序数据。
-- 日期范围。
-- 已选指标。
+- 当前场站在所选日期范围内的功率和 SOC 历史数据。
+- 用户选择的开始日期和结束日期。
+- 用户在图例中选择查看的指标。
 
 输出：
 
-- 趋势图。
-- 图例。
-- 悬浮提示。
+- 场站功率趋势折线图。
+- 有功功率、无功功率、SOC 等图例。
+- 鼠标悬浮时展示对应时间点的指标明细。
 
 计算规则：
 
-1. 按时间粒度聚合数据。
-2. 日期范围变更后重新查询。
-3. 缺失点断线或置空。
+1. 默认按配置日期范围加载趋势数据。
+2. 用户修改开始日期或结束日期后，按新的日期范围刷新趋势图。
+3. 趋势数据按配置时间粒度展示，缺失点断线或置空。
+4. 点击图例时，高亮或隐藏对应指标曲线。
 
 展示要求：
 
-- 图表展示坐标轴、图例和阈值线。
-- 悬停展示同一时间点多指标值。
+- 图表需展示坐标轴、图例、单位和必要的阈值辅助线。
+- 鼠标悬浮时需同时展示同一时间点各指标值。
+- 日期范围变化后，图表加载状态和空态需清晰可见。
+- 多条曲线颜色需易于区分，并与图例保持一致。
 
 可配置参数：
 
@@ -914,30 +842,33 @@
 
 功能概述：
 
-展示指定时间范围内的趋势变化。
+展示当前场站在指定日期范围内的充电表现和放电表现趋势，帮助用户分析场站充放电效果和周期变化。
 
 输入：
 
-- 历史时序数据。
-- 日期范围。
-- 已选指标。
+- 当前场站在所选日期范围内的充电量、放电量和循环相关数据。
+- 用户选择的开始日期和结束日期。
+- 用户在图例中选择查看的指标。
 
 输出：
 
-- 趋势图。
-- 图例。
-- 悬浮提示。
+- 充电表现、放电表现趋势图。
+- 指标图例。
+- 鼠标悬浮时展示对应时间点的充放电明细。
 
 计算规则：
 
-1. 按时间粒度聚合数据。
-2. 日期范围变更后重新查询。
-3. 缺失点断线或置空。
+1. 默认按配置日期范围加载充放电表现数据。
+2. 日期范围变化后，按当前场站和新日期范围刷新趋势图。
+3. 数据按配置时间粒度聚合展示，缺失点断线或置空。
+4. 点击图例时，高亮或隐藏对应指标曲线。
 
 展示要求：
 
-- 图表展示坐标轴、图例和阈值线。
-- 悬停展示同一时间点多指标值。
+- 图表需展示坐标轴、图例、单位和必要的阈值辅助线。
+- 悬浮提示需展示当前时间点的充电表现、放电表现等明细。
+- 当前首屏截图未完整覆盖该区块时，需在后续联调补充局部截图。
+- 数据为空时展示空态，不保留上一日期范围的曲线。
 
 可配置参数：
 
@@ -966,32 +897,35 @@
 
 功能概述：
 
-展示当前范围内的明细清单，并提供查看或处理入口。
+展示当前场站范围内的预警、告警和数据异常清单，并提供查看详情或进入处理流程的入口。
 
 输入：
 
-- 页面上下文 ID。
-- 时间范围。
-- 等级筛选。
-- 事件集合。
+- 当前查看的场站。
+- 用户选择的预警/告警类型筛选条件。
+- 用户选择的时间范围或自定义日期区间。
+- 当前场站产生的预警、告警和数据异常记录。
 
 输出：
 
-- 明细列表。
-- 统计数量。
-- 操作入口。
+- 当前场站的预警/告警/数据异常清单。
+- 预警、告警、数据三类统计数量。
+- 每条记录的详情查看入口和处理入口。
 
 计算规则：
 
-1. 按当前页面上下文过滤数据。
-2. 按严重度和时间排序。
-3. 处理后刷新。
+1. 仅展示当前场站范围内的预警、告警和数据异常。
+2. 类型筛选切换时，同步刷新清单和统计数量。
+3. 时间筛选切换时，按所选时间范围刷新清单。
+4. 清单默认按风险严重度优先、发生时间倒序排列。
+5. 事件处理完成后，同步刷新清单状态和统计数量。
 
 展示要求：
 
-- 列表展示关键字段。
-- 超出区域滚动。
-- 无数据展示空态。
+- 清单卡片需展示等级/类型、设备模块、处理状态、事件名称、发生时间和操作入口。
+- 清单内容超出区域时在列表内部滚动。
+- 无符合条件数据时展示“当前场站暂无预警/告警”。
+- 点击清单卡片后打开详情弹窗；点击处理入口后进入处理弹窗。
 
 可配置参数：
 
