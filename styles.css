@@ -2901,8 +2901,15 @@ h2 {
   width: 22px;
   height: 22px;
   display: block;
+  overflow: visible;
   color: var(--topology-color, #13c781);
   filter: drop-shadow(0 0 8px var(--topology-glow, rgba(19, 199, 129, 0.2)));
+}
+
+.subsystem-aux-item .fire-svg-icon {
+  width: 21px;
+  height: 21px;
+  justify-self: center;
 }
 
 .subsystem-aux-item > span {
