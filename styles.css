@@ -2734,18 +2734,19 @@ h2 {
   place-items: center;
 }
 
-.subsystem-topology-node img {
+.subsystem-topology-node .topology-svg-icon {
   width: 42px;
   height: 42px;
   display: block;
-  filter: drop-shadow(0 0 12px rgba(19, 199, 129, 0.22));
+  color: var(--topology-color, #13c781);
+  filter: drop-shadow(0 0 12px var(--topology-glow, rgba(19, 199, 129, 0.22)));
 }
 
 .topology-node-text {
   grid-column: 2;
   display: grid;
   gap: 3px;
-  min-width: 94px;
+  min-width: 86px;
   padding: 4px 6px;
   border-radius: 4px;
   background: rgba(25, 27, 38, 0.86);
@@ -2797,7 +2798,7 @@ h2 {
 .rack-node {
   display: grid;
   grid-template-columns: 40px;
-  grid-template-rows: 40px 13px 20px;
+  grid-template-rows: 40px 13px 12px;
   justify-items: center;
   align-items: start;
   gap: 1px;
@@ -2812,13 +2813,14 @@ h2 {
   cursor: pointer;
 }
 
-.rack-node img {
+.rack-node .topology-svg-icon {
   grid-column: 1;
   grid-row: 1;
   width: 32px;
   height: 40px;
   display: block;
-  filter: drop-shadow(0 0 10px rgba(19, 199, 129, 0.2));
+  color: var(--topology-color, #13c781);
+  filter: drop-shadow(0 0 10px var(--topology-glow, rgba(19, 199, 129, 0.2)));
 }
 
 .rack-node strong {
@@ -2836,7 +2838,7 @@ h2 {
   grid-row: 3;
   align-self: start;
   display: grid;
-  gap: 3px;
+  gap: 0;
   justify-items: center;
   color: #d7e1f1;
   font-size: 8px;
@@ -2849,8 +2851,8 @@ h2 {
   align-self: start;
   justify-self: end;
   display: grid;
-  gap: 3px;
-  padding-top: 57px;
+  gap: 0;
+  padding-top: 58px;
   color: #d7e1f1;
   font-size: 8px;
   font-weight: 600;
@@ -2880,8 +2882,8 @@ h2 {
 }
 
 .subsystem-aux-item {
-  min-width: 112px;
-  height: 32px;
+  min-width: 126px;
+  min-height: 36px;
   display: grid;
   grid-template-columns: 24px 1fr;
   align-items: center;
@@ -2895,10 +2897,31 @@ h2 {
   cursor: pointer;
 }
 
-.subsystem-aux-item img {
+.subsystem-aux-item .topology-svg-icon {
   width: 22px;
   height: 22px;
   display: block;
+  color: var(--topology-color, #13c781);
+  filter: drop-shadow(0 0 8px var(--topology-glow, rgba(19, 199, 129, 0.2)));
+}
+
+.subsystem-aux-item > span {
+  display: grid;
+  gap: 2px;
+  line-height: 1.1;
+}
+
+.subsystem-aux-item strong {
+  color: #e8eef9;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.subsystem-aux-item span span,
+.topology-node-text span {
+  color: var(--topology-color, #13c781);
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .subsystem-basic-panel {

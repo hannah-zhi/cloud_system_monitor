@@ -3256,7 +3256,7 @@ function showSubsystemDetail(station, subsystemNo, mode = "overview") {
   state.overviewChargeHighlight = null;
   state.detailAlarmCategory = "all";
   state.detailAlarmSubfilter = "all";
-  els.backBtn.textContent = "‹ 返回场站概览";
+  els.backBtn.textContent = state.subsystemPageMode === "diagnosis" ? "‹ 返回安全诊断" : "‹ 返回场站概览";
   els.detailSectionTabs.hidden = true;
   els.listView.classList.remove("active-view");
   els.riskView.classList.remove("active-view");
@@ -3709,16 +3709,46 @@ function renderSubsystemMetricCards(station, subsystemNo) {
     </div>`;
 }
 
-function renderSubsystemPartIcon(type, label) {
-  const iconMap = {
-    hv: "hv-box.svg",
-    pcs: "pcs.svg",
-    rack: "battery-rack.svg",
-    pack: "battery-pack.svg",
-    hvac: "environment-control.svg",
-    fire: "fire-system.svg",
+function topologyPartSosScore(station, subsystemNo, type, id = 0) {
+  const snapshot = subsystemSnapshot(station, subsystemNo);
+  const seed = stationIndexSeed(station) + Number(subsystemNo || 0) * 13 + Number(id || 0) * 0.37;
+  const offsets = {
+    hv: 2.8,
+    pcs1: -3.4,
+    pcs2: -4.8,
+    hvac: 1.6,
+    fire: 4.2,
+    rack: -8.5,
   };
-  return `<img src="assets/topology-icons/${iconMap[type] || iconMap.pack}" alt="${label}" loading="lazy" />`;
+  const wobble = Math.sin(seed + String(type).length * 0.73) * 5.2;
+  const base = snapshot.score + (offsets[type] ?? 0) + wobble;
+  return round(Math.max(35, Math.min(100, base)), 2);
+}
+
+function topologyStyleForScore(score) {
+  const risk = getRisk(score);
+  return `--topology-color:${riskMeta[risk].color};--topology-glow:${riskMeta[risk].color}55;`;
+}
+
+function renderTopologySosText(score) {
+  return `<span>SOS ${formatSosValue(score)}</span>`;
+}
+
+function renderSubsystemPartIcon(type, label) {
+  const title = `<title>${label}</title>`;
+  if (type === "hv") {
+    return `<svg class="topology-svg-icon" viewBox="0 0 64 64" role="img" aria-label="${label}">${title}<rect x="21" y="8" width="22" height="34" rx="4" fill="rgba(255,255,255,.16)" stroke="currentColor" stroke-width="2"/><path d="M32 42v9M24 51h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M28 17h8l-5 10h7l-10 16 3-12h-6z" fill="currentColor"/><circle cx="24" cy="46" r="2.5" fill="currentColor"/><circle cx="40" cy="46" r="2.5" fill="currentColor"/></svg>`;
+  }
+  if (type === "pcs") {
+    return `<svg class="topology-svg-icon" viewBox="0 0 64 64" role="img" aria-label="${label}">${title}<rect x="12" y="12" width="40" height="40" rx="5" fill="rgba(255,255,255,.13)" stroke="currentColor" stroke-width="2"/><path d="M18 25c4-5 8 5 12 0s8-5 16 0" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M19 39h26" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".58"/><circle cx="22" cy="45" r="2" fill="currentColor"/><circle cx="31" cy="45" r="2" fill="currentColor" opacity=".76"/><circle cx="40" cy="45" r="2" fill="currentColor" opacity=".56"/></svg>`;
+  }
+  if (type === "rack") {
+    return `<svg class="topology-svg-icon rack-svg-icon" viewBox="0 0 48 64" role="img" aria-label="${label}">${title}<rect x="10" y="9" width="28" height="46" rx="3" fill="rgba(255,255,255,.12)" stroke="currentColor" stroke-width="1.7"/><path d="M14 18h20M14 28h20M14 38h20M14 48h20" stroke="currentColor" stroke-width="1.1" opacity=".62"/><rect x="16" y="13" width="16" height="4" rx="1" fill="currentColor" opacity=".7"/></svg>`;
+  }
+  if (type === "fire") {
+    return `<svg class="topology-svg-icon" viewBox="0 0 64 64" role="img" aria-label="${label}">${title}<rect x="18" y="16" width="28" height="34" rx="4" fill="rgba(255,255,255,.13)" stroke="currentColor" stroke-width="2"/><path d="M32 43c7-4 8-10 3-16-1 4-4 6-7 8 0-5-2-8-5-11 1 9-5 11-3 17 2 7 9 9 12 2z" fill="currentColor"/><circle cx="42" cy="22" r="2.5" fill="currentColor" opacity=".8"/></svg>`;
+  }
+  return `<svg class="topology-svg-icon" viewBox="0 0 64 64" role="img" aria-label="${label}">${title}<rect x="16" y="14" width="32" height="36" rx="5" fill="rgba(255,255,255,.13)" stroke="currentColor" stroke-width="2"/><path d="M25 39l14-14M25 25h14v14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M23 48v6M41 48v6M25 10v6M39 10v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
 }
 
 function renderSubsystemPartsTopology(station, subsystemNo) {
@@ -3727,6 +3757,12 @@ function renderSubsystemPartsTopology(station, subsystemNo) {
   const rightRacks = Array.from({ length: 9 }, (_, index) => 201 + index);
   const hvacFilter = subsystemUtilityFilter("hvac");
   const fireFilter = subsystemUtilityFilter("fire");
+  const hvScore = topologyPartSosScore(station, subsystemNo, "hv", subsystemNo);
+  const pcs1Score = topologyPartSosScore(station, subsystemNo, "pcs1", 1);
+  const pcs2Score = topologyPartSosScore(station, subsystemNo, "pcs2", 2);
+  const hvacScore = topologyPartSosScore(station, subsystemNo, "hvac", 1);
+  const fireScore = topologyPartSosScore(station, subsystemNo, "fire", 2);
+  const hvFilter = { key: `hv-${subsystemNo}`, label: `箱变 #${String(subsystemNo).padStart(2, "0")}`, tokens: [`箱变 #${String(subsystemNo).padStart(2, "0")}`] };
   return `
     <article class="panel subsystem-parts-panel">
       <div class="panel-title"><span></span>拓扑图</div>
@@ -3737,37 +3773,39 @@ function renderSubsystemPartsTopology(station, subsystemNo) {
           ${rightRacks.map((_, index) => `<path d="M ${597 + index * 43} 252 V294" />`).join("")}
         </svg>
         <div class="subsystem-aux-list" aria-label="辅助系统">
-          <button class="topology-filter subsystem-aux-item${state.subsystemPartFilter?.key === hvacFilter.key ? " active" : ""}" type="button" ${topologyFilterAttribute(hvacFilter)}>
-            ${renderSubsystemPartIcon("hvac", "环控系统")}<span>环控系统</span>
+          <button class="topology-filter subsystem-aux-item${state.subsystemPartFilter?.key === hvacFilter.key ? " active" : ""}" style="${topologyStyleForScore(hvacScore)}" type="button" ${topologyFilterAttribute(hvacFilter)}>
+            ${renderSubsystemPartIcon("hvac", "环控系统")}<span><strong>环控系统</strong>${renderTopologySosText(hvacScore)}</span>
           </button>
-          <button class="topology-filter subsystem-aux-item${state.subsystemPartFilter?.key === fireFilter.key ? " active" : ""}" type="button" ${topologyFilterAttribute(fireFilter)}>
-            ${renderSubsystemPartIcon("fire", "消防系统")}<span>消防系统</span>
+          <button class="topology-filter subsystem-aux-item${state.subsystemPartFilter?.key === fireFilter.key ? " active" : ""}" style="${topologyStyleForScore(fireScore)}" type="button" ${topologyFilterAttribute(fireFilter)}>
+            ${renderSubsystemPartIcon("fire", "消防系统")}<span><strong>消防系统</strong>${renderTopologySosText(fireScore)}</span>
           </button>
         </div>
-        <button class="${topologyPartButtonClass({ key: `hv-${subsystemNo}`, label: `箱变 #${String(subsystemNo).padStart(2, "0")}`, tokens: [`箱变 #${String(subsystemNo).padStart(2, "0")}`] }, "hv-node")}" type="button" ${topologyFilterAttribute({ key: `hv-${subsystemNo}`, label: `箱变 #${String(subsystemNo).padStart(2, "0")}`, tokens: [`箱变 #${String(subsystemNo).padStart(2, "0")}`] })}>
+        <button class="${topologyPartButtonClass(hvFilter, "hv-node")}" style="${topologyStyleForScore(hvScore)}" type="button" ${topologyFilterAttribute(hvFilter)}>
           <span class="topology-node-icon">${renderSubsystemPartIcon("hv", "箱变")}</span>
-          <span class="topology-node-text"><strong>箱变 #${String(subsystemNo).padStart(2, "0")}</strong><span>Ia: ${formatNumeric(2.1 + subsystemNo * 0.08)} A</span><span>Q: ${formatNumeric(snapshot.ratedPower * 18)} kVar</span></span>
+          <span class="topology-node-text"><strong>箱变 #${String(subsystemNo).padStart(2, "0")}</strong>${renderTopologySosText(hvScore)}</span>
         </button>
-        <button class="${topologyPartButtonClass(subsystemPcsFilter(1), "pcs-node left")}" type="button" ${topologyFilterAttribute(subsystemPcsFilter(1))}>
+        <button class="${topologyPartButtonClass(subsystemPcsFilter(1), "pcs-node left")}" style="${topologyStyleForScore(pcs1Score)}" type="button" ${topologyFilterAttribute(subsystemPcsFilter(1))}>
           <span class="topology-node-icon">${renderSubsystemPartIcon("pcs", "变流器")}</span>
-          <span class="topology-node-text"><strong>变流器 #01</strong><span>P: ${formatNumeric(snapshot.power)} kW</span><span>Q: ${formatNumeric(snapshot.ratedPower * 8.2)} kVar</span></span>
+          <span class="topology-node-text"><strong>变流器 #01</strong>${renderTopologySosText(pcs1Score)}</span>
         </button>
-        <button class="${topologyPartButtonClass(subsystemPcsFilter(2), "pcs-node right")}" type="button" ${topologyFilterAttribute(subsystemPcsFilter(2))}>
+        <button class="${topologyPartButtonClass(subsystemPcsFilter(2), "pcs-node right")}" style="${topologyStyleForScore(pcs2Score)}" type="button" ${topologyFilterAttribute(subsystemPcsFilter(2))}>
           <span class="topology-node-icon">${renderSubsystemPartIcon("pcs", "变流器")}</span>
-          <span class="topology-node-text"><strong>变流器 #02</strong><span>P: ${formatNumeric(snapshot.power * 0.96)} kW</span><span>Q: ${formatNumeric(snapshot.ratedPower * 8.0)} kVar</span></span>
+          <span class="topology-node-text"><strong>变流器 #02</strong>${renderTopologySosText(pcs2Score)}</span>
         </button>
         <div class="rack-row left">
-          <div class="rack-group-metrics" aria-hidden="true"><span>SOC:</span><span>SOH:</span></div>
+          <div class="rack-group-metrics" aria-hidden="true"><span>SOS:</span></div>
           ${leftRacks.map((rack) => {
             const filter = subsystemRackFilter(rack);
-            return `<button class="topology-filter rack-node${state.subsystemPartFilter?.key === filter.key ? " active" : ""}" type="button" ${topologyFilterAttribute(filter)}>${renderSubsystemPartIcon("rack", `Rack ${rack}`)}<strong>${rack}</strong><span class="rack-values"><span>${formatNumeric(4.6 + (rack % 4) * 0.4)}%</span><span>${formatNumeric(97 + (rack % 3) * 0.2)}%</span></span></button>`;
+            const score = topologyPartSosScore(station, subsystemNo, "rack", rack);
+            return `<button class="topology-filter rack-node${state.subsystemPartFilter?.key === filter.key ? " active" : ""}" style="${topologyStyleForScore(score)}" type="button" ${topologyFilterAttribute(filter)}>${renderSubsystemPartIcon("rack", `Rack ${rack}`)}<strong>${rack}</strong><span class="rack-values"><span>${formatSosValue(score)}</span></span></button>`;
           }).join("")}
         </div>
         <div class="rack-row right">
-          <div class="rack-group-metrics" aria-hidden="true"><span>SOC:</span><span>SOH:</span></div>
+          <div class="rack-group-metrics" aria-hidden="true"><span>SOS:</span></div>
           ${rightRacks.map((rack) => {
             const filter = subsystemRackFilter(rack);
-            return `<button class="topology-filter rack-node${state.subsystemPartFilter?.key === filter.key ? " active" : ""}" type="button" ${topologyFilterAttribute(filter)}>${renderSubsystemPartIcon("rack", `Rack ${rack}`)}<strong>${rack}</strong><span class="rack-values"><span>${formatNumeric(4.8 + (rack % 5) * 0.3)}%</span><span>${formatNumeric(97.1 + (rack % 4) * 0.18)}%</span></span></button>`;
+            const score = topologyPartSosScore(station, subsystemNo, "rack", rack);
+            return `<button class="topology-filter rack-node${state.subsystemPartFilter?.key === filter.key ? " active" : ""}" style="${topologyStyleForScore(score)}" type="button" ${topologyFilterAttribute(filter)}>${renderSubsystemPartIcon("rack", `Rack ${rack}`)}<strong>${rack}</strong><span class="rack-values"><span>${formatSosValue(score)}</span></span></button>`;
           }).join("")}
         </div>
       </div>
