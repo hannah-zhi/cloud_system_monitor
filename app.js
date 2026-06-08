@@ -3753,6 +3753,7 @@ function renderSubsystemPartIcon(type, label) {
 
 function renderSubsystemPartsTopology(station, subsystemNo) {
   const snapshot = subsystemSnapshot(station, subsystemNo);
+  const isDiagnosisTopology = state.subsystemPageMode === "diagnosis";
   const leftRacks = Array.from({ length: 9 }, (_, index) => 101 + index);
   const rightRacks = Array.from({ length: 9 }, (_, index) => 201 + index);
   const hvacFilter = subsystemUtilityFilter("hvac");
@@ -3763,49 +3764,50 @@ function renderSubsystemPartsTopology(station, subsystemNo) {
   const hvacScore = topologyPartSosScore(station, subsystemNo, "hvac", 1);
   const fireScore = topologyPartSosScore(station, subsystemNo, "fire", 2);
   const hvFilter = { key: `hv-${subsystemNo}`, label: `箱变 #${String(subsystemNo).padStart(2, "0")}`, tokens: [`箱变 #${String(subsystemNo).padStart(2, "0")}`] };
+  const topologyStyle = (score) => (isDiagnosisTopology ? ` style="${topologyStyleForScore(score)}"` : "");
   return `
     <article class="panel subsystem-parts-panel">
       <div class="panel-title"><span></span>拓扑图</div>
-      <div class="subsystem-topology">
+      <div class="subsystem-topology ${isDiagnosisTopology ? "diagnosis-sos-topology" : "overview-core-topology"}">
         <svg class="subsystem-wires" viewBox="0 0 1000 386" preserveAspectRatio="none" aria-hidden="true">
           <path d="M500 84 V126 M250 126 H750 M250 126 V145 M750 126 V145 M250 187 V252 H97 M250 252 H440 M750 187 V252 H597 M750 252 H940" />
           ${leftRacks.map((_, index) => `<path d="M ${97 + index * 43} 252 V294" />`).join("")}
           ${rightRacks.map((_, index) => `<path d="M ${597 + index * 43} 252 V294" />`).join("")}
         </svg>
         <div class="subsystem-aux-list" aria-label="辅助系统">
-          <button class="topology-filter subsystem-aux-item${state.subsystemPartFilter?.key === hvacFilter.key ? " active" : ""}" style="${topologyStyleForScore(hvacScore)}" type="button" ${topologyFilterAttribute(hvacFilter)}>
-            ${renderSubsystemPartIcon("hvac", "环控系统")}<span><strong>环控系统</strong>${renderTopologySosText(hvacScore)}</span>
+          <button class="topology-filter subsystem-aux-item${state.subsystemPartFilter?.key === hvacFilter.key ? " active" : ""}"${topologyStyle(hvacScore)} type="button" ${topologyFilterAttribute(hvacFilter)}>
+            ${renderSubsystemPartIcon("hvac", "环控系统")}${isDiagnosisTopology ? `<span><strong>环控系统</strong>${renderTopologySosText(hvacScore)}</span>` : "<span>环控系统</span>"}
           </button>
-          <button class="topology-filter subsystem-aux-item${state.subsystemPartFilter?.key === fireFilter.key ? " active" : ""}" style="${topologyStyleForScore(fireScore)}" type="button" ${topologyFilterAttribute(fireFilter)}>
-            ${renderSubsystemPartIcon("fire", "消防系统")}<span><strong>消防系统</strong>${renderTopologySosText(fireScore)}</span>
+          <button class="topology-filter subsystem-aux-item${state.subsystemPartFilter?.key === fireFilter.key ? " active" : ""}"${topologyStyle(fireScore)} type="button" ${topologyFilterAttribute(fireFilter)}>
+            ${renderSubsystemPartIcon("fire", "消防系统")}${isDiagnosisTopology ? `<span><strong>消防系统</strong>${renderTopologySosText(fireScore)}</span>` : "<span>消防系统</span>"}
           </button>
         </div>
-        <button class="${topologyPartButtonClass(hvFilter, "hv-node")}" style="${topologyStyleForScore(hvScore)}" type="button" ${topologyFilterAttribute(hvFilter)}>
+        <button class="${topologyPartButtonClass(hvFilter, "hv-node")}"${topologyStyle(hvScore)} type="button" ${topologyFilterAttribute(hvFilter)}>
           <span class="topology-node-icon">${renderSubsystemPartIcon("hv", "箱变")}</span>
-          <span class="topology-node-text"><strong>箱变 #${String(subsystemNo).padStart(2, "0")}</strong>${renderTopologySosText(hvScore)}</span>
+          <span class="topology-node-text"><strong>箱变 #${String(subsystemNo).padStart(2, "0")}</strong>${isDiagnosisTopology ? renderTopologySosText(hvScore) : `<span>Ia: ${formatNumeric(2.1 + subsystemNo * 0.08)} A</span><span>Q: ${formatNumeric(snapshot.ratedPower * 18)} kVar</span>`}</span>
         </button>
-        <button class="${topologyPartButtonClass(subsystemPcsFilter(1), "pcs-node left")}" style="${topologyStyleForScore(pcs1Score)}" type="button" ${topologyFilterAttribute(subsystemPcsFilter(1))}>
+        <button class="${topologyPartButtonClass(subsystemPcsFilter(1), "pcs-node left")}"${topologyStyle(pcs1Score)} type="button" ${topologyFilterAttribute(subsystemPcsFilter(1))}>
           <span class="topology-node-icon">${renderSubsystemPartIcon("pcs", "变流器")}</span>
-          <span class="topology-node-text"><strong>变流器 #01</strong>${renderTopologySosText(pcs1Score)}</span>
+          <span class="topology-node-text"><strong>变流器 #01</strong>${isDiagnosisTopology ? renderTopologySosText(pcs1Score) : `<span>P: ${formatNumeric(snapshot.power)} kW</span><span>Q: ${formatNumeric(snapshot.ratedPower * 8.2)} kVar</span>`}</span>
         </button>
-        <button class="${topologyPartButtonClass(subsystemPcsFilter(2), "pcs-node right")}" style="${topologyStyleForScore(pcs2Score)}" type="button" ${topologyFilterAttribute(subsystemPcsFilter(2))}>
+        <button class="${topologyPartButtonClass(subsystemPcsFilter(2), "pcs-node right")}"${topologyStyle(pcs2Score)} type="button" ${topologyFilterAttribute(subsystemPcsFilter(2))}>
           <span class="topology-node-icon">${renderSubsystemPartIcon("pcs", "变流器")}</span>
-          <span class="topology-node-text"><strong>变流器 #02</strong>${renderTopologySosText(pcs2Score)}</span>
+          <span class="topology-node-text"><strong>变流器 #02</strong>${isDiagnosisTopology ? renderTopologySosText(pcs2Score) : `<span>P: ${formatNumeric(snapshot.power * 0.96)} kW</span><span>Q: ${formatNumeric(snapshot.ratedPower * 8.0)} kVar</span>`}</span>
         </button>
         <div class="rack-row left">
-          <div class="rack-group-metrics" aria-hidden="true"><span>SOS:</span></div>
+          <div class="rack-group-metrics" aria-hidden="true">${isDiagnosisTopology ? "<span>SOS:</span>" : "<span>SOC:</span><span>SOH:</span>"}</div>
           ${leftRacks.map((rack) => {
             const filter = subsystemRackFilter(rack);
             const score = topologyPartSosScore(station, subsystemNo, "rack", rack);
-            return `<button class="topology-filter rack-node${state.subsystemPartFilter?.key === filter.key ? " active" : ""}" style="${topologyStyleForScore(score)}" type="button" ${topologyFilterAttribute(filter)}>${renderSubsystemPartIcon("rack", `Rack ${rack}`)}<strong>${rack}</strong><span class="rack-values"><span>${formatSosValue(score)}</span></span></button>`;
+            return `<button class="topology-filter rack-node${state.subsystemPartFilter?.key === filter.key ? " active" : ""}"${topologyStyle(score)} type="button" ${topologyFilterAttribute(filter)}>${renderSubsystemPartIcon("rack", `Rack ${rack}`)}<strong>${rack}</strong><span class="rack-values">${isDiagnosisTopology ? `<span>${formatSosValue(score)}</span>` : `<span>${formatNumeric(4.6 + (rack % 4) * 0.4)}%</span><span>${formatNumeric(97 + (rack % 3) * 0.2)}%</span>`}</span></button>`;
           }).join("")}
         </div>
         <div class="rack-row right">
-          <div class="rack-group-metrics" aria-hidden="true"><span>SOS:</span></div>
+          <div class="rack-group-metrics" aria-hidden="true">${isDiagnosisTopology ? "<span>SOS:</span>" : "<span>SOC:</span><span>SOH:</span>"}</div>
           ${rightRacks.map((rack) => {
             const filter = subsystemRackFilter(rack);
             const score = topologyPartSosScore(station, subsystemNo, "rack", rack);
-            return `<button class="topology-filter rack-node${state.subsystemPartFilter?.key === filter.key ? " active" : ""}" style="${topologyStyleForScore(score)}" type="button" ${topologyFilterAttribute(filter)}>${renderSubsystemPartIcon("rack", `Rack ${rack}`)}<strong>${rack}</strong><span class="rack-values"><span>${formatSosValue(score)}</span></span></button>`;
+            return `<button class="topology-filter rack-node${state.subsystemPartFilter?.key === filter.key ? " active" : ""}"${topologyStyle(score)} type="button" ${topologyFilterAttribute(filter)}>${renderSubsystemPartIcon("rack", `Rack ${rack}`)}<strong>${rack}</strong><span class="rack-values">${isDiagnosisTopology ? `<span>${formatSosValue(score)}</span>` : `<span>${formatNumeric(4.8 + (rack % 5) * 0.3)}%</span><span>${formatNumeric(97.1 + (rack % 4) * 0.18)}%</span>`}</span></button>`;
           }).join("")}
         </div>
       </div>
@@ -4123,11 +4125,11 @@ function renderStationOverview(station) {
     const displayStatusClass = subsystemStatusClassFromAlarms(station, item, subsystemAlarms);
     return `
     <div class="storage-system-card ${displayStatusClass} alarm-${alarmTone}" data-system="${item.n}" role="button" tabindex="0" aria-label="查看${subsystemDisplayName(station, item.n)}">
-      <div class="storage-system-head"><strong>${subsystemDisplayName(station, item.n)}</strong><span class="system-status-pill ${displayStatusClass}">${displayStatus}</span></div>
-      <div class="system-row"><span>系统有功(PCS)功率</span><strong>${formatNumeric(item.localPower)} kW</strong></div>
-      <div class="system-row"><span>系统SOC</span><strong>${formatNumeric(item.localSoc)} %</strong></div>
+      <div class="storage-system-head"><strong>${subsystemShortName(item.n)}</strong><span class="system-status-pill ${displayStatusClass}">${displayStatus}</span></div>
+      <div class="system-row"><span>有功功率</span><strong>${formatNumeric(item.localPower)} kW</strong></div>
+      <div class="system-row"><span>SOC</span><strong>${formatNumeric(item.localSoc)} %</strong></div>
       <div class="mini-bars">${Array.from({ length: 12 }, (_, bar) => `<i style="opacity:${bar < Math.round(item.localSoc / 8.4) ? 0.95 : 0.18}"></i>`).join("")}</div>
-      <div class="system-row"><span>系统SOH</span><strong>${formatNumeric(item.localSoh)} %</strong></div>
+      <div class="system-row"><span>SOH</span><strong>${formatNumeric(item.localSoh)} %</strong></div>
       ${subsystemAlarmTooltipHtml(station, item.n)}
     </div>`;
   }).join("");

@@ -2798,7 +2798,7 @@ h2 {
 .rack-node {
   display: grid;
   grid-template-columns: 40px;
-  grid-template-rows: 40px 13px 12px;
+  grid-template-rows: 40px 13px 20px;
   justify-items: center;
   align-items: start;
   gap: 1px;
@@ -2838,7 +2838,7 @@ h2 {
   grid-row: 3;
   align-self: start;
   display: grid;
-  gap: 0;
+  gap: 3px;
   justify-items: center;
   color: #d7e1f1;
   font-size: 8px;
@@ -2851,8 +2851,8 @@ h2 {
   align-self: start;
   justify-self: end;
   display: grid;
-  gap: 0;
-  padding-top: 58px;
+  gap: 3px;
+  padding-top: 57px;
   color: #d7e1f1;
   font-size: 8px;
   font-weight: 600;
@@ -2929,6 +2929,25 @@ h2 {
   color: var(--topology-color, #13c781);
   font-size: 11px;
   font-weight: 700;
+}
+
+.overview-core-topology .topology-node-text span {
+  color: #c8d3e6;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.diagnosis-sos-topology .rack-node {
+  grid-template-rows: 40px 13px 12px;
+}
+
+.diagnosis-sos-topology .rack-values,
+.diagnosis-sos-topology .rack-group-metrics {
+  gap: 0;
+}
+
+.diagnosis-sos-topology .rack-group-metrics {
+  padding-top: 58px;
 }
 
 .subsystem-basic-panel {
@@ -3420,8 +3439,8 @@ h2 {
 
 .storage-system-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 180px));
-  column-gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 170px));
+  column-gap: 7px;
   row-gap: 28px;
   margin-top: 10px;
   padding-top: 20px;
@@ -3451,10 +3470,10 @@ h2 {
 }
 
 .storage-system-card {
-  min-height: 104px;
+  min-height: 98px;
   border: 1px solid rgba(104, 112, 134, 0.58);
   border-radius: 4px;
-  padding: 8px;
+  padding: 8px 7px;
   background: rgba(24, 26, 36, 0.95);
   position: relative;
   z-index: 2;
