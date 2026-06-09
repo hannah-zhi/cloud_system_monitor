@@ -2937,6 +2937,11 @@ h2 {
   font-weight: 500;
 }
 
+.overview-core-topology .topology-svg-icon {
+  color: #8f98aa;
+  filter: drop-shadow(0 0 9px rgba(143, 152, 170, 0.2));
+}
+
 .diagnosis-sos-topology .rack-node {
   grid-template-rows: 40px 13px 12px;
 }
@@ -3439,8 +3444,8 @@ h2 {
 
 .storage-system-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 170px));
-  column-gap: 7px;
+  grid-template-columns: repeat(auto-fit, minmax(118px, 136px));
+  column-gap: 6px;
   row-gap: 28px;
   margin-top: 10px;
   padding-top: 20px;
@@ -3470,10 +3475,10 @@ h2 {
 }
 
 .storage-system-card {
-  min-height: 98px;
+  min-height: 94px;
   border: 1px solid rgba(104, 112, 134, 0.58);
   border-radius: 4px;
-  padding: 8px 7px;
+  padding: 7px 6px;
   background: rgba(24, 26, 36, 0.95);
   position: relative;
   z-index: 2;
@@ -3714,7 +3719,7 @@ h2 {
 .storage-system-head,
 .system-row {
   display: flex;
-  gap: 6px;
+  gap: 4px;
   font-size: 11px;
 }
 
@@ -3743,13 +3748,13 @@ h2 {
 
 .system-status-pill {
   flex: 0 0 auto;
-  min-width: 34px;
+  min-width: 30px;
   height: 18px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 9px;
-  padding: 0 7px;
+  padding: 0 5px;
   font-size: 10px;
   line-height: 1;
   border: 1px solid currentColor;
@@ -3809,7 +3814,7 @@ h2 {
 }
 
 .storage-system-card .system-row strong {
-  font-size: 11px;
+  font-size: 10px;
   line-height: 1.15;
   white-space: nowrap;
   flex: 0 0 auto;
@@ -3817,7 +3822,7 @@ h2 {
 
 .storage-system-card .system-row:nth-of-type(2) strong,
 .storage-system-card .system-row:nth-of-type(3) strong {
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .storage-system-card .system-row span {
