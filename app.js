@@ -3317,6 +3317,7 @@ function showDetail(id, initialTab = "overview", sourcePage = initialTab === "di
   els.riskView.classList.remove("active-view");
   els.alarmDetailView.classList.remove("active-view");
   els.detailView.classList.add("active-view");
+  els.detailView.classList.remove("is-subsystem-detail");
   document.getElementById("pageTitle").textContent = "";
   updateNavActive(sourcePage);
   showDetailTab(state.detailTab, false);
@@ -3375,6 +3376,7 @@ function showSubsystemDetail(station, subsystemNo, mode = "overview") {
   els.riskView.classList.remove("active-view");
   els.alarmDetailView.classList.remove("active-view");
   els.detailView.classList.add("active-view");
+  els.detailView.classList.add("is-subsystem-detail");
   showDetailTab("overview", false);
   renderSubsystemDetail(station, state.selectedSubsystemNo);
   renderDetailAlarms(station);
@@ -3431,6 +3433,7 @@ function showList() {
 function renderDetail(station) {
   const risk = riskMeta[station.risk];
   els.detailTitle.textContent = `${station.id}${station.name}`;
+  els.detailView.classList.remove("is-subsystem-detail");
   renderDetailStationSelector();
   els.detailComm.textContent = commMeta[station.comm].label;
   els.detailComm.style.borderColor = commMeta[station.comm].color;
@@ -3932,7 +3935,9 @@ function renderSubsystemPartsTopology(station, subsystemNo) {
 function renderSubsystemDetail(station, subsystemNo) {
   const snapshot = subsystemSnapshot(station, subsystemNo);
   const risk = riskMeta[snapshot.risk];
-  els.detailTitle.textContent = snapshot.name;
+  els.detailView.classList.add("is-subsystem-detail");
+  closeDetailStationPicker();
+  els.detailTitle.textContent = `${station.id}${station.name} - ${snapshot.name}`;
   els.detailComm.textContent = commMeta[station.comm].label;
   els.detailComm.style.borderColor = commMeta[station.comm].color;
   els.detailComm.style.color = commMeta[station.comm].color;

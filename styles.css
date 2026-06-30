@@ -902,6 +902,19 @@ h2 {
   color: #f4f8ff;
 }
 
+.detail-view.is-subsystem-detail .detail-head h2 {
+  display: block;
+  margin: 0;
+  overflow: hidden;
+  color: #f4f8ff;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detail-view.is-subsystem-detail .detail-station-selector {
+  display: none;
+}
+
 .detail-station-selector {
   width: min(460px, 100%);
   margin-top: 0;

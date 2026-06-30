@@ -482,3 +482,8 @@
 - The top-right communication marker on station cards should read visually as a WiFi symbol inside a rounded capsule, not as a simple circular dot or one-arc gauge.
 - After removing data-class alarms from right-side lists, the source/category summary should use two balanced columns for `预警` and `告警`; do not leave an empty third-column track from the old `数据` category.
 - In right-side `预警 / 告警` summary boxes, the left total block and right subfilter block should form a compact centered group. Avoid a wide left `1fr` region that pushes the subfilter metrics to the far right and leaves a large empty gap.
+
+## 42. 2026-06-30 Subsystem Diagnosis Header Rule
+
+- Single-subsystem diagnosis/detail pages must not use the station-level single-select search header.
+- When entering a subsystem page from `站级诊断` or subsystem SOS rows, the top header should keep the original `场站 - 子系统` title format and hide the station selector. Returning to `站级诊断` or `站级监测` restores the station selector.
