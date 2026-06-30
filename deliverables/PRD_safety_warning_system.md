@@ -474,3 +474,10 @@
 - Central-monitoring station cards no longer show the `通讯状态` text row. The communication state remains available through the top-right icon.
 - The station-card communication marker changes from a plain dot to a WiFi-style icon. The icon color continues to map to communication status: normal green, partial interruption amber, interruption red, offline gray.
 - Right-side alarm/warning lists on all pages must exclude data-class alarms from the visible category boxes, tabs, counts, and list cards. Remaining side-panel categories should only reflect the supported warning/alarm classes for that page.
+
+## 41. 2026-06-30 Station-Level Visual Polish
+
+- Station-level pages should not repeat the selected project name above the station selector. The project/station name appears only inside the single-select search box.
+- After removing the `通讯状态` row from central-monitoring station cards, reduce the card height accordingly so the card does not keep unnecessary blank vertical space.
+- The top-right communication marker on station cards should read visually as a WiFi symbol inside a rounded capsule, not as a simple circular dot or one-arc gauge.
+- After removing data-class alarms from right-side lists, the source/category summary should use two balanced columns for `预警` and `告警`; do not leave an empty third-column track from the old `数据` category.

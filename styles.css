@@ -897,13 +897,14 @@ h2 {
 }
 
 .detail-head h2 {
+  display: none;
   font-size: 18px;
   color: #f4f8ff;
 }
 
 .detail-station-selector {
   width: min(460px, 100%);
-  margin-top: 8px;
+  margin-top: 0;
 }
 
 .detail-station-selector .combo-input {
@@ -1960,10 +1961,10 @@ h2 {
 }
 
 .station-card {
-  height: 248px;
-  min-height: 248px;
+  height: 222px;
+  min-height: 222px;
   border-top-width: 1px;
-  padding: 14px 14px 13px;
+  padding: 13px 14px 12px;
   z-index: 0;
 }
 
@@ -4135,40 +4136,34 @@ h2 {
 }
 
 .comm-dot {
-  width: 30px;
-  height: 20px;
+  width: 34px;
+  height: 22px;
   position: relative;
   display: inline-block;
   border-radius: 999px;
   flex: 0 0 auto;
-  background: rgba(28, 36, 46, 0.96);
-  box-shadow: inset 0 0 0 1px rgba(122, 143, 166, 0.18), 0 0 14px color-mix(in srgb, currentColor 34%, transparent);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, currentColor 18%, rgba(28, 36, 46, 0.96)), rgba(25, 32, 42, 0.96));
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, currentColor 34%, rgba(122, 143, 166, 0.16)),
+    0 0 14px color-mix(in srgb, currentColor 28%, transparent);
 }
 
 .comm-dot::before {
   content: "";
   position: absolute;
   left: 50%;
-  top: 5px;
-  width: 13px;
-  height: 9px;
-  border: 2px solid currentColor;
-  border-bottom: 0;
-  border-radius: 13px 13px 0 0;
-  transform: translateX(-50%);
-  box-shadow: inset 0 3px 0 -1px rgba(0, 0, 0, 0.85);
+  top: 50%;
+  width: 18px;
+  height: 14px;
+  background: currentColor;
+  transform: translate(-50%, -45%);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg width='24' height='18' viewBox='0 0 24 18' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6.5c4.7-4 11.3-4 16 0'/%3E%3Cpath d='M7.5 10c2.7-2.2 6.3-2.2 9 0'/%3E%3Cpath d='M10.5 13.2c.9-.7 2.1-.7 3 0'/%3E%3C/g%3E%3Ccircle cx='12' cy='15.7' r='1.6' fill='white'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg width='24' height='18' viewBox='0 0 24 18' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6.5c4.7-4 11.3-4 16 0'/%3E%3Cpath d='M7.5 10c2.7-2.2 6.3-2.2 9 0'/%3E%3Cpath d='M10.5 13.2c.9-.7 2.1-.7 3 0'/%3E%3C/g%3E%3Ccircle cx='12' cy='15.7' r='1.6' fill='white'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 
 .comm-dot::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: 5px;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: currentColor;
-  transform: translateX(-50%);
+  content: none;
 }
 
 .station-card.comm-ok {
@@ -4532,7 +4527,7 @@ h2 {
 }
 
 .alarm-source-summary {
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.15fr) minmax(72px, 0.72fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
 
 .alarm-summary > div {
