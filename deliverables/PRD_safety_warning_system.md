@@ -462,3 +462,15 @@
 
 - In the alarm-management `预警/告警列表` filter bar, add a searchable multi-select `编号` filter immediately after the date range.
 - The `编号` filter options must match the grouped table code values exactly, and selecting one or more codes filters the table to the corresponding grouped rows.
+
+## 40. 2026-06-30 Station-Level Monitoring Navigation
+
+- `站级监测` replaces the former single-station `场站概览` entry name. It is exposed as a second-level sidebar item under `全景监测 / 集中监测`.
+- `站级诊断` replaces the former single-station `安全诊断` entry name. It is exposed as a second-level sidebar item under `安全预警 / 预警管理`.
+- Clicking a station card on `集中监测` opens the corresponding station directly in `站级监测`.
+- Clicking the left sidebar `站级监测` or `站级诊断` without a station context opens the station with the lowest SOS value by default.
+- `站级监测` and `站级诊断` both provide a top single-select station search control. The control follows the central-monitoring station search visual style but allows only one selected station at a time. Selecting another station switches the current station page in place.
+- The old horizontal station-detail tabs are no longer the primary navigation for `站级监测` and `站级诊断`; the left sidebar owns these page entries.
+- Central-monitoring station cards no longer show the `通讯状态` text row. The communication state remains available through the top-right icon.
+- The station-card communication marker changes from a plain dot to a WiFi-style icon. The icon color continues to map to communication status: normal green, partial interruption amber, interruption red, offline gray.
+- Right-side alarm/warning lists on all pages must exclude data-class alarms from the visible category boxes, tabs, counts, and list cards. Remaining side-panel categories should only reflect the supported warning/alarm classes for that page.

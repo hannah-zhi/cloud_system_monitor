@@ -890,7 +890,7 @@ h2 {
 
 .detail-head {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto minmax(360px, 1fr) auto;
   align-items: center;
   gap: 16px;
   margin-bottom: 12px;
@@ -899,6 +899,25 @@ h2 {
 .detail-head h2 {
   font-size: 18px;
   color: #f4f8ff;
+}
+
+.detail-station-selector {
+  width: min(460px, 100%);
+  margin-top: 8px;
+}
+
+.detail-station-selector .combo-input {
+  height: 36px;
+}
+
+.detail-station-selector .combo-input strong {
+  min-width: 18px;
+}
+
+.selector-empty {
+  padding: 12px 10px;
+  color: #8792a8;
+  font-size: 13px;
 }
 
 .detail-section-tabs {
@@ -4055,7 +4074,7 @@ h2 {
   line-height: 1.2;
 }
 
-.station-card.is-collapsed .central-monitor-metrics .metric:nth-child(-n + 4) {
+.station-card.is-collapsed .central-monitor-metrics .metric:nth-child(-n + 3) {
   display: none;
 }
 
@@ -4116,11 +4135,40 @@ h2 {
 }
 
 .comm-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+  width: 30px;
+  height: 20px;
+  position: relative;
+  display: inline-block;
+  border-radius: 999px;
   flex: 0 0 auto;
-  box-shadow: 0 0 12px currentColor;
+  background: rgba(28, 36, 46, 0.96);
+  box-shadow: inset 0 0 0 1px rgba(122, 143, 166, 0.18), 0 0 14px color-mix(in srgb, currentColor 34%, transparent);
+}
+
+.comm-dot::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 5px;
+  width: 13px;
+  height: 9px;
+  border: 2px solid currentColor;
+  border-bottom: 0;
+  border-radius: 13px 13px 0 0;
+  transform: translateX(-50%);
+  box-shadow: inset 0 3px 0 -1px rgba(0, 0, 0, 0.85);
+}
+
+.comm-dot::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 5px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  transform: translateX(-50%);
 }
 
 .station-card.comm-ok {
@@ -4170,22 +4218,18 @@ h2 {
 }
 
 .comm-dot.comm-ok {
-  background: #13c781;
   color: #13c781;
 }
 
 .comm-dot.comm-partial {
-  background: #f4a51c;
   color: #f4a51c;
 }
 
 .comm-dot.comm-down {
-  background: #ff3d59;
   color: #ff3d59;
 }
 
 .comm-dot.comm-offline {
-  background: #7c8799;
   color: #7c8799;
 }
 

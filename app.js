@@ -126,6 +126,7 @@ const state = {
   detailAlarmSource: "all",
   detailAlarmCategory: "all",
   detailAlarmSubfilter: "all",
+  detailStationKeyword: "",
   overviewSortMode: "sosAsc",
   chargeStatWindow: "day",
   cardsCollapsed: false,
@@ -163,6 +164,11 @@ function bindElements() {
     "stationPickerMenu",
     "stationPickerList",
     "stationSelector",
+    "detailStationSelector",
+    "detailStationSearchInput",
+    "detailStationSelectedCount",
+    "detailStationPickerMenu",
+    "detailStationPickerList",
     "overviewSortControl",
     "overviewSortButton",
     "overviewSortMenu",
@@ -337,9 +343,21 @@ function bindEvents() {
     openStationPicker();
     renderStationPicker();
   });
+  els.detailStationSearchInput?.addEventListener("focus", () => {
+    openDetailStationPicker();
+    renderDetailStationPicker();
+  });
+  els.detailStationSearchInput?.addEventListener("input", () => {
+    state.detailStationKeyword = els.detailStationSearchInput.value.trim();
+    openDetailStationPicker();
+    renderDetailStationPicker();
+  });
   document.addEventListener("click", (event) => {
     if (!els.stationSelector.contains(event.target) && !els.stationPickerMenu.contains(event.target)) {
       closeStationPicker();
+    }
+    if (els.detailStationSelector && !els.detailStationSelector.contains(event.target) && !els.detailStationPickerMenu.contains(event.target)) {
+      closeDetailStationPicker();
     }
     if (!els.overviewSortControl?.contains(event.target)) {
       closeOverviewSortMenu();
@@ -347,7 +365,9 @@ function bindEvents() {
     hideAlarmRowContextMenu();
   });
   window.addEventListener("resize", positionStationPicker);
+  window.addEventListener("resize", positionDetailStationPicker);
   window.addEventListener("scroll", positionStationPicker, true);
+  window.addEventListener("scroll", positionDetailStationPicker, true);
   bindSosRangeEvents();
   els.collapseCardsBtn?.addEventListener("click", () => {
     state.cardsCollapsed = !state.cardsCollapsed;
@@ -1179,6 +1199,10 @@ function sortOverviewStations(stations) {
 }
 
 function showPage(page) {
+  if (page === "stationOverview" || page === "stationDiagnosis") {
+    showDefaultStationPage(page);
+    return;
+  }
   state.activePage = page;
   state.selectedStation = null;
   state.selectedSubsystemNo = null;
@@ -1188,9 +1212,7 @@ function showPage(page) {
   els.listView.classList.toggle("active-view", page === "overview");
   els.riskView.classList.toggle("active-view", page === "risk");
   els.alarmDetailView.classList.toggle("active-view", page === "alarm");
-  els.pageTabs?.querySelectorAll("button").forEach((button) => {
-    button.classList.toggle("active", button.dataset.page === page);
-  });
+  updateNavActive(page);
   if (page === "risk") renderRiskView();
   if (page === "alarm") {
     renderAlarmOverview();
@@ -1218,7 +1240,7 @@ function renderStations(stations) {
   }
   els.stationGrid.innerHTML = stations.map(createStationCard).join("");
   els.stationGrid.querySelectorAll(".station-card").forEach((card) => {
-    card.addEventListener("click", () => showDetail(card.dataset.id));
+    card.addEventListener("click", () => showDetail(card.dataset.id, "overview", "stationOverview"));
   });
 }
 
@@ -1241,7 +1263,7 @@ function createStationCard(station) {
       <div class="card-head">
         ${operationTag}
         <span class="station-name" title="${station.id}${station.name}">${station.id}${station.name}</span>
-        <span class="comm-dot ${commClass}" title="${comm.label}"></span>
+        <span class="comm-dot ${commClass}" title="${comm.label}" aria-label="${comm.label}"></span>
       </div>
       <div class="card-sos-line" style="--sos-color:${risk.color};--sos-width:${sosPercent}%">
         <span>SOS</span><strong>${formatSosValue(station.sos)}</strong><i></i>
@@ -1250,7 +1272,6 @@ function createStationCard(station) {
         <span>健康度</span><strong>${formatNumeric(healthScore)}</strong><i></i>
       </div>
       <div class="metrics central-monitor-metrics">
-        <div class="metric"><span>通讯状态</span><strong>${comm.label}</strong></div>
         <div class="metric"><span>额定能量/容量</span><strong>${station.rated}MW/${station.ratedEnergy}MWh</strong></div>
         <div class="metric"><span>子系统数量</span><strong>${station.subsystemCount}</strong></div>
         <div class="metric"><span>场站SOC</span><strong>${formatNumeric(station.soc)} <em>%</em></strong></div>
@@ -1370,9 +1391,72 @@ function positionStationPicker() {
   els.stationPickerMenu.style.width = `${Math.round(rect.width)}px`;
 }
 
+function renderDetailStationSelector() {
+  if (!els.detailStationSearchInput || !state.selectedStation) return;
+  if (document.activeElement !== els.detailStationSearchInput || !els.detailStationSelector.classList.contains("open")) {
+    els.detailStationSearchInput.value = `${state.selectedStation.id}${state.selectedStation.name}`;
+    state.detailStationKeyword = "";
+  }
+  if (els.detailStationSelectedCount) els.detailStationSelectedCount.textContent = "1";
+  renderDetailStationPicker();
+}
+
+function renderDetailStationPicker() {
+  if (!els.detailStationPickerList) return;
+  const keyword = (state.detailStationKeyword || "").trim().toLowerCase();
+  const stations = state.stations
+    .filter((station) => !keyword || `${station.id}${station.name}`.toLowerCase().includes(keyword))
+    .sort((a, b) => a.sos - b.sos || a.id.localeCompare(b.id, "zh-CN"))
+    .slice(0, 60);
+  els.detailStationPickerList.innerHTML = stations
+    .map(
+      (station) => `
+        <button class="selector-option ${state.selectedStation?.id === station.id ? "selected" : ""}" type="button" data-id="${station.id}">
+          <span class="selector-check ${state.selectedStation?.id === station.id ? "checked" : ""}"></span>
+          <span>${station.id}${station.name}</span><strong>SOS ${formatSosValue(station.sos)}</strong>
+        </button>`
+    )
+    .join("") || `<div class="selector-empty">未找到匹配场站</div>`;
+  els.detailStationPickerList.querySelectorAll(".selector-option").forEach((button) => {
+    button.addEventListener("click", () => {
+      const nextPage = state.activePage === "stationDiagnosis" || state.detailTab === "diagnosis" ? "stationDiagnosis" : "stationOverview";
+      closeDetailStationPicker();
+      showDetail(button.dataset.id, nextPage === "stationDiagnosis" ? "diagnosis" : "overview", nextPage);
+    });
+  });
+}
+
+function openDetailStationPicker() {
+  if (!els.detailStationSelector || !els.detailStationPickerMenu) return;
+  els.detailStationSelector.classList.add("open");
+  els.detailStationPickerMenu.classList.add("open");
+  positionDetailStationPicker();
+}
+
+function closeDetailStationPicker() {
+  els.detailStationSelector?.classList.remove("open");
+  els.detailStationPickerMenu?.classList.remove("open");
+  if (state.selectedStation && els.detailStationSearchInput) {
+    els.detailStationSearchInput.value = `${state.selectedStation.id}${state.selectedStation.name}`;
+  }
+  state.detailStationKeyword = "";
+}
+
+function positionDetailStationPicker() {
+  if (!els.detailStationPickerMenu?.classList.contains("open")) return;
+  const rect = els.detailStationSelector.getBoundingClientRect();
+  els.detailStationPickerMenu.style.left = `${Math.round(rect.left)}px`;
+  els.detailStationPickerMenu.style.top = `${Math.round(rect.bottom + 6)}px`;
+  els.detailStationPickerMenu.style.width = `${Math.round(rect.width)}px`;
+}
+
 function renderAlarms() {
   if (!els.alarmList) return;
-  const rangeAlarms = filterAlarmsByTime(state.alarms).filter(homeVisibleAlarm);
+  if (state.activeHomeAlarmCategory === "data") {
+    state.activeHomeAlarmCategory = "all";
+    state.activeHomeAlarmSubfilter = "all";
+  }
+  const rangeAlarms = filterAlarmsByTime(state.alarms).filter(homeVisibleAlarm).filter((alarm) => homeAlarmCategory(alarm) !== "data");
   const categoryAlarms = rangeAlarms.filter((alarm) => state.activeHomeAlarmCategory === "all" || homeAlarmCategory(alarm) === state.activeHomeAlarmCategory);
   const alarms = categoryAlarms.filter((alarm) => homeAlarmSubfilterMatch(alarm, state.activeHomeAlarmSubfilter));
   els.alarmCountAll.textContent = rangeAlarms.length;
@@ -1482,7 +1566,6 @@ function renderHomeAlarmCategorySummary(container, alarms, options = {}) {
         { key: "alarm", label: "告警", count: alarms.filter((alarm) => homeAlarmCategory(alarm) === "alarm" && homeDeviceAlarmSeverity(alarm) === "alarm").length },
       ],
     },
-    { key: "data", label: "数据", count: alarms.filter((alarm) => homeAlarmCategory(alarm) === "data").length, subfilters: [] },
   ].filter((entry) => !warningOnly || entry.key === "warning");
   container.innerHTML = entries
     .map((entry) => {
@@ -1626,7 +1709,7 @@ function renderRiskTopList(stations) {
     )
     .join("");
   els.riskTopList.querySelectorAll("button").forEach((button) => {
-    button.addEventListener("click", () => showDetail(button.dataset.station, "diagnosis"));
+    button.addEventListener("click", () => showDetail(button.dataset.station, "diagnosis", "stationDiagnosis"));
   });
 }
 
@@ -3199,10 +3282,12 @@ function handleAlarmTrendHover(event) {
   els.alarmTrendTooltip.classList.add("show");
 }
 
-function showDetail(id, initialTab = "overview") {
+function showDetail(id, initialTab = "overview", sourcePage = initialTab === "diagnosis" ? "stationDiagnosis" : "stationOverview") {
   const station = state.stations.find((item) => item.id === id);
   if (!station) return;
+  state.activePage = sourcePage;
   state.selectedStation = station;
+  state.detailStationKeyword = "";
   state.selectedSubsystemNo = null;
   state.subsystemPageMode = "overview";
   state.subsystemPartFilter = null;
@@ -3226,20 +3311,48 @@ function showDetail(id, initialTab = "overview") {
   els.detailAlarmTimeButtons.querySelectorAll("button").forEach((button) => button.classList.toggle("active", button.dataset.days === "all"));
   els.detailAlarmStartDate.value = "";
   els.detailAlarmEndDate.value = "";
-  els.backBtn.textContent = "‹ 返回场站列表";
-  els.detailSectionTabs.hidden = false;
+  els.backBtn.textContent = "‹ 返回集中监测";
+  els.detailSectionTabs.hidden = true;
   els.listView.classList.remove("active-view");
   els.riskView.classList.remove("active-view");
   els.alarmDetailView.classList.remove("active-view");
   els.detailView.classList.add("active-view");
   document.getElementById("pageTitle").textContent = "";
+  updateNavActive(sourcePage);
   showDetailTab(state.detailTab, false);
   renderDetail(station);
   window.scrollTo({ top: 0, behavior: "smooth" });
   const url = new URL(window.location.href);
   url.searchParams.set("station", station.id);
+  url.searchParams.set("page", sourcePage);
   url.searchParams.delete("subsystem");
+  if (initialTab === "diagnosis") url.searchParams.set("tab", "diagnosis");
+  else url.searchParams.delete("tab");
   window.history.replaceState({}, "", url);
+}
+
+function updateNavActive(page) {
+  els.pageTabs?.querySelectorAll("button[data-page]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.page === page);
+  });
+  els.pageTabs?.querySelectorAll(".nav-group").forEach((group) => {
+    const hasActive = Boolean(group.querySelector("button[data-page].active"));
+    group.classList.toggle("is-active", hasActive);
+    if (hasActive) {
+      group.classList.add("is-open");
+      group.querySelector(".nav-toggle")?.setAttribute("aria-expanded", "true");
+    }
+  });
+}
+
+function lowestSosStation() {
+  return [...state.stations].sort((a, b) => a.sos - b.sos || a.id.localeCompare(b.id, "zh-CN"))[0] || null;
+}
+
+function showDefaultStationPage(page) {
+  const station = lowestSosStation();
+  if (!station) return;
+  showDetail(station.id, page === "stationDiagnosis" ? "diagnosis" : "overview", page);
 }
 
 function showSubsystemDetail(station, subsystemNo, mode = "overview") {
@@ -3256,7 +3369,7 @@ function showSubsystemDetail(station, subsystemNo, mode = "overview") {
   state.overviewChargeHighlight = null;
   state.detailAlarmCategory = "all";
   state.detailAlarmSubfilter = "all";
-  els.backBtn.textContent = state.subsystemPageMode === "diagnosis" ? "‹ 返回安全诊断" : "‹ 返回场站概览";
+  els.backBtn.textContent = state.subsystemPageMode === "diagnosis" ? "‹ 返回站级诊断" : "‹ 返回站级监测";
   els.detailSectionTabs.hidden = true;
   els.listView.classList.remove("active-view");
   els.riskView.classList.remove("active-view");
@@ -3281,13 +3394,14 @@ function handleDetailBack() {
     state.selectedSubsystemNo = null;
     state.subsystemPageMode = "overview";
     state.subsystemPartFilter = null;
-    els.backBtn.textContent = "‹ 返回场站列表";
-    els.detailSectionTabs.hidden = false;
+    els.backBtn.textContent = "‹ 返回集中监测";
+    els.detailSectionTabs.hidden = true;
     state.detailTab = returnTab;
     renderDetail(state.selectedStation);
     showDetailTab(returnTab);
     const url = new URL(window.location.href);
     url.searchParams.set("station", state.selectedStation.id);
+    url.searchParams.set("page", returnTab === "diagnosis" ? "stationDiagnosis" : "stationOverview");
     url.searchParams.delete("subsystem");
     url.searchParams.delete("subsystemView");
     if (returnTab === "diagnosis") url.searchParams.set("tab", "diagnosis");
@@ -3300,7 +3414,7 @@ function handleDetailBack() {
 
 function showList() {
   els.detailView.classList.remove("active-view");
-  showPage(state.activePage || "overview");
+  showPage("overview");
   state.selectedStation = null;
   state.selectedSubsystemNo = null;
   state.subsystemPageMode = "overview";
@@ -3317,6 +3431,7 @@ function showList() {
 function renderDetail(station) {
   const risk = riskMeta[station.risk];
   els.detailTitle.textContent = `${station.id}${station.name}`;
+  renderDetailStationSelector();
   els.detailComm.textContent = commMeta[station.comm].label;
   els.detailComm.style.borderColor = commMeta[station.comm].color;
   els.detailComm.style.color = commMeta[station.comm].color;
@@ -5158,9 +5273,14 @@ function handleBoxHover(event) {
 function renderDetailAlarms(station) {
   const subsystemNo = state.selectedSubsystemNo;
   const warningOnly = state.subsystemPageMode === "diagnosis" && Boolean(subsystemNo);
+  if (!warningOnly && state.detailAlarmCategory === "data") {
+    state.detailAlarmCategory = "all";
+    state.detailAlarmSubfilter = "all";
+  }
   const snapshot = subsystemNo ? subsystemSnapshot(station, subsystemNo) : null;
   const partFilter = subsystemNo ? state.subsystemPartFilter : null;
   const rangeAlarms = detailBaseAlarmsForStation(station, subsystemNo)
+    .filter((alarm) => warningOnly || homeAlarmCategory(alarm) !== "data")
     .filter((alarm) => !warningOnly || homeAlarmCategory(alarm) === "warning")
     .filter((alarm) => alarmMatchesPartFilter(alarm, partFilter));
   const activeCategory = warningOnly ? "warning" : state.detailAlarmCategory;
@@ -5549,14 +5669,15 @@ function tickClock() {
 
 function openPageFromUrl() {
   const page = new URLSearchParams(window.location.search).get("page");
-  if (["overview", "risk", "alarm"].includes(page)) showPage(page);
+  if (["overview", "risk", "alarm", "stationOverview", "stationDiagnosis"].includes(page)) showPage(page);
 }
 
 function openStationFromUrl() {
   const params = new URLSearchParams(window.location.search);
   const stationId = params.get("station");
   if (!stationId) return;
-  showDetail(stationId);
+  const page = params.get("page") === "stationDiagnosis" || params.get("tab") === "diagnosis" ? "stationDiagnosis" : "stationOverview";
+  showDetail(stationId, page === "stationDiagnosis" ? "diagnosis" : "overview", page);
   const subsystemNo = Number(params.get("subsystem"));
   if (Number.isFinite(subsystemNo) && subsystemNo > 0) {
     const station = state.stations.find((item) => item.id === stationId);
