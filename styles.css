@@ -4546,6 +4546,20 @@ h2 {
   gap: 9px;
 }
 
+.alarm-source-summary .alarm-source-stat:has(.alarm-source-subfilters) {
+  grid-template-columns: 56px 70px;
+  justify-content: center;
+  gap: 14px;
+  padding-inline: 12px;
+}
+
+.alarm-source-main {
+  min-width: 0;
+  display: grid;
+  justify-items: start;
+  gap: 4px;
+}
+
 .alarm-source-summary .alarm-source-stat-data {
   grid-template-columns: 1fr;
 }
@@ -4647,7 +4661,7 @@ h2 {
   grid-template-columns: 1fr;
   gap: 3px;
   margin-top: 0;
-  padding-left: 9px;
+  padding-left: 10px;
   border-left: 1px solid rgba(111, 119, 146, 0.32);
 }
 

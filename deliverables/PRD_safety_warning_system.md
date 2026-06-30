@@ -481,3 +481,4 @@
 - After removing the `通讯状态` row from central-monitoring station cards, reduce the card height accordingly so the card does not keep unnecessary blank vertical space.
 - The top-right communication marker on station cards should read visually as a WiFi symbol inside a rounded capsule, not as a simple circular dot or one-arc gauge.
 - After removing data-class alarms from right-side lists, the source/category summary should use two balanced columns for `预警` and `告警`; do not leave an empty third-column track from the old `数据` category.
+- In right-side `预警 / 告警` summary boxes, the left total block and right subfilter block should form a compact centered group. Avoid a wide left `1fr` region that pushes the subfilter metrics to the far right and leaves a large empty gap.
