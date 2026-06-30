@@ -3937,7 +3937,7 @@ function renderSubsystemDetail(station, subsystemNo) {
   const risk = riskMeta[snapshot.risk];
   els.detailView.classList.add("is-subsystem-detail");
   closeDetailStationPicker();
-  els.detailTitle.textContent = `${station.id}${station.name} - ${snapshot.name}`;
+  els.detailTitle.textContent = snapshot.name;
   els.detailComm.textContent = commMeta[station.comm].label;
   els.detailComm.style.borderColor = commMeta[station.comm].color;
   els.detailComm.style.color = commMeta[station.comm].color;

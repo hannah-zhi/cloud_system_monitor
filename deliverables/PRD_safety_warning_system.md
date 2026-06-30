@@ -486,4 +486,4 @@
 ## 42. 2026-06-30 Subsystem Diagnosis Header Rule
 
 - Single-subsystem diagnosis/detail pages must not use the station-level single-select search header.
-- When entering a subsystem page from `站级诊断` or subsystem SOS rows, the top header should keep the original `场站 - 子系统` title format and hide the station selector. Returning to `站级诊断` or `站级监测` restores the station selector.
+- When entering a subsystem page from `站级诊断` or subsystem SOS rows, the top header should hide the station selector and show only the compact `场站号-#N子系统` title, such as `K-0239-#4子系统`. Returning to `站级诊断` or `站级监测` restores the station selector.
