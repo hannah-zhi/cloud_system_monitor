@@ -1,5 +1,7 @@
 # 集中监测模块_集中监测_产品需求规格说明书
 
+> 截图说明：除 2.1.6 新版右侧预警/告警清单截图外，本文截图从 V0.0.1 恢复，用于对应模块的布局参考。历史截图中的旧版页面名称、导航入口、状态名称、健康度单位及预警/告警展示样式和范围，以 V0.0.4 正文规则为准；三个页面右侧清单均以 2.1.6 截图为准。
+
 ## 版本历史
 
 
@@ -121,7 +123,7 @@
 
 界面截图：
 
-集中监测主页面
+![集中监测主页面](images/central-monitor-v004-restored/section-2.1-1.png)
 
 #### 2.1.1 页面布局
 
@@ -155,7 +157,7 @@
 
 界面截图：
 
-场站搜索
+![场站搜索](images/central-monitor-v004-restored/section-2.1.2-1.png)
 
 功能概述：
 
@@ -193,7 +195,7 @@
 
 界面截图：
 
-场站排序
+![场站排序](images/central-monitor-v004-restored/section-2.1.3-1.png)
 
 功能概述：
 
@@ -250,7 +252,7 @@
 
 界面截图：
 
-状态筛选卡片
+![状态筛选卡片](images/central-monitor-v004-restored/section-2.1.4-1.png)
 
 功能概述：
 
@@ -304,11 +306,11 @@
 
 界面截图：
 
-场站卡片列表
+![场站卡片列表](images/central-monitor-v004-restored/section-2.1.5-1.png)
 
 收起状态截图：
 
-场站卡片列表-收起状态
+![场站卡片列表-收起状态](images/central-monitor-v004-restored/section-2.1.5-2.png)
 
 功能概述：
 
@@ -486,11 +488,11 @@
 
 界面截图：
 
-站级监测页
+![站级监测页](images/central-monitor-v004-restored/section-2.2-1.png)
 
 #### 2.2.1 页面入口、场站搜索与顶部信息 (Page Entry, Site Search and Header Information)
 
-页面入口与顶部信息
+![页面入口与顶部信息](images/central-monitor-v004-restored/section-2.2.1-1.png)
 
 功能概述：
 
@@ -546,7 +548,7 @@
 
 界面截图：
 
-单站指标卡
+![单站指标卡](images/central-monitor-v004-restored/section-2.2.2-1.png)
 
 功能概述：
 
@@ -588,7 +590,7 @@
 
 界面截图：
 
-场站运行
+![场站运行](images/central-monitor-v004-restored/section-2.2.3-1.png)
 
 功能概述：
 
@@ -638,7 +640,7 @@
 
 界面截图：
 
-场站属性
+![场站属性](images/central-monitor-v004-restored/section-2.2.4-1.png)
 
 功能概述：
 
@@ -675,7 +677,7 @@
 
 界面截图：
 
-充放电统计
+![充放电统计](images/central-monitor-v004-restored/section-2.2.5-1.png)
 
 功能概述：
 
@@ -726,7 +728,7 @@
 
 界面截图：
 
-场站拓扑图
+![场站拓扑图](images/central-monitor-v004-restored/section-2.2.6-1.png)
 
 功能概述：
 
@@ -821,7 +823,7 @@
 
 界面截图：
 
-场站功率趋势
+![场站功率趋势](images/central-monitor-v004-restored/section-2.2.7-1.png)
 
 功能概述：
 
@@ -876,7 +878,7 @@
 
 界面截图：
 
-场站充放电表现
+![场站充放电表现](images/central-monitor-v004-restored/section-2.2.8-1.png)
 
 功能概述：
 
@@ -983,13 +985,13 @@
 
 界面截图：
 
-单子系统-子系统概览页
+![单子系统-子系统概览页](images/central-monitor-v004-restored/section-2.3-1.png)
 
 #### 2.3.1 页面入口与顶部信息
 
 界面截图：
 
-页面入口与顶部信息
+![页面入口与顶部信息](images/central-monitor-v004-restored/section-2.3.1-1.png)
 
 功能概述：
 
@@ -1042,7 +1044,7 @@
 
 界面截图：
 
-子系统运行
+![子系统运行](images/central-monitor-v004-restored/section-2.3.2-1.png)
 
 功能概述：
 
@@ -1080,7 +1082,7 @@
 
 界面截图：
 
-子系统充放电统计
+![子系统充放电统计](images/central-monitor-v004-restored/section-2.3.3-1.png)
 
 功能概述：
 
@@ -1126,7 +1128,7 @@
 
 界面截图：
 
-子系统拓扑图
+![子系统拓扑图](images/central-monitor-v004-restored/section-2.3.4-1.png)
 
 功能概述：
 
@@ -1179,7 +1181,7 @@
 
 界面截图：
 
-子系统功率趋势
+![子系统功率趋势](images/central-monitor-v004-restored/section-2.3.5-1.png)
 
 功能概述：
 
